@@ -1,19 +1,17 @@
 # workflow.py
 import os
-from typing import TypedDict, Annotated, Sequence
-import operator
+from typing import TypedDict
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
 from langfuse.langchain import CallbackHandler
 from langgraph.graph import StateGraph, START, END
 
 # 1. DEFINE THE STATE
-# This is the shared memory passed between agents.
 class AgentState(TypedDict):
     company_name: str
     search_results: str
@@ -21,24 +19,22 @@ class AgentState(TypedDict):
     report: str
     retry_count: int
 
-# Initialize shared tools and models
 langfuse_handler = CallbackHandler()
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 search_tool = TavilySearch(max_results=5, topic="news")
 
-# 2. DEFINE THE NODES (The Agents)
+# 2. DEFINE THE NODES (Now fully Async)
+# We changed `def` to `async def` and `.invoke()` to `.ainvoke()`
 
-def research_node(state: AgentState):
-    """Fetches recent news using Tavily."""
+async def research_node(state: AgentState):
     print(f"--- RESEARCHING {state['company_name']} ---")
     query = f"{state['company_name']} recent news, product updates, or pricing changes"
     
     try:
-        results = search_tool.invoke({"query": query})
-        # Convert the raw results to a string for the next agent
+        # Using ainvoke for non-blocking execution
+        results = await search_tool.ainvoke({"query": query})
         search_text = str(results) 
         
-        # Basic retry logic: if results are empty, trigger a retry
         if not results:
             return {"retry_count": state.get("retry_count", 0) + 1}
             
@@ -47,8 +43,7 @@ def research_node(state: AgentState):
         print(f"Search failed: {e}")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
-def analysis_node(state: AgentState):
-    """Synthesises raw search results into structured insights."""
+async def analysis_node(state: AgentState):
     print("--- ANALYSING RESULTS ---")
     prompt = f"""
     You are a competitive intelligence analyst. 
@@ -59,11 +54,10 @@ def analysis_node(state: AgentState):
     Raw Results:
     {state['search_results']}
     """
-    response = llm.invoke([HumanMessage(content=prompt)])
+    response = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"insights": response.content}
 
-def report_node(state: AgentState):
-    """Formats insights into a clean Markdown output."""
+async def report_node(state: AgentState):
     print("--- GENERATING REPORT ---")
     prompt = f"""
     You are a professional report writer. 
@@ -74,59 +68,35 @@ def report_node(state: AgentState):
     Insights:
     {state['insights']}
     """
-    response = llm.invoke([HumanMessage(content=prompt)])
+    response = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"report": response.content}
 
-# 3. DEFINE THE CONDITIONAL EDGE (Routing / Retry logic)
+# 3. ROUTING
 def check_research(state: AgentState):
-    """Routes to 'analysis' if search succeeded, or 'research' if it needs a retry."""
     if state.get("retry_count", 0) > 0 and state.get("retry_count", 0) < 3:
         print("--- RETRYING RESEARCH ---")
         return "retry"
     elif state.get("retry_count", 0) >= 3:
         print("--- MAX RETRIES REACHED ---")
-        return "fail" # In a real app, route to an error handling node
+        return "fail" 
     else:
         return "continue"
 
-# 4. BUILD THE LANGGRAPH STATE MACHINE
+# 4. BUILD GRAPH
 workflow = StateGraph(AgentState)
-
-# Add nodes
 workflow.add_node("research", research_node)
 workflow.add_node("analysis", analysis_node)
 workflow.add_node("report", report_node)
 
-# Add edges
 workflow.add_edge(START, "research")
-
-# Conditional edge after research (handles retries)
-workflow.add_conditional_edges(
-    "research",
-    check_research,
-    {
-        "continue": "analysis",
-        "retry": "research",
-        "fail": END # For the PoC, we just end if it fails 3 times
-    }
-)
-
-# Standard edges for the rest of the flow
+workflow.add_conditional_edges("research", check_research, {"continue": "analysis", "retry": "research", "fail": END})
 workflow.add_edge("analysis", "report")
 workflow.add_edge("report", END)
 
-# Compile the graph
 app_graph = workflow.compile()
 
-# Helper function for FastAPI to call
+# Helper function
 async def run_workflow(company_name: str) -> str:
-    """Executes the LangGraph workflow."""
     initial_state = {"company_name": company_name, "retry_count": 0}
-    
-    # Run the graph with Langfuse tracing
-    result = await app_graph.ainvoke(
-        initial_state, 
-        config={"callbacks": [langfuse_handler]}
-    )
-    
+    result = await app_graph.ainvoke(initial_state, config={"callbacks": [langfuse_handler]})
     return result.get("report", "Failed to generate report.")
