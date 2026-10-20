@@ -11,7 +11,6 @@ from langchain_tavily import TavilySearch
 from langfuse.langchain import CallbackHandler
 from langgraph.graph import StateGraph, START, END
 
-# 1. DEFINE THE STATE
 class AgentState(TypedDict):
     company_name: str
     search_results: str
@@ -20,18 +19,15 @@ class AgentState(TypedDict):
     retry_count: int
 
 langfuse_handler = CallbackHandler()
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+# Temperature is already set to 0 here
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0) 
 search_tool = TavilySearch(max_results=5, topic="news")
-
-# 2. DEFINE THE NODES (Now fully Async)
-# We changed `def` to `async def` and `.invoke()` to `.ainvoke()`
 
 async def research_node(state: AgentState):
     print(f"--- RESEARCHING {state['company_name']} ---")
     query = f"{state['company_name']} recent news, product updates, or pricing changes"
     
     try:
-        # Using ainvoke for non-blocking execution
         results = await search_tool.ainvoke({"query": query})
         search_text = str(results) 
         
@@ -45,33 +41,49 @@ async def research_node(state: AgentState):
 
 async def analysis_node(state: AgentState):
     print("--- ANALYSING RESULTS ---")
-    prompt = f"""
-    You are a competitive intelligence analyst. 
-    Based on the following raw search results about {state['company_name']}, 
-    extract the 3 most important competitive insights (e.g., product launches, funding, market moves).
-    Keep each insight to 1-2 sentences.
-    
-    Raw Results:
-    {state['search_results']}
-    """
+    prompt = f"""You are a competitive intelligence analyst. Your output will be fact-checked
+line by line against the source text below, so accuracy matters more than polish.
+
+TASK
+Extract the 3 most strategically important insights about {state['company_name']}
+(product launches, funding, partnerships, market moves, leadership or pricing pivots).
+
+GROUNDING RULES
+1. Use ONLY information stated in the SOURCE TEXT. No outside knowledge.
+2. Copy dates, years, prices, and numbers exactly as written. Never convert,
+   round, or recompute them.
+3. If the source gives a month but no year (e.g. "in December"), write exactly
+   that: "in December". Never add a year.
+4. If no date is given, give none. Do not write "recently" or "this year" either.
+5. Do not infer the current year, the timing of events, or causes the text
+   does not state.
+6. Skip minor details (individual model numbers, small price changes) unless
+   the text presents them as a strategic shift.
+7. If the source supports fewer than 3 solid insights, return fewer. Never pad.
+
+FORMAT
+- One bullet per insight, 1-2 sentences each.
+- Plain factual tone, no hype or speculation.
+
+SOURCE TEXT
+\"\"\"
+{state['search_results']}
+\"\"\"
+"""
     response = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"insights": response.content}
 
 async def report_node(state: AgentState):
     print("--- GENERATING REPORT ---")
-    prompt = f"""
-    You are a professional report writer. 
-    Format the following insights into a clean, professional Markdown report.
-    Include a main header with the company name ({state['company_name']}).
-    Use bullet points for the insights.
-    
-    Insights:
-    {state['insights']}
-    """
+    prompt = f"""Format the insights below into a short markdown report for {state['company_name']}.
+Use ONLY the facts in the insights. Do not add, infer, or change any dates, numbers, or claims.
+
+INSIGHTS
+{state['insights']}
+"""
     response = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"report": response.content}
 
-# 3. ROUTING
 def check_research(state: AgentState):
     if state.get("retry_count", 0) > 0 and state.get("retry_count", 0) < 3:
         print("--- RETRYING RESEARCH ---")
@@ -82,7 +94,6 @@ def check_research(state: AgentState):
     else:
         return "continue"
 
-# 4. BUILD GRAPH
 workflow = StateGraph(AgentState)
 workflow.add_node("research", research_node)
 workflow.add_node("analysis", analysis_node)
@@ -95,8 +106,11 @@ workflow.add_edge("report", END)
 
 app_graph = workflow.compile()
 
-# Helper function
-async def run_workflow(company_name: str) -> str:
+# Changed to return a dictionary with both the report and the search results
+async def run_workflow(company_name: str) -> dict:
     initial_state = {"company_name": company_name, "retry_count": 0}
     result = await app_graph.ainvoke(initial_state, config={"callbacks": [langfuse_handler]})
-    return result.get("report", "Failed to generate report.")
+    return {
+        "report": result.get("report", "Failed to generate report."),
+        "search_results": result.get("search_results", "")
+    }
