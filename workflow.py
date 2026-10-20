@@ -82,12 +82,14 @@ GROUNDING RULES
 4. If no date is given, give none. Do not write "recently" or "this year".
 5. Do not infer the current year, the timing of events, or causes the text does not state.
 6. If the source supports fewer than 3 solid insights, return fewer. Never pad.
+7. ZERO TOLERANCE: If a specific dollar amount, funding round, loan, or financial figure is not explicitly written in the SOURCE TEXT, you are forbidden from including it. Do not use your training data to fill in missing figures.
 
 RELEVANCE RULES
-7. Keep only insights that change how a competitor should view {state['company_name']}: strategic direction, partnerships, acquisitions, funding, major launches, market-share moves.
-8. Exclude routine pricing, individual product SKUs, API/developer release notes, admin or tooling updates, and legal settlements unless they represent a strategic shift.
-9. Do not characterize or editorialize beyond the source wording (e.g., do not add why something happened or who it affects if the text does not say so).
-10. State each fact once. Do not repeat the same item in different words.
+8. Keep only insights that change how a competitor should view {state['company_name']}: strategic direction, partnerships, acquisitions, funding, major launches, market-share moves.
+9. Exclude routine pricing, individual product SKUs, API/developer release notes, admin or tooling updates, and legal settlements unless they represent a strategic shift.
+10. Do not characterize or editorialize beyond the source wording (e.g., do not add why something happened or who it affects if the text does not say so).
+11. State each fact once. Do not repeat the same item in different words.
+12. FOCUS ON THE TARGET: The subject of every bullet point MUST be {state['company_name']}. If the source text discusses a third-party company (e.g., a partner, vendor, or competitor), you may mention them ONLY as context for what {state['company_name']} is doing. Do not write a bullet point that is primarily about a third-party company.
 
 FORMAT
 - One bullet per insight, 1-2 sentences each.
