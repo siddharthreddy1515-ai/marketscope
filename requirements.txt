@@ -1,0 +1,12 @@
+fastapi[standard]
+langchain-core
+langchain-openai
+langchain-tavily
+langgraph
+langfuse
+python-dotenv
+deepeval
+pytest
+portalocker
+openai
+tavily-python
