@@ -2,6 +2,9 @@
 import os
 import pytest
 import asyncio
+
+load_dotenv() 
+
 from dotenv import load_dotenv
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
