@@ -1,5 +1,6 @@
 # workflow.py
 import os
+import json
 from typing import TypedDict
 from dotenv import load_dotenv
 
@@ -18,26 +19,53 @@ class AgentState(TypedDict):
     report: str
     retry_count: int
 
+# --- Single Source of Truth ---
+def build_query(company: str) -> str:
+    return f"{company} strategy partnerships acquisitions funding product launches market share"
+
+def mock_path(company: str) -> str:
+    return f"mocks/{company.replace(' ', '_')}.json"
+# ------------------------------
+
 langfuse_handler = CallbackHandler()
-# Temperature is already set to 0 here
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0) 
+# Model and temperature held constant
+llm_analysis = ChatOpenAI(model="gpt-4o", temperature=0)
+llm_report = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 search_tool = TavilySearch(max_results=5, topic="news")
 
 async def research_node(state: AgentState):
-    print(f"--- RESEARCHING {state['company_name']} ---")
-    query = f"{state['company_name']} recent news, product updates, or pricing changes"
+    company = state["company_name"]
+    print(f"--- RESEARCHING {company} ---")
     
-    try:
-        results = await search_tool.ainvoke({"query": query})
-        search_text = str(results) 
-        
-        if not results:
+    if os.getenv("MOCK_TAVILY") == "true":
+        path = mock_path(company)
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Missing mock fixture: {path}")
+        with open(path, "r", encoding="utf-8") as f:
+            results = json.load(f)
+    else:
+        try:
+            results = await search_tool.ainvoke({"query": build_query(company)})
+        except Exception as e:
+            print(f"Search failed: {e}")
             return {"retry_count": state.get("retry_count", 0) + 1}
             
-        return {"search_results": search_text, "retry_count": 0}
-    except Exception as e:
-        print(f"Search failed: {e}")
+    if not results:
         return {"retry_count": state.get("retry_count", 0) + 1}
+        
+    # Clean text extraction
+    clean_text_parts = []
+    if isinstance(results, dict):
+        if results.get("answer"):
+            clean_text_parts.append(results["answer"])
+        if results.get("results"):
+            for item in results["results"]:
+                clean_text_parts.append(item.get("content", ""))
+    else:
+        clean_text_parts.append(str(results))
+        
+    search_text = "\n\n".join(filter(None, clean_text_parts))
+    return {"search_results": search_text, "retry_count": 0}
 
 async def analysis_node(state: AgentState):
     print("--- ANALYSING RESULTS ---")
@@ -45,21 +73,21 @@ async def analysis_node(state: AgentState):
 line by line against the source text below, so accuracy matters more than polish.
 
 TASK
-Extract the 3 most strategically important insights about {state['company_name']}
-(product launches, funding, partnerships, market moves, leadership or pricing pivots).
+Extract the 3 most strategically important insights about {state['company_name']}.
 
 GROUNDING RULES
 1. Use ONLY information stated in the SOURCE TEXT. No outside knowledge.
-2. Copy dates, years, prices, and numbers exactly as written. Never convert,
-   round, or recompute them.
-3. If the source gives a month but no year (e.g. "in December"), write exactly
-   that: "in December". Never add a year.
-4. If no date is given, give none. Do not write "recently" or "this year" either.
-5. Do not infer the current year, the timing of events, or causes the text
-   does not state.
-6. Skip minor details (individual model numbers, small price changes) unless
-   the text presents them as a strategic shift.
-7. If the source supports fewer than 3 solid insights, return fewer. Never pad.
+2. Copy dates, years, prices, and numbers exactly as written. Never convert, round, or recompute them.
+3. If the source gives a month but no year, write exactly that. Never add a year.
+4. If no date is given, give none. Do not write "recently" or "this year".
+5. Do not infer the current year, the timing of events, or causes the text does not state.
+6. If the source supports fewer than 3 solid insights, return fewer. Never pad.
+
+RELEVANCE RULES
+7. Keep only insights that change how a competitor should view {state['company_name']}: strategic direction, partnerships, acquisitions, funding, major launches, market-share moves.
+8. Exclude routine pricing, individual product SKUs, API/developer release notes, admin or tooling updates, and legal settlements unless they represent a strategic shift.
+9. Do not characterize or editorialize beyond the source wording (e.g., do not add why something happened or who it affects if the text does not say so).
+10. State each fact once. Do not repeat the same item in different words.
 
 FORMAT
 - One bullet per insight, 1-2 sentences each.
@@ -70,26 +98,25 @@ SOURCE TEXT
 {state['search_results']}
 \"\"\"
 """
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await llm_analysis.ainvoke([HumanMessage(content=prompt)])
     return {"insights": response.content}
 
 async def report_node(state: AgentState):
     print("--- GENERATING REPORT ---")
     prompt = f"""Format the insights below into a short markdown report for {state['company_name']}.
 Use ONLY the facts in the insights. Do not add, infer, or change any dates, numbers, or claims.
+Do not include introductory or concluding sentences.
 
 INSIGHTS
 {state['insights']}
 """
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await llm_report.ainvoke([HumanMessage(content=prompt)])
     return {"report": response.content}
 
 def check_research(state: AgentState):
     if state.get("retry_count", 0) > 0 and state.get("retry_count", 0) < 3:
-        print("--- RETRYING RESEARCH ---")
         return "retry"
     elif state.get("retry_count", 0) >= 3:
-        print("--- MAX RETRIES REACHED ---")
         return "fail" 
     else:
         return "continue"
@@ -106,7 +133,6 @@ workflow.add_edge("report", END)
 
 app_graph = workflow.compile()
 
-# Changed to return a dictionary with both the report and the search results
 async def run_workflow(company_name: str) -> dict:
     initial_state = {"company_name": company_name, "retry_count": 0}
     result = await app_graph.ainvoke(initial_state, config={"callbacks": [langfuse_handler]})
