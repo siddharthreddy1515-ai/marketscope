@@ -48,7 +48,9 @@ async def analysis_node(state: AgentState):
     prompt = f"""
     You are a competitive intelligence analyst. 
     Based on the following raw search results about {state['company_name']}, 
-    extract the 3 most important competitive insights (e.g., product launches, funding, market moves).
+    extract the 3 most important STRATEGIC competitive insights (e.g., product launches, funding, market moves, partnerships).
+    Do NOT include minor product pricing or specific model numbers unless it is a major strategic pivot.
+    Be strictly accurate with dates and years found in the text; do not hallucinate years.
     Keep each insight to 1-2 sentences.
     
     Raw Results:
