@@ -7,3 +7,6 @@ mlruns/
 mlflow.db
 drift_report.html
 temp_report.md
+current_reports.csv
+drift_report*.html
+test_*.html
