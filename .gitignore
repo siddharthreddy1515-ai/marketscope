@@ -3,3 +3,7 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+mlruns/
+mlflow.db
+drift_report.html
+temp_report.md
