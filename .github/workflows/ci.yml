@@ -21,6 +21,7 @@ jobs:
     - name: Run DeepEval Tests
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }} # <--- ADD THIS BACK
         LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
         LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
         LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
