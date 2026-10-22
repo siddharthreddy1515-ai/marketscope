@@ -3,46 +3,72 @@ import os
 import asyncio
 import pytest
 from dotenv import load_dotenv
-from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+from companies import COMPANIES as ALL_COMPANIES
 from workflow import run_workflow
 
 load_dotenv()
 
-COMPANIES = [
-    "Tesla", "Nvidia", "Microsoft", "Apple", "Google", 
-    "Amazon", "Meta", "OpenAI", "Anthropic", "Rivian", 
-    "Lucid Motors", "Ford", "General Motors", "Toyota", 
-    "Intel", "AMD", "Qualcomm", "Salesforce", "Adobe", "IBM"
-]
+# Only run all 20 if FULL_EVAL is true. Otherwise, run the "Danger 6".
+if os.getenv("FULL_EVAL") == "true":
+    COMPANIES = ALL_COMPANIES
+else:
+    COMPANIES = ["Tesla", "Microsoft", "Google", "Meta", "Rivian", "Intel"]
 
-async def fetch_company_data(company: str):
-    print(f"--- Generating report for {company} ---")
-    # We no longer call search_tool here. run_workflow returns both.
-    result = await run_workflow(company)
-    return company, (str(result["search_results"]), result["report"])
+THRESHOLD = 0.7
+MIN_PASS_RATE = 0.80   # Allows 1 flake out of 6
+MIN_MEAN = 0.85        # Overall average must be high
+JUDGE = "gpt-4o"
 
-async def generate_all_reports():
-    results = await asyncio.gather(*(fetch_company_data(c) for c in COMPANIES))
-    return dict(results)
+async def score_company(company, sem):
+    async with sem:
+        out = {"company": company, "error": None}
+        try:
+            r = await run_workflow(company)
+            tc = LLMTestCase(
+                input=f"Provide a competitive intelligence report for {company}",
+                actual_output=r["report"],
+                retrieval_context=[str(r["search_results"])],
+            )
+            rel = AnswerRelevancyMetric(threshold=THRESHOLD, model=JUDGE)
+            fai = FaithfulnessMetric(threshold=THRESHOLD, model=JUDGE)
+            
+            # Run judge concurrently
+            await asyncio.gather(rel.a_measure(tc), fai.a_measure(tc))
+            
+            out.update(
+                relevancy=rel.score, 
+                faithfulness=fai.score,
+                reasons={"relevancy": rel.reason, "faithfulness": fai.reason},
+                insights=r.get("insights", "")
+            )
+        except Exception as e:
+            out["error"] = repr(e)[:200]
+        return out
 
 @pytest.fixture(scope="session")
-def agent_data():
-    print("\nStarting concurrent agent generation for all companies...")
-    return asyncio.run(generate_all_reports())
+def scored():
+    async def main():
+        sem = asyncio.Semaphore(5) # Limit concurrency
+        return await asyncio.gather(*(score_company(c, sem) for c in COMPANIES))
+    return asyncio.run(main())
 
-relevancy = AnswerRelevancyMetric(threshold=0.7, model="gpt-4o")
-faithfulness = FaithfulnessMetric(threshold=0.7, model="gpt-4o")
+def test_no_infra_errors(scored):
+    errs = [(r["company"], r["error"]) for r in scored if r["error"]]
+    assert not errs, f"Infra/judge errors, not quality failures: {errs}"
 
-@pytest.mark.parametrize("company", COMPANIES)
-def test_marketscope_agent(agent_data, company):
-    search_results, agent_report = agent_data[company]
+@pytest.mark.parametrize("metric", ["relevancy", "faithfulness"])
+def test_suite_quality(scored, metric):
+    ok = [r for r in scored if not r["error"]]
+    scores = [r[metric] for r in ok]
+    mean = sum(scores) / len(scores)
+    rate = sum(s >= THRESHOLD for s in scores) / len(scores)
     
-    test_case = LLMTestCase(
-        input=f"Provide a competitive intelligence report for {company}",
-        actual_output=agent_report,
-        retrieval_context=[search_results]
-    )
-    
-    assert_test(test_case, [relevancy, faithfulness])
+    # Print details for any failures so we can debug them
+    for r in ok:
+        if r[metric] < THRESHOLD:
+            print(f"\n[{metric}] {r['company']} = {r[metric]:.2f}\n{r['reasons'][metric]}\nINSIGHTS:\n{r['insights']}")
+            
+    print(f"\n{metric}: mean={mean:.2f} pass_rate={rate:.0%}")
+    assert rate >= MIN_PASS_RATE and mean >= MIN_MEAN

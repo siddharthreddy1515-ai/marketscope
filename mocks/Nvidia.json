@@ -1,0 +1,55 @@
+{
+  "query": "Nvidia strategy partnerships acquisitions funding product launches market share",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "url": "https://www.businessinsider.com/nvidia-share-buyback-biggest-market-history-ai-boom-jensen-huang-2026-9",
+      "title": "Nvidia is repurchasing $150 billion of stock in the biggest buyback in market history - Business Insider",
+      "score": 0.31317866,
+      "published_date": "Mon, 28 Sep 2026 12:43:02 GMT",
+      "content": "Nvidia is already the world's most valuable company. Now it's launching the largest share buyback in history. The tech giant, whose chips are fuelling much of the AI boom, said on Monday that it would expand its existing share buyback plan by $150 billion, taking its total program worth $235 billion. \"I think we're going through the largest infrastructure build-out in human history, and we have the benefit of being a very central part of that,\" Nvidia CEO Jensen Huang said in an interview with CNBC shortly after the announcement. \"We're generating a lot of cash, we're going to generate a lot of cash in the coming years. And you know, every single year, as we generate more cash, I'd like to be able to return it back to the shareholders,\" he added. Nvidia said it expects to finish the buyback by the 2028 financial year. The company's share price was up around 1.7% in premarket trading around 8:30 a.m. ET on Monday.",
+      "raw_content": null,
+      "id": "d16a0c-00"
+    },
+    {
+      "url": "https://mlq.ai/news/nvidia-joins-funding-round-for-vast-data-at-30-billion-valuation-in-ai-storage-push/",
+      "title": "Nvidia Joins Funding Round for Vast Data at $30 Billion Valuation in AI Storage Push - MLQ.ai",
+      "score": 0.25071135,
+      "published_date": "Thu, 23 Apr 2026 09:47:38 GMT",
+      "content": "# Nvidia Joins Funding Round for Vast Data at $30 Billion Valuation in AI Storage Push. The round, led by Drive Capital and Access Industries, included participation from Nvidia, Fidelity Management & Research Company, and NEA amid rising demand for AI data infrastructure[1][2]. The company operates with positive margins and free cash flow, reflecting strong growth in AI-optimized data platforms[1]. Nvidia's investment in Vast Data underscores its broadening strategy beyond GPU hardware into the full AI infrastructure stack, including data storage critical for handling massive datasets in training large language models. Vast Data's focus on high-performance storage differentiates it in a market where enterprises require scalable solutions for AI workloads. Participation from diverse investors like Drive Capital, Access Industries, Fidelity, and NEA indicates broad recognition of Vast's execution, particularly its $4 billion in bookings serving high-profile AI firms[1]. Vast Data's funding positions it to accelerate product development and expand market reach as AI infrastructure demand intensifies.",
+      "raw_content": null,
+      "id": "3194a0-01"
+    },
+    {
+      "url": "https://au.finance.yahoo.com/news/wall-street-sends-strong-signal-140700090.html",
+      "title": "Wall Street sends strong signal to Nvidia stock investors - Yahoo Finance Australia",
+      "score": 0.19442934,
+      "published_date": "Thu, 13 Aug 2026 14:07:00 GMT",
+      "content": "# Wall Street sends strong signal to Nvidia stock investors. On Aug. 10, he tried something bolder, convincing some of the most powerful money managers on Wall Street to treat those same chips like an entirely new kind of investment. Several of the biggest names in finance signed on within days, and the numbers involved are large enough to reshape how the AI buildout gets paid for going forward, at a moment when questions about who ultimately foots the bill have only gotten louder. Nvidia signed memorandums of understanding with Apollo Global Management, Blackstone, BlackRock, Brookfield Asset Management, Goldman Sachs, and KKR to build financing platforms aimed at mobilizing more than $500 billion in third-party capital for hyperscalers, AI labs, and enterprises building data centers,\u00a0according to CNBC. Huang told CNBC he approached only those six firms about the idea, and none of them turned him down, framing the deal as proof that chips have become a genuine asset class for the first time, calling them revenue-generating, long-lived, and fungible,\u00a0according to Benzinga.",
+      "raw_content": null,
+      "id": "c48b0e-02"
+    },
+    {
+      "url": "https://www.axios.com/2025/12/01/nvidia-ai-investments-openai-anthropic",
+      "title": "Nvidia's massive investments are shaping the AI bubble debate - Axios",
+      "score": 0.16257967,
+      "published_date": "Mon, 01 Dec 2025 16:36:54 GMT",
+      "content": "Nvidia has been on an investing spree the last two years, expanding the AI economy \u2014 a boom that helped make the company the most valuable in the world. * In 2024 and so far this year, Nvidia and its NVentures unit have made 117 investments totaling $62.24 billion, per PitchBook. * That's a steep ramp up from the previous two years, when Nvidia made 46 such investments totaling $6.09 billion. * Nvidia did not respond to Axios' requests for comment on the PitchBook data and its investment strategy. **What we're watching:** Investors will have their eye on where Nvidia will invest next, and whether its strategy will change now that Google, and its in-house AI chips, have emerged as a competitor.",
+      "raw_content": null,
+      "id": "cb385b-03"
+    },
+    {
+      "url": "https://finance.yahoo.com/markets/stocks/articles/nvidia-nvda-pulls-back-financing-153423894.html",
+      "title": "Nvidia (NVDA) Pulls Back A Financing Program Right After Blowout Earnings - Yahoo Finance",
+      "score": 0.1513414,
+      "published_date": "Fri, 28 Aug 2026 15:34:23 GMT",
+      "content": "3. Best money market accounts. Revenue for Nvidia's fiscal second quarter, which ended July 26, came in at $96.2 billion, up 106% from a year earlier and ahead of both Nvidia's own targets and Wall Street's estimates. Amazon Web Services agreed to deploy an additional 2 million Nvidia GPUs over the next two years, a deal CEO Jensen Huang said could also include millions of CPUs. Nvidia is leaning into that opening, projecting $20 billion in stand-alone CPU revenue this year and more than double that next year, while also committing to return at least half its free cash flow to shareholders. Nvidia stepped back from some of those deals last week, though a spokesperson said the broader model \"is still in place and continues to evolve due to high demand.\" The report noted some Nvidia employees had privately worried the arrangement could draw antitrust scrutiny, and that the company had told cloud providers they could only rent chips to approved customers, a level of control that reportedly irritated potential partners early on.",
+      "raw_content": null,
+      "id": "1b48ff-04"
+    }
+  ],
+  "response_time": 0.0,
+  "request_id": "f16eaae5-bddc-47fd-a868-1d55402002ae"
+}

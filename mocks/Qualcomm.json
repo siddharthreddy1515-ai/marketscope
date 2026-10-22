@@ -1,0 +1,55 @@
+{
+  "query": "Qualcomm strategy partnerships acquisitions funding product launches market share",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "url": "https://www.stocktitan.net/sec-filings/QCOM/s-3-qualcomm-inc-de-shelf-registration-statement-e54e65e1dd17.html",
+      "title": "Qualcomm registers up to 25M shares for Amazon resale | QCOM S-3 Registration",
+      "content": "enhanced products, services or technologies; emerging industries or business models; design wins or product launches; industry, market or technology trends, dynamics or transitions; our expectations regarding future demand or supply conditions; strategic investments or acquisitions, and the anticipated timing or benefits thereof; legal or regulatory matters; U.S./China trade or national security tensions; vertical integration by our customers; competition; annual effective tax rates; and other [...] and licensees, and particularly from their sale of premium-tier handset devices; our customers vertically integrating; a significant portion of our business being concentrated in China, which is exacerbated by U.S./China trade and national security tensions; our ability to extend our technologies and products into new and expanded product areas, and industries and applications beyond mobile handsets; our strategic acquisitions, transactions and investments, and our ability to consummate [...] to consummate strategic acquisitions; our dependence on a limited number of third-party suppliers; risks associated with the operation and control of our manufacturing facilities; security breaches of our information technology systems, or other misappropriation of our technology, intellectual property or other proprietary or confidential information; our ability to attract and retain qualified employees; the continued and future success of our licensing programs, which requires us to continue",
+      "score": 0.48264915,
+      "raw_content": null,
+      "published_date": "Fri, 02 Oct 2026 20:30:37 GMT",
+      "id": "f7fe8b-00"
+    },
+    {
+      "url": "https://www.sphericalinsights.com/blogs/how-intel-amd-and-qualcomm-are-reshaping-the-laptop-industry-ai-innovation-processor-competition-and-market-challenges-expert-view-by-spherical-insights",
+      "title": "How Intel, AMD and Qualcomm Are Reshaping the Laptop Industry",
+      "content": "6. Collaborate with Laptop Manufacturers: Intel, AMD and Qualcomm should strengthen partnerships with Lenovo, HP, Dell, ASUS and Acer to accelerate product launches and optimise hardware-software integration. Intel announced that its Core Ultra Series 3 platform would support more than 200 PC designs, illustrating the importance of manufacturer partnerships for market reach.\n\nMajor Companies Influencing the Laptop Industry [...] practical AI applications, reliable performance, extended battery life and competitive pricing. By prioritising innovation, software compatibility, supply-chain resilience and strategic partnerships, these companies can strengthen their market positions. Ultimately, sustainable competitive advantage requires translating technological advancements into meaningful customer benefits. [...] Laptop shipments and processor market share.\n Revenue growth and average selling prices.\n Gross margin and research-and-development expenditure.\n Battery life and performance per watt.\n AI application adoption and NPU utilisation.\n Customer satisfaction, return rates and warranty costs.\n Inventory levels and product availability.\n Enterprise adoption and repeat purchases.",
+      "score": 0.4527543,
+      "raw_content": null,
+      "published_date": "Wed, 14 Oct 2026 16:00:00 GMT",
+      "id": "168679-01"
+    },
+    {
+      "url": "https://www.barchart.com/story/news/4832550/qualcomm-just-agreed-to-acquire-robotics-software-firm-picknik-how-to-approach-the-stock-now",
+      "title": "Qualcomm Just Agreed to Acquire Robotics Software Firm Picknik. How to Approach the Stock Now.",
+      "content": "Based in San Diego, California and valued at a market capitalization of roughly $212 billion, Qualcomm designs semiconductors, wireless connectivity technologies, and software used in smartphones, PCs, vehicles, industrial equipment, and networking systems. It also licenses foundational cellular patents, generating high-margin revenue alongside its chip business and funding investments in AI, edge computing, and robotics. [...] This acquisition fits the company's broader effort to diversify beyond smartphone chips. Itsmultigenerational collaboration with Amazon(AMZN) focuses on next-generation AI data-center infrastructure, extending Qualcomm\u2019s AI ambitions beyond edge devices. [...] Qualcomm's free cash flow (FCF) margin dropped to 5% from 24.9% a year earlier. Yet its industrial networking and robotics pipeline provides a more constructive long-term signal. This progress followspartnerships with Arduino and Edge Impulse, which have extended Qualcomm\u2019s reach to more than 30 million users across the development ecosystem.\n\n## Why PickNik Matters for Qualcomm",
+      "score": 0.3656158,
+      "raw_content": null,
+      "published_date": "Mon, 28 Sep 2026 13:00:02 GMT",
+      "id": "ff36ec-02"
+    },
+    {
+      "url": "https://www.theglobeandmail.com/investing/markets/stocks/QCOM/pressreleases/5007047/qualcomms-huawei-deal-adds-strategic-depth-to-its-ai-expansion",
+      "title": "Qualcomm's Huawei Deal Adds Strategic Depth to Its AI ...",
+      "content": "Qualcomm deal at about $6.9 billion. Qualcomm provides a dividend yield of about 2%, paying 92 cents per share quarterly. Alongside the dividend, Qualcomm",
+      "score": 0.200605,
+      "raw_content": null,
+      "published_date": "Tue, 06 Oct 2026 00:00:00 GMT",
+      "id": "a0703a-03"
+    },
+    {
+      "url": "https://startupfortune.com/qualcomm-gave-amazon-4-billion-in-stock-warrants-to-bet-against-nvidia",
+      "title": "Qualcomm gave Amazon $4 billion in stock warrants to bet against Nvidia - Startup Fortune",
+      "content": "This article is posted in Technology News, check it out for more related stories.\n\n## Join the discussion\n\nOpen in the community \u2192\n\nAlmost there. Sign in and your reply posts straight away.\n\nTOPICS\n\nAmazon AWS chips Nvidia competition strategic investment Billion Gave Qualcomm Qualcomm Amazon custom silicon partnership details Stock\n\nJudith Murphy\nMore posts by this author \u2192 [...] On September 8, Qualcomm and Amazon Web Services announced a multi-generation partnership to build custom silicon for AI inference, backed by an unusual financial structure: Qualcomm issued warrants letting Amazon buy 25 million Qualcomm shares at $161.26 apiece, a stake worth roughly $4 billion at signing. The warrants expire in September 2036. According to CNBC, 3.75 million of those shares vest immediately, with the rest tied to milestones, chiefly AWS following through on purchases of up to [...] Qualcomm and Amazon Web Services announced a multi-generation deal to co-develop custom AI inference chips and 1.6 Tbps optical interconnects for AWS data centers. Qualcomm issued Amazon a warrant worth roughly $4 billion in stock, and shares jumped nearly 10 percent on the news, marking Qualcomm's most credible entry yet into a data center chip... - Qualcomm Amazon AI chip partnership deal details - Custom inference chips for AWS data centers",
+      "score": 0.19580965,
+      "raw_content": null,
+      "published_date": "Tue, 29 Sep 2026 17:47:47 GMT",
+      "id": "cf6c56-04"
+    }
+  ],
+  "response_time": 0.0,
+  "request_id": "bd56a0fd-b141-47c2-84c2-ae50dbd56d51"
+}

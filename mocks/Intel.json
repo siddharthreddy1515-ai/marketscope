@@ -1,0 +1,55 @@
+{
+  "query": "Intel strategy partnerships acquisitions funding product launches market share",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "url": "https://www.pcgamer.com/hardware/processors/despite-intel-dropping-the-desktop-cpu-ball-this-year-its-share-of-the-market-fell-by-just-4-9-percent-while-amd-still-lags-significantly-further-behind-on-mobile/",
+      "title": "Intel's desktop CPUs might not have been particularly impressive this year, but it doesn't seem to have affected its market share by as much as you might expect - PC Gamer",
+      "score": 0.26483387,
+      "published_date": "Fri, 14 Nov 2025 17:16:05 GMT",
+      "content": "# Despite Intel dropping the desktop CPU ball this year, its share of the market fell by just 4.9%\u2014while AMD still lags significantly behind on mobile So, despite AMD having had a relatively bumper year for desktop CPUs, it still trails behind Intel with 33.6% of the market share. AMD may be having quite the run of success with its desktop CPUs, and servers, too, but it's still running into OEM agreements that mean the market share overall still sides significantly in Intel's favour, despite all the negativity it's received this year. Now working as a hardware writer for PC Gamer, Andy spends his time jumping around the world attending product launches and trade shows, all the while reviewing every bit of PC gaming hardware he can get his hands on.",
+      "raw_content": null,
+      "id": "d79c55-00"
+    },
+    {
+      "url": "https://ts2.tech/en/intel-stock-intc-what-to-know-before-the-u-s-market-opens-on-dec-15-2025/",
+      "title": "Intel Stock (INTC): What to Know Before the U.S. Market Opens on Dec. 15, 2025 - ts2.tech",
+      "score": 0.1908299,
+      "published_date": "Sun, 14 Dec 2025 22:27:58 GMT",
+      "content": "The biggest themes for investors right now: governance scrutiny around CEO Lip-Bu Tan, a sensitive supplier/testing story tied to China-linked chipmaking tools, the company\u2019s government-backed capital structure, and whether Intel can convert its manufacturing roadmap into sustainable earnings. For Monday\u2019s open, that matters because Intel has become a high-beta \u201cturnaround + AI manufacturing\u201d story \u2014 meaning market-wide risk appetite and semiconductor sentiment can move INTC even when the company itself has no new filings or product launches. Reuters reported the U.S. government agreed to purchase a\u00a0**9.9% stake**\u00a0in Intel for\u00a0**$8.9 billion**\u00a0(about\u00a0**$20.47 per share**), using funds tied to unpaid CHIPS Act grants and the Secure Enclave program. In early December, President Donald Trump said Nvidia would be allowed to sell more advanced AI chips (H200) to approved customers in China under a framework that includes a government share of sales, and reporting indicated similar permissions were being considered for other chipmakers such as AMD and Intel.",
+      "raw_content": null,
+      "id": "b264e0-01"
+    },
+    {
+      "url": "https://www.cnbc.com/2026/04/13/intel-stock-historic-winning-streak.html",
+      "title": "Intel's stock is on track for a historic 9-day winning streak, up 56% over that run - CNBC",
+      "score": 0.17129704,
+      "published_date": "Mon, 13 Apr 2026 16:15:27 GMT",
+      "content": "# Intel's stock is on track for a historic 9-day winning streak, up 56% over that run. * Shares of the semiconductor company are soaring after a series of announcements and major partnerships with Google and Elon Musk. Several big deals and announcements from the U.S. chipmaker have fueled the run, including partnerships with Google and Elon Musk's Terafab project. Last week, Intel announced an expansion of its partnership with Google. Google will use Intel's newest Xeon 6 central processing units to run artificial intelligence training and inference workloads, according to the announcement. Intel also announced it will be joining Elon Musk's Terafab project last week. Plans for Terafab, an advanced AI chip complex in Austin, Texas, were announced by Musk last month. * Google expands partnership with Intel for AI chips. In August, the U.S. government bought a 10% stake in Intel, as the only company that can make advanced chips domestically. Intel and Google double down in AI infrastructure.",
+      "raw_content": null,
+      "id": "482adf-02"
+    },
+    {
+      "url": "https://finance.yahoo.com/markets/stocks/article/intel-stock-falls-nearly-8-despite-big-q2-earnings-beat-121538508.html",
+      "title": "Intel stock falls nearly 8% despite big Q2 earnings beat - Yahoo Finance",
+      "score": 0.12670976,
+      "published_date": "Fri, 24 Jul 2026 20:44:56 GMT",
+      "content": "2. Best 0% APR cards. 3. Best money market accounts. Intel (INTC) stock fell almost 8% on Friday after posting blowout Q2 earnings after the bell on Thursday, blowing past Wall Street's expectations on both the top and bottom lines and topping third quarter guidance estimates. The company plans to spend more than $20 billion in 2026, up from about $18 billion, to meet high demand for its products. For the quarter, Intel saw earnings per share of $0.38 on revenue of $16.1 billion. The company also said it is projecting Q3 revenue of between $15.8 billion and $16.8 billion, well ahead of the $15.06 billion estimate. \"As part of our broader strategy to become a more focused and efficient company, Intel's Data Center Group (DCG) is aligning its organization to ensure it has the right roles and skills in place to position the business for long-term success,\" an Intel spokesperson told Yahoo Finance.",
+      "raw_content": null,
+      "id": "72d3a9-03"
+    },
+    {
+      "url": "https://www.reuters.com/business/intel-results-show-if-barrage-investments-chipmaker-paying-off-2025-10-22/",
+      "title": "Intel results to show if barrage of investments in chipmaker paying off - Reuters",
+      "score": 0.099654265,
+      "published_date": "Wed, 22 Oct 2025 11:53:31 GMT",
+      "content": "Multi billion-dollar investments from Nvidia and Japan's SoftBank as well as an unprecedented U.S. government stake during the September quarter provided bright spots in Intel's (INTC.O), opens new tab long-running turnaround. Intel has been consistently losing share in the personal computer and server central processing unit (CPU) market to AMD (AMD.O), opens new tab, while Arm-based architecture poses a threat to its legacy x86 chip blueprint. Our Standards: The Thomson Reuters Trust Principles., opens new tab *   About Reuters, opens new tab *   Reuters News Agency, opens new tab *   Reuters and AI, opens new tab *   Reuters Leadership, opens new tab *   Reuters Diversity Report, opens new tab",
+      "raw_content": null,
+      "id": "ff95bf-04"
+    }
+  ],
+  "response_time": 0.0,
+  "request_id": "1faae64f-7191-4b14-8c28-57a8af65c7c5"
+}
