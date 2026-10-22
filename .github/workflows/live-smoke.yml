@@ -1,0 +1,33 @@
+name: Live Search Smoke Test
+
+on:
+  schedule:
+    - cron: '0 0 */3 * *' # Runs at midnight every 3 days
+  workflow_dispatch: # Allows you to run it manually from the GitHub UI
+
+jobs:
+  live-eval:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run Live DeepEval Tests
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+        LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+        LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
+        FULL_EVAL: "true" 
+        # MOCK_TAVILY is intentionally omitted so it hits the live API
+      run: |
+        deepeval test run test_agent.py

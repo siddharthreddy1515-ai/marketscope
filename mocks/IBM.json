@@ -1,0 +1,55 @@
+{
+  "query": "IBM strategy partnerships acquisitions funding product launches market share",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "url": "https://www.hpcwire.com/bigdatawire/this-just-in/ibm-to-acquire-turbonomic-building-comprehensive-aiops-capabilities-for-hybrid-cloud",
+      "title": "BigDATAwire - Data Science \u2022 AI \u2022 Advanced Analytics",
+      "content": "The acquisition complements IBM\u2019s recent acquisition of Instana for application performance monitoring (APM) and observability, and the launch of IBM Cloud Pak for Watson AIOps to automate IT Operations using AI. By acquiring Turbonomic, IBM will be able to provide customers with AI-powered automation capabilities that span from AIOps (the use of AI to automate IT Operations) to application and infrastructure observability \u2013 all built on Red Hat OpenShift to run across any hybrid cloud [...] Today\u2019s news underscores IBM\u2019s continued focus on providing organizations with a one-stop shop of AI-powered automation capabilities for business and IT all built on Red Hat OpenShift, helping to automate their entire enterprise, from robotic process automation (RPA), to AIOps, ARM and process mining. This is the latest move in a series of recent IBM acquisitions \u2013 including myInvenio, Instana and WDG Automation; ecosystem partnerships; organic R&D \u2013 including the launch of Cloud Pak for Watson [...] As 5G adoption continues to grow, enterprises are also looking to move workloads to the edge. This is driving networking to be an integral component of the application deployment strategy. With this acquisition, IBM plans to leverage Turbonomic\u2019s NPM products and strong presence in the telecommunications industry to complement its own offerings and expertise in this area, helping customers intelligently optimize applications running in 5G environments.",
+      "score": 0.36602354,
+      "raw_content": null,
+      "published_date": "Sat, 17 Oct 2026 05:00:00 GMT",
+      "id": "766e20-00"
+    },
+    {
+      "url": "https://www.tradingkey.com/analysis/stocks/us-stocks/262160968-ibm-stock-ai-red-hat-ibm-breakout-242-tradingekey",
+      "title": "IBM Stock Tests $240 as AI Partnerships and Red Hat Growth Support Breakout",
+      "content": "For me, the more important part of this announcement is the FCF guidance, as the company reported $62 billion in total debt at the end of their last report. The company has the ability to fund acquisitions and pursue their AI initiatives, but Free Cash Flow is the most important part of this equation.\n\n## Dividend and Capital Returns Remain Part of the Thesis [...] IBM\u2019s announcement of their next gen processor is yet another important strategic move. Built in a 2-nm process with capabilities to integrate AI inference accelerators, this new processor will power the upcoming line of offerings in both the IBM Z and LinuxONE systems equipped to run workloads that span both traditional IBM architecture offerings and Arm based architectures. [...] Some of IBM's management teams were surprised by the execution of some of their larger software deals this past quarter. This reason, along with a sharp decline in revenue for IBM Z due to the passing of the surge from the initial launch of z17, explained some of the overall deal execution delays.",
+      "score": 0.20987462,
+      "raw_content": null,
+      "published_date": "Thu, 10 Sep 2026 00:00:00 GMT",
+      "id": "134c41-01"
+    },
+    {
+      "url": "https://newsroom.ibm.com/press-releases-artificial-intelligence?keywords=2026&l=100",
+      "title": "IBM - Announcements",
+      "content": "Aug 24, 2026\n  reveals the digital expectations of surveyed sports fans are rising as they navigate more platforms, subscriptions...\n\n  Aug 24, 2026\n  today announced a strategic partnership with OpenAI to help enterprises deliver business outcomes by deploying AI at scale across core business...\n\n  Aug 13, 2026\n  and t hink tanks in the United States.... [...] Nov 10, 2025\n  and IBM (NYSE: IBM) today announce a multi-year collaboration to transform the global...\n\n  Nov 5, 2025\n  today announced the launch of IBM Digital Asset Haven, a comprehensive platform for financial institutions, governments, and corporations to securely...\n\n  Oct 27, 2025\n  and...\n\n  Oct 1, 2025\n  worldwide. [...] Learners will benefit from a new generative AI course roadmap and collaborations with Non-Governmental Organizations (NGOs) worldwide. NEW YORK, Sept. 18, 2023 /PRNewswire/ -- To help close the...\n\n  Sep 18, 2023\n [](\n\n  IBM Acquires Dialexa to Speed Digital Innovation\n\n  Dialexa's leading digital product engineering consulting services will enhance IBM's hybrid cloud and AI capabilities, accelerate growth for clients",
+      "score": 0.2031066,
+      "raw_content": null,
+      "published_date": "Mon, 21 Sep 2026 00:00:00 GMT",
+      "id": "d1f09b-02"
+    },
+    {
+      "url": "https://www.barchart.com/story/news/4967739/zs-stock-alert-what-to-know-as-zscaler-unveils-partnership-with-ibm",
+      "title": "ZS Stock Alert: What to Know as Zscaler Unveils Partnership With IBM",
+      "content": "Image 1: Barchart.com\n\n\n\nWATCH LIVE: \n\n\n\n A corporate office for IBM by HJBC via Adobe Stock \n\nZscaler (ZS) shares are inching higher on Oct. 5 after the cybersecurity company announced a new strategic alliance with International Business Machines (IBM).The deal integrates ZS\u2019s Autonomous Application Shield within its Zero Trust Exchange framework with IBM and Red Hat\u2019s Lightwell platform. [...] Free Newsletters\n\nAll Free NewslettersThe Barchart BriefActive InvestorUnusual Options ActivityDividend InvestorPre-Market BulletinCommodity BulletinChart of the DayAg Market Commentary\n\nPress Releases\n\nAll Press ReleasesACCESS NewswireBusiness WireGlobeNewswireTMX NewsfilePR Newswire\n\nTools\n\nMember Tools [...] Married PutProtective Collar\n\nStraddle and Strangle\n\nLong StraddleShort StraddleLong StrangleShort Strangle\n\nHorizontal Strategies\n\nLong Call CalendarLong Put CalendarLong Call DiagonalShort Call DiagonalLong Put DiagonalShort Put Diagonal\n\nButterfly Strategies\n\nLong Call ButterflyShort Call ButterflyLong Put ButterflyShort Put ButterflyLong Iron ButterflyShort Iron Butterfly\n\nCondor Strategies\n\nLong Call CondorShort Call CondorLong Put CondorShort Put CondorLong Iron CondorShort Iron Condor",
+      "score": 0.14210115,
+      "raw_content": null,
+      "published_date": "Mon, 05 Oct 2026 18:36:20 GMT",
+      "id": "711e11-03"
+    },
+    {
+      "url": "https://www.stocktitan.net/news/IBM/llm-d-1-0-advances-open-cost-efficient-ai-inference-for-production-86yps0wxy1s5.html",
+      "title": "IBM, partners release llm-d 1.0 for AI serving | IBM Stock News",
+      "content": "Turning Innovation into Production Reality [...] conferences\n\n### Splunk State of Observability 2026: Avoiding the Hidden Costs of AI Agents\n\nAI\n\n### Axcelis to Begin Construction of New Manufacturing Facility in Pyeongtaek, Korea\n\n### September Investors Back Trident Digital Tech Holdings With Voluntary Lock-Up: No Early Release Below US$8.00 Per Share\n\nATLN CIRC\n\n### Circle8 Group Awarded CAK Managed Services Contract Valued at $68 Million in Annual Revenue [...] About Red Hat",
+      "score": 0.1416731,
+      "raw_content": null,
+      "published_date": "Tue, 20 Oct 2026 12:00:00 GMT",
+      "id": "e0ac7f-04"
+    }
+  ],
+  "response_time": 0.0,
+  "request_id": "340513cb-7c6d-4624-b326-4433ccfb5baa"
+}

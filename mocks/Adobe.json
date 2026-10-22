@@ -1,0 +1,55 @@
+{
+  "query": "Adobe strategy partnerships acquisitions funding product launches market share",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "url": "https://finance.yahoo.com/markets/stocks/articles/adobe-semrush-deal-aims-recast-150458558.html",
+      "title": "Adobe Semrush Deal Aims To Recast AI Marketing And Search Workflows",
+      "content": "Adobe has completed its acquisition of Semrush Holdings, adding AI driven brand visibility and marketing tools to its portfolio.\n The deal expands Adobe's capabilities in SEO, agentic search optimization and digital discoverability for enterprise customers.\n The transaction comes alongside broader launches in Adobe's enterprise AI products and partnerships with large marketing groups. [...] The Semrush acquisition plugs directly into Adobe's push to own more of the brand visibility and customer experience stack, rather than just offering isolated creative tools. By combining Semrush's search and AI-driven visibility data with Adobe Experience Manager, CX Enterprise and GenStudio, Adobe is positioning its platform as a single system that can sense how a brand shows up across search and AI interfaces, adjust content, and push changes into campaigns. Partnerships with Omnicom, DICK'S [...] \ud83c\udf81 Potential for more comprehensive, AI-driven marketing workflows that tie together search visibility, content production and personalization inside one vendor relationship.\n \ud83c\udf81 The acquisition, alongside the US$25b buyback, may reinforce Adobe's positioning as a scaled, full-stack provider for enterprise marketing and CX budgets rather than just a creative software vendor.",
+      "score": 0.4352539,
+      "published_date": "Tue, 28 Apr 2026 00:00:00 GMT",
+      "raw_content": null,
+      "id": "d58c83-00"
+    },
+    {
+      "url": "https://www.marketscale.com/industries/software-and-technology/adobes-ai-first-arr-triples-year-over-year-surpassing-500-million-as-q2-revenue-hits-a-record-662-billion",
+      "title": "Adobe AI-first ARR triples, Q2 revenue hits record $6.62B",
+      "content": "## Acquisition strategy: Topaz Labs and the imaging stack\n\nAlongside the financial results, Adobe announced a pending acquisition of Topaz Labs, a developer known for AI-powered image and video enhancement tools widely used by professional photographers and post-production teams, per a Business Wire report via Yahoo Finance. Topaz Labs' core capabilities in upscaling, noise reduction, and sharpening are technically complementary to Adobe's existing Photoshop and Premiere Pro pipelines. [...] The move follows Adobe's earlier acquisition of Rephrase.AI, which added synthetic video and avatar generation capabilities aimed at e-commerce and digital marketing workflows, also reported via Yahoo Finance. Together, the acquisitions signal that Adobe is filling out the full generative media stack, from still imaging and video enhancement to AI-generated presenters, rather than relying solely on organic Firefly development. [...] Sources\n\n Adobe Reports Record Q2 Results \u2197 \u00b7 Business Wire\n Adobe to Acquire Topaz Labs \u2197 \u00b7 Yahoo Finance / Business Wire\n Adobe Introduces Firefly Foundry to Support Custom AI Models for Enterprise Brand Consistency \u2197 \u00b7 Yahoo Finance / GlobeNewswire\n Content Intelligence Market to Reach $39.88 Billion by 2035 \u2197 \u00b7 Yahoo Finance / SNS Insider\n Adobe: Company Profile \u2197 \u00b7 Fortune\n\nFeatured companies\n\nAdobeinTopaz LabsinSemrushin\n\nYour experts belong here",
+      "score": 0.26105812,
+      "published_date": "Tue, 28 Jul 2026 19:36:00 GMT",
+      "raw_content": null,
+      "id": "6a8d8c-01"
+    },
+    {
+      "url": "https://www.klover.ai/omnicom_ai_strategy_analysis_dominance_in_marketing_pr",
+      "title": "Omnicom AI Strategy: Analysis of Dominance in Marketing, PR - Klover.ai",
+      "content": "16. Omnicom Strengthens Partnership with Adobe to Bring Enterprise Generative AI Capabilities to Clients \u2013 PR Newswire, accessed April 16, 2026, \n17. Adobe and Omnicom power data-driven creativity, accessed April 16, 2026, \n18. Omnicom\u2019s AI-driven framework powers brand experiences at scale \u2013 Adobe for Business, accessed April 16, 2026, \n19. Anthropic expands partnership with Google and Broadcom for multiple gigawatts of next-generation compute, accessed April 16, 2026, [...] Through a deep architectural integration, Adobe\u2019s enterprise creative applications are directly embedded into the Omni operating system.17 This partnership enables Omnicom\u2019s creative teams to generate commercially safe, on-brand content at an unprecedented scale across all global markets.17 Because Adobe Firefly is trained exclusively on Adobe Stock images, openly licensed content, and public domain material where copyright has expired, it allows Omnicom to offer sweeping legal indemnification [...] Furthermore, the partnership enables the sophisticated training of bespoke AI models using a brand\u2019s highly specific IP.16 This ensures that the AI generates assets that adhere strictly to the brand\u2019s unique style guidelines, color palettes, and visual taxonomy.16 By embedding these guardrails directly within Omni, Omnicom essentially automates the brand compliance and quality assurance pipeline. Adobe\u2019s agentic AI tools automate the highly repetitive tasks of content versioning and formatting,",
+      "score": 0.163379,
+      "published_date": "Sun, 19 Apr 2026 10:22:32 GMT",
+      "raw_content": null,
+      "id": "7f71d6-02"
+    },
+    {
+      "url": "https://www.marketsandmarkets.com/Market-Reports/geography/digital-asset-management-market/Saudi-Arabia",
+      "title": "Saudi-Arabia Digital Asset Management Market Size, Share,Trends, Growth Analysis Report, 2031",
+      "content": "To profile key players in the market and comprehensively analyze their market share/ranking and core competencies\n To track and analyze competitive developments, such as mergers & acquisitions, product launches, and partnerships & collaborations, in the market [...] | ADOBE | United States | Public Company | Digital Media (Creative Cloud and Document Cloud),Digital Experience,Publishing and Advertising / Other, |\n| OPENTEXT | Canada | Public Company | Content Services & Information Management Cloud,Business Network & B2B Integration Managed Services,Cybersecurity, DevOps, Observability & Service Management, |\n| COGNIZANT | United States | Public Company | Financial Services,Health Sciences,Products and Resources, | [...] ### ADOBE\n\nAdobe is a public software company founded in 1982 in the United States with 31,360 employees. The company is a global leader in digital media and marketing software, including creative, document, and analytics solutions.\n\n### OPENTEXT\n\nOpenText is a public Canadian software company founded in 1991 with 20,500 employees. The company provides enterprise information management and cloud solutions for businesses worldwide.\n\n### COGNIZANT",
+      "score": 0.14541878,
+      "published_date": "Tue, 21 Jul 2026 00:00:00 GMT",
+      "raw_content": null,
+      "id": "6ff53c-03"
+    },
+    {
+      "url": "https://www.databricks.com/company/newsroom/press-releases/databricks-enters-security-market-launch-lakewatch-new-agentic-siem",
+      "title": "Databricks Enters Security Market with Launch of Lakewatch: New, Agentic SIEM - Databricks",
+      "content": "\u201cAs the volume of security data grows, organizations need new ways to analyze and act on that information quickly and at scale,\u201d said Karthik Venkatesan, Security Engineering Lead at Adobe. \u201cDatabricks provides the foundation needed to move from data-driven to AI-driven approaches for security operations, and Lakewatch is an important step toward bringing security intelligence closer to where data already lives.\u201d [...] Expanding Security Leadership with Antimatter and SiftD.ai Acquisitions [...] Agentic SIEM for Enterprise Speed and Scale  \nLakewatch is designed to deliver agentic security atop the scale of the security lakehouse. Key features include:\n\nEnterprise organizations use Lakewatch to unify their data and detect threats faster with AI. Lakewatch customers include industry leaders like Adobe and Dropbox.",
+      "score": 0.05978415,
+      "published_date": "Tue, 24 Mar 2026 01:28:00 GMT",
+      "raw_content": null,
+      "id": "d25feb-04"
+    }
+  ],
+  "response_time": 0.0,
+  "request_id": "ae0f63a0-1a3d-4b84-8f5a-e389e2656e9b"
+}
