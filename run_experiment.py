@@ -9,7 +9,7 @@ from deepeval.test_case import LLMTestCase
 from workflow import run_workflow
 
 # Tell the script to write to the exact same database the server is reading from
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
+mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db"))
 
 load_dotenv()
 

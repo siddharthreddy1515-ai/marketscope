@@ -1,0 +1,12 @@
+.venv
+__pycache__
+.pytest_cache
+.deepeval
+.git
+.github
+.env
+mlruns
+mlflow.db
+current_reports.csv
+drift_report*.html
+test_*.html

@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - MOCK_TAVILY=${MOCK_TAVILY:-false}
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    ports:
+      - "8080:5000"
+    volumes:
+      - mlflow-data:/mlflow-data
+
+volumes:
+  mlflow-data:
