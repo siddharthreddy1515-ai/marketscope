@@ -4,7 +4,7 @@ Multi-agent competitive intelligence system, built with production MLOps practic
 
 Give it a company name and a LangGraph pipeline researches the web, analyzes the competitive landscape, and returns a structured report. It currently targets 20 global tech companies (Tesla, Nvidia, Microsoft, and others).
 
-**Live demo:** *Deployment in progress (Render)*
+**Live demo:** *https://marketscope-4owi.onrender.com*
 
 ## Highlights
 
