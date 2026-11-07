@@ -12,12 +12,21 @@ from langchain_tavily import TavilySearch
 from langfuse.langchain import CallbackHandler
 from langgraph.graph import StateGraph, START, END
 
+
+class SourceRecord(TypedDict):
+    title: str
+    url: str
+    content: str
+    published_at: str | None
+
+
 class AgentState(TypedDict):
     company_name: str
     search_results: str
     insights: str
     report: str
     retry_count: int
+    sources: list[SourceRecord]
 
 # --- Single Source of Truth ---
 def build_query(company: str) -> str:
@@ -52,19 +61,40 @@ async def research_node(state: AgentState):
             
     if not results:
         return {"retry_count": state.get("retry_count", 0) + 1}
-        
+
     clean_text_parts = []
+    sources: list[SourceRecord] = []
+
     if isinstance(results, dict):
         if results.get("answer"):
             clean_text_parts.append(results["answer"])
-        if results.get("results"):
-            for item in results["results"]:
-                clean_text_parts.append(item.get("content", ""))
+
+        for item in results.get("results", []):
+            content = item.get("content") or ""
+
+            sources.append({
+                "title": item.get("title") or "",
+                "url": item.get("url") or "",
+                "content": content,
+                "published_at": (
+                    item.get("published_date")
+                    or item.get("published_at")
+                ),
+            })
+
+            if content:
+                clean_text_parts.append(content)
     else:
         clean_text_parts.append(str(results))
-        
-    search_text = "\n\n".join(filter(None, clean_text_parts))
-    return {"search_results": search_text, "retry_count": 0}
+
+    search_text = "\n\n".join(clean_text_parts)
+
+    return {
+        "search_results": search_text,
+        "sources": sources,
+        "retry_count": 0,
+    }
+
 
 async def analysis_node(state: AgentState):
     print("--- ANALYSING RESULTS ---")
