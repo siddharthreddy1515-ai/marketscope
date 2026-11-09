@@ -40,6 +40,8 @@ class AgentState(TypedDict):
     insights: str
     report: str
     retry_count: int
+    research_attempts: int
+    enrichment_attempted: bool
     sources: list[SourceRecord]
     source_stats: ResearchStats
     research_warnings: list[str]
@@ -99,60 +101,108 @@ langfuse_handler = CallbackHandler()
 # Use GPT-4o only for analysis; the report node is deterministic Python.
 llm_analysis = ChatOpenAI(model="gpt-4o", temperature=0, seed=42)
 search_tool = TavilySearch(max_results=5, topic="news")
+expanded_search_tool = TavilySearch(max_results=10, topic="news")
+SOURCE_TARGET = 3
+MAX_RESEARCH_CALLS = 3
 
 
 async def research_node(state: AgentState):
     company = state["company_name"]
     print(f"--- RESEARCHING {company} ---")
 
+    # Reuse the sources LangGraph preserved from earlier research attempts.
+    sources: list[SourceRecord] = list(state.get("sources", []))
+    seen_url_keys = {
+        canonical_source_url(source["url"]) for source in sources
+    }
+
+    attempt = state.get("research_attempts", 0) + 1
+    # Enrichment is allowed once, only if useful evidence already exists.
+    is_enrichment = bool(sources) and not state.get(
+        "enrichment_attempted", False
+    )
+    enrichment_attempted = (
+        state.get("enrichment_attempted", False) or is_enrichment
+    )
+
+    previous_stats = state.get("source_stats") or {}
+    previous_returned = max(previous_stats.get("returned", 0), len(sources))
+    warnings = list(state.get("research_warnings", []))
+
+    # These fields are always returned, even when the provider fails.
+    common = {
+        "research_attempts": attempt,
+        "enrichment_attempted": enrichment_attempted,
+    }
+
     if os.getenv("MOCK_TAVILY") == "true":
         path = mock_path(company)
         if not os.path.exists(path):
             raise FileNotFoundError(f"Missing mock fixture: {path}")
-
         with open(path, "r", encoding="utf-8") as file:
             results = json.load(file)
     else:
+        tool = expanded_search_tool if is_enrichment else search_tool
         try:
-            results = await search_tool.ainvoke(
-                {"query": build_query(company)}
-            )
+            results = await tool.ainvoke({"query": build_query(company)})
         except Exception as exc:
             print(f"Search failed: {exc}")
-            # Existing graph routing will retry on a positive retry_count.
-            return {"retry_count": state.get("retry_count", 0) + 1}
+            if sources:
+                warnings.append(
+                    "Additional search failed; preserving earlier sources."
+                )
+                warnings.append(
+                    f"Only {len(sources)} unique usable source(s) collected "
+                    f"(target: {SOURCE_TARGET})."
+                )
+            else:
+                warnings.append("Search request failed.")
+            return {
+                **common,
+                "retry_count": (
+                    0 if sources else state.get("retry_count", 0) + 1
+                ),
+                "sources": sources,
+                "search_results": "\n\n".join(
+                    source["content"] for source in sources
+                ),
+                "source_stats": {
+                    "returned": previous_returned,
+                    "accepted": len(sources),
+                    "discarded": previous_returned - len(sources),
+                },
+                "research_warnings": warnings,
+            }
 
-    # We require an article list, not just a provider-generated answer.
     raw_items = results.get("results") if isinstance(results, dict) else None
-
     if not isinstance(raw_items, list):
+        warnings.append("Search response has no valid results list.")
         return {
-            "retry_count": state.get("retry_count", 0) + 1,
-            "search_results": "",
-            "sources": [],
+            **common,
+            "retry_count": (
+                0 if sources else state.get("retry_count", 0) + 1
+            ),
+            "sources": sources,
+            "search_results": "\n\n".join(
+                source["content"] for source in sources
+            ),
             "source_stats": {
-                "returned": 0,
-                "accepted": 0,
-                "discarded": 0,
+                "returned": previous_returned,
+                "accepted": len(sources),
+                "discarded": previous_returned - len(sources),
             },
-            "research_warnings": [
-                "Search response has no valid results list."
-            ],
+            "research_warnings": warnings,
         }
 
-    sources: list[SourceRecord] = []
-    seen_url_keys: set[str] = set()
     duplicate_count = 0
+    new_count = 0
 
-    # Validate each returned item independently. Keep valid ones even
-    # when the batch also contains invalid items.
     for item in raw_items:
         if not isinstance(item, dict):
             continue
 
         url = item.get("url")
         content = item.get("content")
-
         if not isinstance(url, str) or not isinstance(content, str):
             continue
 
@@ -168,78 +218,61 @@ async def research_node(state: AgentState):
         ):
             continue
 
-
-        # Normalize the URL only for duplicate comparison.
         url_key = canonical_source_url(url.strip())
-
         if url_key in seen_url_keys:
             duplicate_count += 1
             continue
 
         seen_url_keys.add(url_key)
-
-
         published_at = item.get("published_date") or item.get("published_at")
         title = item.get("title")
+        sources.append({
+            "title": title if isinstance(title, str) else "",
+            "url": url.strip(),
+            "content": content.strip(),
+            "published_at": (
+                published_at if isinstance(published_at, str) else None
+            ),
+        })
+        new_count += 1
 
-        sources.append(
-            {
-                "title": title if isinstance(title, str) else "",
-                "url": url.strip(),
-                "content": content.strip(),
-                "published_at": (
-                    published_at if isinstance(published_at, str) else None
-                ),
-            }
-        )
-
-    total = len(raw_items)
-    accepted = len(sources)
-    discarded = total - accepted
-
-    stats: ResearchStats = {
-        "returned": total,
-        "accepted": accepted,
-        "discarded": discarded,
-    }
-
-    warnings: list[str] = []
-
-    unusable_count = discarded - duplicate_count
+    batch_returned = len(raw_items)
+    cumulative_returned = previous_returned + batch_returned
+    batch_discarded = batch_returned - new_count
+    unusable_count = batch_discarded - duplicate_count
 
     if unusable_count > 0:
         warnings.append(
-            f"{unusable_count} of {total} returned source "
+            f"{unusable_count} of {batch_returned} returned source "
             "records were unusable."
         )
-
     if duplicate_count > 0:
         warnings.append(
-            f"{duplicate_count} duplicate source URL(s) "
-            "were removed."
+            f"{duplicate_count} duplicate source URL(s) were removed."
         )
-
-
-    # A search with no usable source must not be counted as success.
     if not sources:
         warnings.append("No usable source evidence found.")
-        return {
-            "retry_count": state.get("retry_count", 0) + 1,
-            "search_results": "",
-            "sources": [],
-            "source_stats": stats,
-            "research_warnings": warnings,
-        }
-
-    # Preserve the existing text interface for the analysis node.
-    search_text = "\n\n".join(source["content"] for source in sources)
+    elif len(sources) < SOURCE_TARGET and (is_enrichment or attempt >= MAX_RESEARCH_CALLS):
+        warnings.append(
+            f"Only {len(sources)} unique usable source(s) collected "
+            f"(target: {SOURCE_TARGET})."
+        )
 
     return {
-        "search_results": search_text,
+        **common,
+        "retry_count": (
+            0 if sources else state.get("retry_count", 0) + 1
+        ),
+        "search_results": "\n\n".join(
+            source["content"] for source in sources
+        ),
         "sources": sources,
-        "source_stats": stats,
+        "source_stats": {
+            "returned": cumulative_returned,
+            "accepted": len(sources),
+            "discarded": cumulative_returned - len(sources),
+        },
         "research_warnings": warnings,
-        "retry_count": 0,
     }
 
 
@@ -292,12 +325,18 @@ async def report_node(state: AgentState):
 
 
 def check_research(state: AgentState):
-    retry_count = state.get("retry_count", 0)
-    if 0 < retry_count < 3:
-        return "retry"
-    if retry_count >= 3:
-        return "fail"
-    return "continue"
+    sources = state.get("sources", [])
+    attempts = state.get("research_attempts", state.get("retry_count", 0))
+
+    if len(sources) >= SOURCE_TARGET:
+        return "continue"
+    if attempts >= MAX_RESEARCH_CALLS:
+        return "continue" if sources else "fail"
+    if sources:
+        # Do not make a second enrichment request, even below target.
+        return "continue" if state.get("enrichment_attempted", False) else "retry"
+    # Without any accepted evidence, retry until the global call cap.
+    return "retry"
 
 
 workflow = StateGraph(AgentState)
@@ -322,6 +361,11 @@ async def run_workflow(company_name: str) -> dict:
     initial_state = {
         "company_name": company_name,
         "retry_count": 0,
+        "research_attempts": 0,
+        "enrichment_attempted": False,
+        "sources": [],
+        "source_stats": {"returned": 0, "accepted": 0, "discarded": 0},
+        "research_warnings": [],
     }
 
     result = await app_graph.ainvoke(
@@ -329,14 +373,14 @@ async def run_workflow(company_name: str) -> dict:
         config={"callbacks": [langfuse_handler]},
     )
 
-    retry_count = result.get("retry_count", 0)
+    attempts = result.get("research_attempts", 0)
 
-    # Research failed on all three attempts.
-    if retry_count >= 3:
+    # Research exhausted its call budget without usable sources.
+    if not result.get("sources"):
         return {
             "status": "failed",
             "error_code": "RESEARCH_EXHAUSTED",
-            "research_attempts": retry_count,
+            "research_attempts": attempts,
             "report": None,
             "search_results": "",
             "insights": "",
@@ -358,6 +402,7 @@ async def run_workflow(company_name: str) -> dict:
     return {
         "status": "completed",
         "error_code": None,
+        "research_attempts": attempts,
         "report": report,
         "search_results": result.get("search_results", ""),
         "insights": result.get("insights", ""),
