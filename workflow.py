@@ -2,7 +2,6 @@
 import json
 import os
 from typing import TypedDict
-from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -13,6 +12,13 @@ from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
 from langfuse.langchain import CallbackHandler
 from langgraph.graph import StateGraph, START, END
+from urllib.parse import (
+    urlparse,
+    urlsplit,
+    urlunsplit,
+    parse_qsl,
+    urlencode,
+)
 
 
 class SourceRecord(TypedDict):
@@ -50,6 +56,43 @@ def build_query(company: str) -> str:
 def mock_path(company: str) -> str:
     return f"mocks/{company.replace(' ', '_')}.json"
 
+
+TRACKING_PARAMS = {
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+}
+
+
+def canonical_source_url(url: str) -> str:
+    """
+    Produce a comparison key by removing known
+    tracking parameters.
+
+    Does not change the original source URL.
+    """
+    parts = urlsplit(url.strip())
+
+    query_params = parse_qsl(
+        parts.query,
+        keep_blank_values=True,
+    )
+
+    filtered_params = [
+        (key, value)
+        for key, value in query_params
+        if key.lower() not in TRACKING_PARAMS
+    ]
+
+    return urlunsplit((
+        parts.scheme,
+        parts.netloc,
+        parts.path,
+        urlencode(filtered_params),
+        parts.fragment,
+    ))
 
 langfuse_handler = CallbackHandler()
 
@@ -98,6 +141,8 @@ async def research_node(state: AgentState):
         }
 
     sources: list[SourceRecord] = []
+    seen_url_keys: set[str] = set()
+    duplicate_count = 0
 
     # Validate each returned item independently. Keep valid ones even
     # when the batch also contains invalid items.
@@ -122,6 +167,17 @@ async def research_node(state: AgentState):
             or not content.strip()
         ):
             continue
+
+
+        # Normalize the URL only for duplicate comparison.
+        url_key = canonical_source_url(url.strip())
+
+        if url_key in seen_url_keys:
+            duplicate_count += 1
+            continue
+
+        seen_url_keys.add(url_key)
+
 
         published_at = item.get("published_date") or item.get("published_at")
         title = item.get("title")
@@ -148,11 +204,21 @@ async def research_node(state: AgentState):
     }
 
     warnings: list[str] = []
-    if discarded > 0:
+
+    unusable_count = discarded - duplicate_count
+
+    if unusable_count > 0:
         warnings.append(
-            f"{discarded} of {total} returned source records "
-            "were discarded as unusable."
+            f"{unusable_count} of {total} returned source "
+            "records were unusable."
         )
+
+    if duplicate_count > 0:
+        warnings.append(
+            f"{duplicate_count} duplicate source URL(s) "
+            "were removed."
+        )
+
 
     # A search with no usable source must not be counted as success.
     if not sources:
@@ -251,14 +317,53 @@ workflow.add_edge("report", END)
 app_graph = workflow.compile()
 
 
+
 async def run_workflow(company_name: str) -> dict:
-    initial_state = {"company_name": company_name, "retry_count": 0}
+    initial_state = {
+        "company_name": company_name,
+        "retry_count": 0,
+    }
+
     result = await app_graph.ainvoke(
         initial_state,
         config={"callbacks": [langfuse_handler]},
     )
+
+    retry_count = result.get("retry_count", 0)
+
+    # Research failed on all three attempts.
+    if retry_count >= 3:
+        return {
+            "status": "failed",
+            "error_code": "RESEARCH_EXHAUSTED",
+            "research_attempts": retry_count,
+            "report": None,
+            "search_results": "",
+            "insights": "",
+            "sources": [],
+            "source_stats": result.get("source_stats", {}),
+            "research_warnings": result.get(
+                "research_warnings", []
+            ),
+        }
+
+    # A successful workflow must produce a report.
+    report = result.get("report")
+
+    if not report:
+        raise RuntimeError(
+            "Workflow ended without generating a report."
+        )
+
     return {
-        "report": result.get("report", "Failed to generate report."),
+        "status": "completed",
+        "error_code": None,
+        "report": report,
         "search_results": result.get("search_results", ""),
-        "insights": result.get("insights", ""),  # Used by existing tests.
+        "insights": result.get("insights", ""),
+        "sources": result.get("sources", []),
+        "source_stats": result.get("source_stats", {}),
+        "research_warnings": result.get(
+            "research_warnings", []
+        ),
     }
