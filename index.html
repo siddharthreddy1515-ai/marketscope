@@ -573,6 +573,41 @@
       padding: 18px 20px;
     }
 
+    .competitor-entry {
+      padding: 15px 0;
+      border-bottom: 1px solid #2b3e59;
+    }
+
+    .competitor-entry:first-child {
+      padding-top: 0;
+    }
+
+    .competitor-entry:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .competitor-name {
+      color: #dff2ff;
+      font-size: 13px;
+      font-weight: 750;
+      margin: 0 0 7px;
+    }
+
+    .competitor-overlap {
+      color: #a9bfd9;
+      font-size: 11px;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .competitor-empty {
+      color: #9cacc4;
+      font-size: 11px;
+      line-height: 1.65;
+      margin: 0;
+    }
+
     .competitor-placeholder {
       text-align: left;
       display: flex;
@@ -1479,9 +1514,12 @@
 
       right.appendChild(breakdown);
 
-      // COMPETITORS
+
+      // RELEVANT COMPETITORS
+      // Values come from FastAPI, not hardcoded lists.
+
       const competitors = panel(
-        "Top Competitors",
+        "Relevant Competitors",
         "⇄"
       );
 
@@ -1491,25 +1529,98 @@
         "competitor-body"
       );
 
-      const competitorEmpty = add(
-        competitorBody,
-        "div",
-        "competitor-placeholder"
-      );
+      const competitorRecords = Array.isArray(
+        data.competitors
+      )
+        ? data.competitors
+        : [];
 
-      add(
-        competitorEmpty,
-        "b",
-        "",
-        "—"
-      );
+      let displayedCompetitors = 0;
 
-      add(
-        competitorEmpty,
-        "p",
-        "",
-        "Competitor comparisons are not available from this research run."
-      );
+      for (const record of competitorRecords) {
+        if (
+          !record ||
+          typeof record.name !== "string" ||
+          !record.name.trim() ||
+          typeof record.overlap !== "string" ||
+          !record.overlap.trim()
+        ) {
+          continue;
+        }
+
+        const recordSources = Array.isArray(
+          record.sources
+        )
+          ? record.sources
+          : [];
+
+        const sourceLinks = [];
+
+        for (const source of recordSources) {
+          const link = safeLink(
+            source,
+            `Source ${sourceLinks.length + 1} ↗`
+          );
+
+          if (link) {
+            sourceLinks.push(link);
+          }
+        }
+
+        // Only display competitor records that
+        // include usable research citations.
+        if (!sourceLinks.length) {
+          continue;
+        }
+
+        const entry = add(
+          competitorBody,
+          "article",
+          "competitor-entry"
+        );
+
+        add(
+          entry,
+          "h3",
+          "competitor-name",
+          record.name
+        );
+
+        add(
+          entry,
+          "p",
+          "competitor-overlap",
+          record.overlap
+        );
+
+        const linksRow = add(
+          entry,
+          "div",
+          "source-row"
+        );
+
+        add(
+          linksRow,
+          "span",
+          "source-label",
+          "Evidence"
+        );
+
+        for (const link of sourceLinks) {
+          linksRow.appendChild(link);
+        }
+
+        displayedCompetitors += 1;
+      }
+
+      if (!displayedCompetitors) {
+        add(
+          competitorBody,
+          "p",
+          "competitor-empty",
+          "No evidence-backed competitors were identified from this research run."
+        );
+      }
 
       right.appendChild(competitors);
 
@@ -1706,6 +1817,32 @@
 
       render({
         company_name: "ExampleCo",
+
+        competitors: [
+          {
+            name: "Summit Metrics",
+            overlap:
+              "In this fictional example, both companies provide analytics dashboards for small businesses.",
+            sources: [
+              {
+                title: "Fictional analytics market comparison",
+                url: "https://example.com/demo-competitor-1"
+              }
+            ]
+          },
+          {
+            name: "Pioneer BI",
+            overlap:
+              "In this fictional example, both companies offer customer reporting tools for retail businesses.",
+            sources: [
+              {
+                title: "Fictional reporting software comparison",
+                url: "https://example.com/demo-competitor-2"
+              }
+            ]
+          }
+        ],
+
 
         sentiment_distribution: {
           positive: 0,

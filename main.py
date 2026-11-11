@@ -74,6 +74,12 @@ class InsightSourceResponse(BaseModel):
     url: str
 
 
+class CompetitorItemResponse(BaseModel):
+    name: str
+    overlap: str
+    sources: list[InsightSourceResponse]
+
+
 class ExecutiveSummaryResponse(BaseModel):
     text: str
     sources: list[InsightSourceResponse]
@@ -125,6 +131,9 @@ class AnalyzeResponse(BaseModel):
     sentiment_distribution: (
         SentimentDistributionResponse | None
     ) = None
+    competitors: list[CompetitorItemResponse] = Field(
+        default_factory=list
+    )
 
 
 @app.post(
@@ -218,6 +227,10 @@ async def analyze_endpoint(request: AnalyzeRequest):
         ),
         sentiment_distribution=result.get(
             "sentiment_distribution",
+        ),
+        competitors=result.get(
+            "competitors",
+            [],
         ),
     )
 
