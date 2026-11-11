@@ -2,20 +2,22 @@
 import asyncio
 import logging
 import re
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, field_validator
-from workflow import run_workflow
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 import os
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel, field_validator
+
+from workflow import run_workflow
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI(title="MarketScope Multi-Agent", version="0.2.0")
 
+
 class AnalyzeRequest(BaseModel):
     company_name: str
 
-    @field_validator('company_name')
+    @field_validator("company_name")
     @classmethod
     def validate_company_name(cls, v: str) -> str:
         v = v.strip()
@@ -27,37 +29,95 @@ class AnalyzeRequest(BaseModel):
             raise ValueError("Company name contains invalid characters.")
         return v
 
+
+class SourceResponse(BaseModel):
+    title: str
+    url: str
+    content: str
+    published_at: str | None = None
+
+
+class InsightSourceResponse(BaseModel):
+    title: str
+    url: str
+
+
+class InsightItemResponse(BaseModel):
+    text: str
+    sources: list[InsightSourceResponse]
+
+
+class ResearchStatsResponse(BaseModel):
+    returned: int
+    accepted: int
+    discarded: int
+
+
 class AnalyzeResponse(BaseModel):
     company_name: str
+    status: str
     report: str
+    research_attempts: int
+    sources: list[SourceResponse]
+    source_stats: ResearchStatsResponse
+    research_warnings: list[str]
+    insight_items: list[InsightItemResponse]
+
 
 @app.post("/api/v1/analyze", response_model=AnalyzeResponse)
 async def analyze_endpoint(request: AnalyzeRequest):
     try:
-        # run_workflow now returns a dict
-        result = await asyncio.wait_for(run_workflow(request.company_name), timeout=60.0)
-        
-        # Extract the report string
-        return AnalyzeResponse(
-            company_name=request.company_name, 
-            report=result["report"]
+        result = await asyncio.wait_for(
+            run_workflow(request.company_name),
+            timeout=60.0,
         )
-        
     except asyncio.TimeoutError:
-        logging.error(f"Timeout generating report for {request.company_name}")
-        raise HTTPException(status_code=504, detail="The request timed out. Please try again.")
-    except Exception as e:
-        logging.error(f"Error generating report for {request.company_name}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An internal error occurred while processing the request.")
+        logging.error("Analysis timed out for %s", request.company_name)
+        raise HTTPException(
+            status_code=504,
+            detail="The request timed out. Please try again.",
+        )
+    except Exception:
+        logging.exception("Analysis failed for %s", request.company_name)
+        raise HTTPException(
+            status_code=500,
+            detail="An internal error occurred.",
+        )
+
+    if (
+        result.get("status") != "completed"
+        or not isinstance(result.get("report"), str)
+    ):
+        logging.warning(
+            "Research could not produce a report for %s",
+            request.company_name,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to generate a report from the available research.",
+        )
+
+    return AnalyzeResponse(
+        company_name=request.company_name,
+        status=result["status"],
+        report=result["report"],
+        research_attempts=result.get("research_attempts", 0),
+        sources=result.get("sources", []),
+        source_stats=result.get(
+            "source_stats", {"returned": 0, "accepted": 0, "discarded": 0}
+        ),
+        research_warnings=result.get("research_warnings", []),
+        insight_items=result.get("insight_items", []),
+    )
+
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
-# Add this at the bottom of main.py
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_gui():
-    # We will put the HTML in the same folder for simplicity
     html_path = os.path.join(os.path.dirname(__file__), "index.html")
     if os.path.exists(html_path):
         with open(html_path, "r", encoding="utf-8") as f:

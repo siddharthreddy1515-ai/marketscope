@@ -1,6 +1,7 @@
 
 import json
 import os
+import re
 from typing import TypedDict
 
 from dotenv import load_dotenv
@@ -28,6 +29,16 @@ class SourceRecord(TypedDict):
     published_at: str | None
 
 
+class InsightSource(TypedDict):
+    title: str
+    url: str
+
+
+class InsightItem(TypedDict):
+    text: str
+    sources: list[InsightSource]
+
+
 class ResearchStats(TypedDict):
     returned: int
     accepted: int
@@ -38,6 +49,7 @@ class AgentState(TypedDict):
     company_name: str
     search_results: str
     insights: str
+    insight_items: list[InsightItem]
     report: str
     retry_count: int
     research_attempts: int
@@ -276,52 +288,102 @@ async def research_node(state: AgentState):
     }
 
 
+def parse_cited_insights(
+    text: str, sources: list[SourceRecord]
+) -> list[InsightItem]:
+    """Map model-selected [S1] citations to retrieved sources.
+
+    Unknown or missing citations are not displayed as source-backed insights.
+    This validates reference identity, not factual correctness of the claim.
+    """
+    by_id = {f"S{i}": source for i, source in enumerate(sources, start=1)}
+    result: list[InsightItem] = []
+
+    for line in text.splitlines():
+        bullet = re.match(r"^\s*[-*]\s+(.+)$", line)
+        if not bullet:
+            continue
+        raw = bullet.group(1).strip()
+        cited = re.findall(r"\[(S\d+)\]", raw)
+        if not cited or any(source_id not in by_id for source_id in cited):
+            continue
+        clean_text = re.sub(r"\s*\[S\d+\]", "", raw).strip()
+        if not clean_text:
+            continue
+
+        # Preserve citation order, removing repeats within the same insight.
+        unique_ids = list(dict.fromkeys(cited))
+        linked_sources: list[InsightSource] = [
+            {"title": by_id[source_id]["title"],
+             "url": by_id[source_id]["url"]}
+            for source_id in unique_ids
+        ]
+        result.append({"text": clean_text, "sources": linked_sources})
+        if len(result) == 3:
+            break
+
+    return result
+
+
 async def analysis_node(state: AgentState):
     print("--- ANALYSING RESULTS ---")
-    prompt = f"""You are a competitive intelligence analyst. Your output will be fact-checked
-line by line against the source text below, so accuracy matters more than polish.
 
-TASK
-Extract the 3 most strategically important insights about {state['company_name']}.
+    # Label retrieved sources explicitly so one analysis call can cite them.
+    # The IDs belong to this run; the model cannot define new source URLs.
+    numbered_sources = "\n\n".join(
+        f"[S{i}] TITLE: {source['title']}\n"
+        f"URL: {source['url']}\n"
+        f"PUBLISHED: {source['published_at'] or 'unknown'}\n"
+        f"CONTENT: {source['content']}"
+        for i, source in enumerate(state["sources"], start=1)
+    )
+
+    prompt = f"""You are a careful competitive intelligence analyst.
+Extract up to 3 strategically important, distinct insights about {state['company_name']}.
 
 GROUNDING RULES
-1. Use ONLY information stated in the SOURCE TEXT. No outside knowledge.
-2. Copy dates, years, prices, and numbers exactly as written. Never convert, round, or recompute them.
-3. If the source gives a month but no year, write exactly that. Never add a year.
-4. If no date is given, give none. Do not write "recently" or "this year".
-5. Do not infer the current year, the timing of events, or causes the text does not state.
-6. If the source supports fewer than 3 solid insights, return fewer. Never pad.
-7. ZERO TOLERANCE: If a specific dollar amount, funding round, loan, or financial figure is not explicitly written in the SOURCE TEXT, you are forbidden from including it.
+1. Use ONLY the numbered source texts below. Do not use outside knowledge.
+2. Copy dates, years, financial amounts, and other numbers exactly as given.
+3. If no date is supported, do not imply recency.
+4. Do not infer causes, market impact, or business outcomes that are not stated.
+5. The subject of each insight must be {state['company_name']}.
+6. Prioritize strategic partnerships, acquisitions, major product launches, and major strategic shifts.
+7. Exclude routine administrative, developer, and financial line items unless truly strategic.
+8. Return fewer than three insights if the evidence supports fewer.
+9. For EACH insight, cite the numbered source IDs that actually support its claims.
+10. Never invent a source ID. Never cite a source that doesn't support the statement.
 
-RELEVANCE RULES
-8. Keep only insights that change how a competitor should view {state['company_name']}: strategic direction, partnerships, acquisitions, funding, major launches, market-share moves.
-9. Exclude routine pricing, individual product SKUs, API/developer release notes, admin/tooling updates, routine financial line items (e.g., other income, unrealized gains/losses, interest, taxes), and legal settlements unless they represent a strategic shift.
-10. Do not characterize or editorialize beyond the source wording (e.g., do not add why something happened or who it affects if the text does not say so).
-11. State each fact once. Do not repeat the same item in different words.
-12. FOCUS ON THE TARGET: The subject of every bullet point MUST be {state['company_name']}. If the source text discusses a third-party company, you may mention them ONLY as context for what {state['company_name']} is doing.
+OUTPUT FORMAT — EXACTLY one bullet per insight, each on a single line:
+- A concise factual insight (1–2 sentences). [S1]
+- A different supported insight. [S2] [S3]
+Do not add a heading, explanations, or bare links. Use only source IDs given below.
 
-FORMAT
-- One bullet per insight, 1-2 sentences each.
-- Plain factual tone, no hype or speculation.
-
-SOURCE TEXT
-\"\"\"
-{state['search_results']}
-\"\"\"
+NUMBERED SOURCE TEXTS
+{numbered_sources}
 """
-    response = await llm_analysis.ainvoke([HumanMessage(content=prompt)])
-    return {"insights": response.content}
 
+    # Still exactly one GPT-4o request — no separate citation or judge call.
+    response = await llm_analysis.ainvoke([HumanMessage(content=prompt)])
+    raw_insights = response.content if isinstance(response.content, str) else ""
+    mapped = parse_cited_insights(raw_insights, state["sources"])
+
+    return {
+        "insights": raw_insights,
+        "insight_items": mapped,
+    }
 
 async def report_node(state: AgentState):
     print("--- GENERATING REPORT ---")
     # Deterministic formatting: no additional LLM call.
     # This does not verify the factual accuracy of upstream AI insights.
-    return {
-        "report": (
-            f"# {state['company_name']} Insights Report\n\n{state['insights']}"
-        )
-    }
+    # Keep the existing Markdown report for backwards compatibility.
+    # Use clean insight text rather than exposing internal [S1] markers.
+    items = state.get("insight_items", [])
+    bullets = (
+        "\n".join(f"- {item['text']}" for item in items)
+        if items else "No source-backed strategic insights were identified."
+    )
+    return {"report": f"# {state['company_name']} Insights Report\n\n{bullets}"}
 
 
 def check_research(state: AgentState):
@@ -384,6 +446,7 @@ async def run_workflow(company_name: str) -> dict:
             "report": None,
             "search_results": "",
             "insights": "",
+            "insight_items": [],
             "sources": [],
             "source_stats": result.get("source_stats", {}),
             "research_warnings": result.get(
@@ -406,6 +469,7 @@ async def run_workflow(company_name: str) -> dict:
         "report": report,
         "search_results": result.get("search_results", ""),
         "insights": result.get("insights", ""),
+        "insight_items": result.get("insight_items", []),
         "sources": result.get("sources", []),
         "source_stats": result.get("source_stats", {}),
         "research_warnings": result.get(
