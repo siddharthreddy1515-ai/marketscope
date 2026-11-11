@@ -745,7 +745,7 @@
     </form>
 
     <div id="demoLabel" class="demo-label">
-      Preview mode — saved sample research.
+      Preview mode — fictional ExampleCo sample data.
       No Tavily or GPT-4o request was made.
     </div>
 
@@ -886,8 +886,8 @@
 
       const cited = new Map();
 
-      // Only the insight count is currently calculated.
-      // Other KPI values remain unavailable.
+      // Only insight counts are computed from report data.
+      // Other unavailable KPI values are not invented.
       const stats = [
         ["Market Position", "—", "Not assessed"],
         [
@@ -1089,36 +1089,72 @@
         "panel-content"
       );
 
-      if (insights.length) {
+      const summary = data.executive_summary;
+      const summaryLinks = [];
+
+      if (
+        summary &&
+        Array.isArray(summary.sources)
+      ) {
+        for (const source of summary.sources) {
+          const link = safeLink(
+            source,
+            `Source ${summaryLinks.length + 1} ↗`
+          );
+
+          if (link) {
+            summaryLinks.push(link);
+          }
+        }
+      }
+
+      if (
+        summary &&
+        typeof summary.text === "string" &&
+        summary.text.trim() &&
+        summaryLinks.length > 0
+      ) {
         add(
           snapshotBody,
           "div",
           "snapshot-label",
-          "Highlighted finding"
+          "STRATEGIC OVERVIEW"
         );
 
         add(
           snapshotBody,
           "p",
           "snapshot-text",
-          insights[0].text || ""
+          summary.text
+        );
+
+        const linksRow = add(
+          snapshotBody,
+          "div",
+          "source-row"
         );
 
         add(
-          snapshotBody,
-          "p",
-          "snapshot-note",
-          "A highlight from the report above, not a separate market assessment."
+          linksRow,
+          "span",
+          "source-label",
+          "Evidence"
         );
+
+        for (const link of summaryLinks) {
+          linksRow.appendChild(link);
+        }
+
       } else {
         add(
           snapshotBody,
           "p",
           "snapshot-text",
-          "No source-backed executive highlight is available from this report."
+          "No source-backed executive summary is available for this report."
         );
       }
 
+      // Important: display the completed panel.
       left.appendChild(snapshot);
 
       // SENTIMENT
@@ -1442,6 +1478,7 @@
           );
         }
 
+        // REAL company data from FastAPI.
         render(data);
 
       } catch (error) {
@@ -1465,59 +1502,83 @@
       }
     }
 
-    // Preview mode: zero API calls.
+    // DEV-ONLY PREVIEW
+    //
+    // This is completely fictional sample data.
+    // It is only used with ?preview=1 to check the UI.
+    // It is NOT a prompt or example sent to GPT-4o.
+    // It is NOT returned for normal user searches.
+    //
+    // All URLs below use example.com placeholders.
+    // They are not real research citations.
+
     if (
       new URLSearchParams(location.search)
         .get("preview") === "1"
     ) {
-      input.value = "Microsoft";
+      input.value = "ExampleCo";
+
+      const demoSource1 = {
+        title: "Fictional partnership announcement",
+        url: "https://example.com/demo-partnership"
+      };
+
+      const demoSource2 = {
+        title: "Fictional product announcement",
+        url: "https://example.com/demo-product"
+      };
+
+      const demoSource3 = {
+        title: "Fictional integration announcement",
+        url: "https://example.com/demo-integration"
+      };
 
       render({
-        company_name: "Microsoft",
+        company_name: "ExampleCo",
+
+        executive_summary: {
+          text:
+            "In this fictional example, ExampleCo announced two partnerships and a product launch. Together, these developments illustrate a focus on building and distributing analytics tools; they do not establish any market leadership or business impact.",
+          sources: [
+            demoSource1,
+            demoSource2,
+            demoSource3
+          ]
+        },
+
         insight_items: [
           {
             category: "M&A / Partnerships",
-            text: "Microsoft holds an investment in OpenAI Group PBC valued at approximately $135 billion, representing roughly 27 percent on an as-converted basis, as described in a 2025 partnership update.",
-            sources: [
-              {
-                title: "The Next Chapter of the Microsoft–OpenAI Partnership",
-                url: "https://openai.com/index/next-chapter-of-microsoft-openai-partnership"
-              }
-            ]
+            text:
+              "Fictional ExampleCo partnered with Northstar Labs to co-develop an analytics integration.",
+            sources: [demoSource1]
+          },
+          {
+            category: "Product & Innovation",
+            text:
+              "Fictional ExampleCo introduced a reporting dashboard for customers.",
+            sources: [demoSource2]
           },
           {
             category: "M&A / Partnerships",
-            text: "OpenAI announced a major 2025 funding round with continued participation from Microsoft, reflecting the ongoing strategic relationship.",
-            sources: [
-              {
-                title: "What Does Microsoft Own?",
-                url: "https://www.fool.com/investing/how-to-invest/stocks/what-does-microsoft-own"
-              }
-            ]
-          },
-          {
-            category: "M&A / Partnerships",
-            text: "Accenture described Avanade, its joint venture with Microsoft, as a provider of Microsoft-platform services in its 2026 Edge announcement.",
-            sources: [
-              {
-                title: "Accenture launches Accenture Edge",
-                url: "https://newsroom.accenture.com/news/2026/accenture-launches-accenture-edge-to-help-mid-market-companies-harness-ai-and-reinvent-how-they-operate"
-              }
-            ]
+            text:
+              "Fictional ExampleCo announced a data integration partnership with Harbor Data.",
+            sources: [demoSource3]
           }
         ],
+
         sources: [
           {
-            url: "https://openai.com/index/next-chapter-of-microsoft-openai-partnership",
-            published_at: "Tue, 28 Oct 2025 00:00:00 GMT"
+            ...demoSource1,
+            published_at: "2026-09-15"
           },
           {
-            url: "https://www.fool.com/investing/how-to-invest/stocks/what-does-microsoft-own",
-            published_at: "Tue, 16 Dec 2025 17:55:57 GMT"
+            ...demoSource2,
+            published_at: "2026-09-21"
           },
           {
-            url: "https://newsroom.accenture.com/news/2026/accenture-launches-accenture-edge-to-help-mid-market-companies-harness-ai-and-reinvent-how-they-operate",
-            published_at: "Tue, 23 Jun 2026 07:59:00 GMT"
+            ...demoSource3,
+            published_at: "2026-10-03"
           }
         ]
       }, true);

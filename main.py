@@ -59,6 +59,11 @@ class InsightSourceResponse(BaseModel):
     url: str
 
 
+class ExecutiveSummaryResponse(BaseModel):
+    text: str
+    sources: list[InsightSourceResponse]
+
+
 class InsightItemResponse(BaseModel):
     text: str
     sources: list[InsightSourceResponse]
@@ -97,6 +102,7 @@ class AnalyzeResponse(BaseModel):
     source_stats: ResearchStatsResponse
     research_warnings: list[str]
     insight_items: list[InsightItemResponse]
+    executive_summary: ExecutiveSummaryResponse | None = None
 
 
 @app.post(
@@ -158,6 +164,7 @@ async def analyze_endpoint(request: AnalyzeRequest):
     return AnalyzeResponse(
         company_name=request.company_name,
         status=result["status"],
+        executive_summary=result.get("executive_summary"),
         report=result["report"],
         research_attempts=result.get(
             "research_attempts",

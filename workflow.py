@@ -39,6 +39,11 @@ class InsightItem(TypedDict):
     sources: list[InsightSource]
 
 
+class ExecutiveSummary(TypedDict):
+    text: str
+    sources: list[InsightSource]
+
+
 class ResearchStats(TypedDict):
     returned: int
     accepted: int
@@ -57,6 +62,7 @@ class AgentState(TypedDict):
     sources: list[SourceRecord]
     source_stats: ResearchStats
     research_warnings: list[str]
+    executive_summary: ExecutiveSummary | None
 
 
 def build_query(company: str) -> str:
@@ -520,6 +526,82 @@ def parse_cited_insights(
     return result
 
 
+def parse_cited_summary(
+    text: str,
+    sources: list[SourceRecord],
+) -> ExecutiveSummary | None:
+    """
+    Extract a source-backed executive summary.
+
+    The LLM provides citation IDs such as [S1].
+    Python maps those IDs to retrieved URLs.
+
+    Returns None if the summary has missing,
+    invalid, or unsupported source IDs.
+
+    This validates citation references, not
+    whether every claim is factually supported.
+    """
+
+    by_id = {
+        f"S{i}": source
+        for i, source in enumerate(sources, start=1)
+    }
+
+    for line in text.splitlines():
+        match = re.match(
+            r"^\s*SUMMARY:\s*(.+?)\s*$",
+            line,
+            re.IGNORECASE,
+        )
+
+        if not match:
+            continue
+
+        raw_summary = match.group(1).strip()
+
+        cited_ids = re.findall(
+            r"\[(S\d+)\]",
+            raw_summary,
+        )
+
+        # Summary must have valid source references.
+        if not cited_ids:
+            return None
+
+        if any(
+            source_id not in by_id
+            for source_id in cited_ids
+        ):
+            return None
+
+        clean_text = re.sub(
+            r"\s*\[S\d+\]",
+            "",
+            raw_summary,
+        ).strip()
+
+        if not clean_text:
+            return None
+
+        unique_ids = list(dict.fromkeys(cited_ids))
+
+        linked_sources: list[InsightSource] = [
+            {
+                "title": by_id[source_id]["title"],
+                "url": by_id[source_id]["url"],
+            }
+            for source_id in unique_ids
+        ]
+
+        return {
+            "text": clean_text,
+            "sources": linked_sources,
+        }
+
+    return None
+
+
 async def analysis_node(state: AgentState):
     print("--- ANALYSING RESULTS ---")
 
@@ -554,12 +636,23 @@ GROUNDING RULES
     Product & Innovation; M&A / Partnerships; Market Expansion; Hiring & Talent; Other.
     Use Other when no category fits clearly. Category is about the event, not company sentiment.
 
-OUTPUT FORMAT — EXACTLY one bullet per insight, each on a single line:
-- [M&A / Partnerships] A concise factual insight (1–2 sentences). [S1]
-- [Product & Innovation] A different supported insight. [S2] [S3]
+EXECUTIVE SUMMARY RULES
+1. Write a concise overall synthesis of the available strategic evidence.
+2. Summarize the common direction across findings instead of repeating the first insight.
+3. Use only claims supported by the numbered sources.
+4. Do not make unsupported claims about market leadership, competitive advantage, or business impact.
+5. Cite the source IDs supporting the summary.
+6. If the available evidence cannot support a meaningful synthesis, write SUMMARY: None.
 
-Use the exact category labels above.
-Do not add headings, explanations, or bare links.
+OUTPUT FORMAT — EXACTLY:
+SUMMARY: A concise overall strategic synthesis. [S1] [S2]
+- [M&A / Partnerships] A factual insight. [S1]
+- [Product & Innovation] Another supported insight. [S2]
+
+The summary must be on one line.
+Each insight must be on its own line.
+Use the exact category labels.
+Do not add other headings, explanations, or bare links.
 
 NUMBERED SOURCE TEXTS
 {numbered_sources}
@@ -577,7 +670,13 @@ NUMBERED SOURCE TEXTS
         else ""
     )
 
+
     mapped = parse_cited_insights(
+        raw_insights,
+        state["sources"],
+    )
+
+    summary = parse_cited_summary(
         raw_insights,
         state["sources"],
     )
@@ -585,7 +684,9 @@ NUMBERED SOURCE TEXTS
     return {
         "insights": raw_insights,
         "insight_items": mapped,
+        "executive_summary": summary,
     }
+
 
 
 async def report_node(state: AgentState):
@@ -732,6 +833,7 @@ async def run_workflow(company_name: str) -> dict:
             "insights": "",
             "insight_items": [],
             "sources": [],
+            "executive_summary": None,
             "source_stats": result.get(
                 "source_stats",
                 {},

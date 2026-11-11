@@ -70,3 +70,62 @@ def test_failed_research_returns_error(monkeypatch):
     )
 
     assert response.status_code == 502
+
+
+def test_executive_summary_reaches_api(monkeypatch):
+
+    async def fake_workflow(company_name):
+        return {
+            "status": "completed",
+            "report": "# Acme Report",
+            "research_attempts": 1,
+            "sources": [
+                {
+                    "title": "Acme Announcement",
+                    "url": "https://example.com/acme",
+                    "content": "Acme launched a product.",
+                    "published_at": None,
+                }
+            ],
+            "source_stats": {
+                "returned": 1,
+                "accepted": 1,
+                "discarded": 0,
+            },
+            "research_warnings": [],
+            "insight_items": [],
+            "executive_summary": {
+                "text": "Acme announced a product launch.",
+                "sources": [
+                    {
+                        "title": "Acme Announcement",
+                        "url": "https://example.com/acme",
+                    }
+                ],
+            },
+        }
+
+    monkeypatch.setattr(
+        main,
+        "run_workflow",
+        fake_workflow,
+    )
+
+    client = TestClient(main.app)
+
+    response = client.post(
+        "/api/v1/analyze",
+        json={"company_name": "Acme"},
+    )
+
+    assert response.status_code == 200
+
+    summary = response.json()["executive_summary"]
+
+    assert summary["text"] == (
+        "Acme announced a product launch."
+    )
+
+    assert summary["sources"][0]["url"] == (
+        "https://example.com/acme"
+    )
