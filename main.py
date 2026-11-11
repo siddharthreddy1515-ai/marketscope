@@ -6,7 +6,7 @@ import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from workflow import run_workflow
 
@@ -17,6 +17,21 @@ app = FastAPI(
     version="0.2.0",
 )
 
+
+class SourceSentimentResponse(BaseModel):
+    source_id: str
+    label: str
+    title: str
+    url: str
+
+
+class SentimentDistributionResponse(BaseModel):
+    positive: int
+    neutral: int
+    negative: int
+    assessed: int
+    unassessed: int
+    total_sources: int
 
 class AnalyzeRequest(BaseModel):
     company_name: str
@@ -103,6 +118,13 @@ class AnalyzeResponse(BaseModel):
     research_warnings: list[str]
     insight_items: list[InsightItemResponse]
     executive_summary: ExecutiveSummaryResponse | None = None
+    source_sentiments: list[SourceSentimentResponse] = Field(
+        default_factory=list
+    )
+
+    sentiment_distribution: (
+        SentimentDistributionResponse | None
+    ) = None
 
 
 @app.post(
@@ -189,6 +211,13 @@ async def analyze_endpoint(request: AnalyzeRequest):
         insight_items=result.get(
             "insight_items",
             [],
+        ),
+        source_sentiments=result.get(
+            "source_sentiments",
+            [],
+        ),
+        sentiment_distribution=result.get(
+            "sentiment_distribution",
         ),
     )
 

@@ -478,6 +478,46 @@
       font-size: 11px;
     }
 
+    .sentiment-legend {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sentiment-legend-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+
+    .sentiment-legend-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #b1c2d8;
+    }
+
+    .sentiment-swatch {
+      width: 9px;
+      height: 9px;
+      flex-shrink: 0;
+      border-radius: 50%;
+    }
+
+    .sentiment-legend-value {
+      white-space: nowrap;
+      color: #dbe7f6;
+    }
+
+    .sentiment-coverage {
+      margin: 0 20px 18px;
+      font-size: 10px;
+      line-height: 1.6;
+      color: #91a6c1;
+    }
+
     .breakdown-body {
       padding: 16px 20px 18px;
     }
@@ -1158,6 +1198,8 @@
       left.appendChild(snapshot);
 
       // SENTIMENT
+
+      // SENTIMENT — RETRIEVED SOURCE COVERAGE
       const sentiment = panel(
         "Sentiment",
         "◉"
@@ -1175,34 +1217,163 @@
         "empty-donut"
       );
 
-      add(
-        donut,
-        "span",
-        "",
-        "—"
-      );
-
       const sentimentText = add(
         sentimentBody,
         "div",
-        "sentiment-copy"
+        "sentiment-copy sentiment-legend"
       );
 
-      add(
-        sentimentText,
-        "strong",
-        "",
-        "Not assessed"
-      );
+      const distribution = data.sentiment_distribution;
 
-      add(
-        sentimentText,
-        "p",
-        "",
-        "This report does not include a measured sentiment distribution."
-      );
+      const fields = [
+        "positive",
+        "neutral",
+        "negative",
+        "assessed",
+        "unassessed",
+        "total_sources"
+      ];
+
+      // Only display a chart when the backend
+      // provides internally consistent counts.
+      const validDistribution =
+        distribution &&
+        fields.every(
+          key =>
+            Number.isInteger(distribution[key]) &&
+            distribution[key] >= 0
+        ) &&
+        distribution.assessed > 0 &&
+        distribution.assessed ===
+          distribution.positive +
+          distribution.neutral +
+          distribution.negative &&
+        distribution.total_sources ===
+          distribution.assessed +
+          distribution.unassessed;
+
+      if (validDistribution) {
+        const total = distribution.assessed;
+
+        const positivePct =
+          100 * distribution.positive / total;
+
+        const neutralPct =
+          100 * distribution.neutral / total;
+
+        const neutralEnd =
+          positivePct + neutralPct;
+
+        donut.style.background = `
+          conic-gradient(
+            #56d7b0 0% ${positivePct}%,
+            #f3c46b ${positivePct}% ${neutralEnd}%,
+            #e47b86 ${neutralEnd}% 100%
+          )
+        `;
+
+        add(
+          donut,
+          "span",
+          "",
+          `${total}/${distribution.total_sources}`
+        );
+
+        donut.setAttribute("role", "img");
+        donut.setAttribute(
+          "aria-label",
+          `${total} of ${distribution.total_sources} sources assessed`
+        );
+
+        add(
+          sentimentText,
+          "strong",
+          "",
+          "Retrieved coverage"
+        );
+
+        const groups = [
+          {
+            name: "Positive",
+            count: distribution.positive,
+            color: "#56d7b0"
+          },
+          {
+            name: "Neutral",
+            count: distribution.neutral,
+            color: "#f3c46b"
+          },
+          {
+            name: "Negative",
+            count: distribution.negative,
+            color: "#e47b86"
+          }
+        ];
+
+        for (const group of groups) {
+          const percent = Math.round(
+            100 * group.count / total
+          );
+
+          const row = add(
+            sentimentText,
+            "div",
+            "sentiment-legend-row"
+          );
+
+          const label = add(
+            row,
+            "span",
+            "sentiment-legend-label"
+          );
+
+          const swatch = add(
+            label,
+            "span",
+            "sentiment-swatch"
+          );
+
+          swatch.style.background = group.color;
+
+          add(label, "span", "", group.name);
+
+          add(
+            row,
+            "span",
+            "sentiment-legend-value",
+            `${group.count} · ${percent}%`
+          );
+        }
+
+        add(
+          sentiment,
+          "p",
+          "sentiment-coverage",
+          `${total} of ${distribution.total_sources} retrieved sources assessed. ` +
+          `${distribution.unassessed} unassessed. ` +
+          "Percentages describe assessed coverage only."
+        );
+
+      } else {
+        add(donut, "span", "", "—");
+
+        add(
+          sentimentText,
+          "strong",
+          "",
+          "Not assessed"
+        );
+
+        add(
+          sentimentText,
+          "p",
+          "",
+          "No usable source-level sentiment distribution is available."
+        );
+      }
 
       right.appendChild(sentiment);
+
 
       // SIGNAL BREAKDOWN
       const breakdown = panel(
@@ -1535,6 +1706,15 @@
 
       render({
         company_name: "ExampleCo",
+
+        sentiment_distribution: {
+          positive: 0,
+          neutral: 3,
+          negative: 0,
+          assessed: 3,
+          unassessed: 0,
+          total_sources: 3
+        },
 
         executive_summary: {
           text:
