@@ -3,137 +3,264 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MarketScope | Competitive Intelligence</title>
+  <meta name="theme-color" content="#0c1425">
+  <title>MarketScope | Company Intelligence</title>
   <style>
-    :root { color-scheme: dark; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    :root {
+      color-scheme: dark;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --bg: #0c1425;
+      --panel: #17253c;
+      --panel-soft: #1c2b44;
+      --line: #2d405d;
+      --text: #f2f6fc;
+      --muted: #99acc7;
+      --sky: #52bfff;
+      --sky-dim: #9cdbff;
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; background: #0e1729; color: #f1f5f9; }
-    .shell { max-width: 940px; margin: 0 auto; padding: 64px 24px 100px; }
-    header { margin-bottom: 42px; }
-    .brand { color: #38bdf8; font-size: 32px; font-weight: 750; letter-spacing: -.7px; }
-    .subtitle { color: #94a3b8; margin-top: 6px; }
-    .search { display: flex; gap: 12px; margin-bottom: 42px; }
-    .search input { min-width: 0; flex: 1; padding: 15px 17px; border: 1px solid #34455d;
-      border-radius: 11px; background: #1c2a40; color: white; font: inherit; }
-    .search button { padding: 0 24px; border: 0; background: #0ea5e9; color: #061321;
-      font: inherit; font-weight: 700; border-radius: 11px; cursor: pointer; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: radial-gradient(ellipse at 72% -20%, #1a345b 0%, transparent 42%), var(--bg);
+    }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    .topbar { border-bottom: 1px solid rgba(148, 183, 226, .13); background: rgba(10, 20, 37, .7); }
+    .topbar-inner { max-width: 1180px; margin: auto; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand-lockup { display: flex; gap: 12px; align-items: center; }
+    .logo { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+      background: linear-gradient(145deg, #56c8ff, #3570d9); color: #08182c; font-weight: 900; font-size: 19px; box-shadow: 0 5px 24px rgba(32, 152, 235, .18); }
+    .brand { color: var(--text); font-size: 21px; font-weight: 760; letter-spacing: -.6px; }
+    .brand-sub { color: var(--muted); font-size: 11px; margin-top: 1px; }
+    .top-label { color: #a9c7e6; font-size: 12px; border: 1px solid var(--line); padding: 8px 12px; border-radius: 100px; }
+    .shell { max-width: 1180px; margin: auto; padding: 31px 28px 88px; }
+    .search { display: flex; gap: 11px; margin-bottom: 35px; }
+    .search input { min-width: 0; flex: 1; color: var(--text); padding: 14px 17px; border-radius: 11px;
+      background: #17243a; border: 1px solid #334765; outline: none; }
+    .search input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(82, 191, 255, .12); }
+    .search input::placeholder { color: #7e95b1; }
+    .search button { padding: 0 28px; min-height: 49px; border: none; border-radius: 11px;
+      color: #041426; background: #42b6f7; font-size: 14px; font-weight: 750; cursor: pointer; }
+    .search button:hover { background: #76ccff; }
     .search button:disabled { opacity: .55; cursor: not-allowed; }
-    #loader { display: none; color: #93c5fd; margin: -20px 0 24px; }
+    #loader { display: none; color: var(--sky-dim); padding: 4px 0 22px; font-size: 14px; }
     #output { display: none; }
-    .eyebrow { color: #93c5fd; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-    h1 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.6px; margin: 12px 0 8px; }
-    .description { color: #a3b1c4; font-size: 14px; margin: 0 0 30px; }
-    .insight { padding: 24px 26px; border: 1px solid #334155; border-radius: 13px;
-      background: #1c293d; margin-bottom: 14px; }
-    .insight-label { color: #7dd3fc; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
-    .insight-text { font-size: 16px; line-height: 1.75; margin: 0; }
-    .sources { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 18px; }
-    .source-label { color: #91a4bd; font-size: 12px; margin-right: 4px; }
-    .source-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 5px 11px;
-      border: 1px solid #42627d; border-radius: 100px; background: #142c42;
-      color: #93d5fc; text-decoration: none; font-size: 12px; line-height: 1.3; }
-    .source-chip:hover, .source-chip:focus-visible { background: #1b405b; border-color: #38bdf8; }
-    .empty, .error { border: 1px solid #334155; background: #1c293d; border-radius: 12px;
-      padding: 24px; line-height: 1.6; }
-    .empty { color: #a3b1c4; } .error { color: #fca5a5; }
-    @media (max-width: 560px) { .shell { padding: 34px 16px; } .search { flex-direction: column; }
-      .search button { min-height: 46px; } .insight { padding: 19px; } }
+    .report-header { margin: 0 0 24px; }
+    .eyebrow { color: #8bc8ff; font-size: 11px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { font-size: clamp(27px, 4vw, 36px); letter-spacing: -.8px; font-weight: 750; margin: 9px 0 7px; }
+    .report-description { color: var(--muted); font-size: 14px; margin: 0; line-height: 1.5; }
+    .columns { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(290px, .9fr); gap: 18px; align-items: start; }
+    .panel { border: 1px solid var(--line); border-radius: 15px; background: var(--panel); overflow: hidden; }
+    .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 22px 23px 19px; border-bottom: 1px solid rgba(142, 174, 215, .16); }
+    .panel-heading h2 { font-size: 17px; letter-spacing: -.25px; margin: 0; font-weight: 750; }
+    .panel-note { font-size: 11px; color: var(--muted); text-align: right; }
+    .insights-list { padding: 0 23px; }
+    .insight { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 13px;
+      padding: 23px 0; border-bottom: 1px solid rgba(142, 174, 215, .15); }
+    .insight:last-child { border-bottom: 0; }
+    .insight-number { height: 35px; width: 35px; border-radius: 10px; display: grid; place-items: center;
+      background: #253c5c; color: #9fd7ff; font-size: 12px; font-weight: 760; }
+    .insight-text { margin: 0; color: #edf4fc; line-height: 1.68; font-size: 15px; overflow-wrap: anywhere; }
+    .source-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+    .source-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #3c607e; background: #132d43;
+      color: #a7dcff; text-decoration: none; border-radius: 100px; padding: 5px 10px; font-size: 11px; line-height: 1.35; }
+    .source-chip:hover, .source-chip:focus-visible { border-color: var(--sky); background: #21455c; }
+    .source-label { color: #8199b6; font-size: 11px; margin-right: 2px; }
+    .aside { display: grid; gap: 18px; }
+    .timeline-intro { padding: 0 22px; margin: 17px 0 4px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .timeline { list-style: none; padding: 0 22px 13px; margin: 9px 0 0; }
+    .timeline-item { padding: 0 0 19px 20px; border-left: 1px solid #416380; margin-left: 5px; position: relative; }
+    .timeline-item:last-child { border-left-color: transparent; padding-bottom: 8px; }
+    .timeline-item::before { content: ""; width: 8px; height: 8px; background: #42b6f7; border-radius: 50%; position: absolute; left: -4.5px; top: 4px; }
+    .timeline-date { font-size: 11px; color: #89c7f4; margin-bottom: 6px; font-weight: 650; }
+    .timeline-link { color: #d2e7fa; font-size: 12px; text-decoration: none; line-height: 1.5; display: block; overflow-wrap: anywhere; }
+    .timeline-link:hover { color: var(--sky); text-decoration: underline; }
+    .context { padding: 20px 22px; }
+    .context h2 { font-size: 14px; margin: 0 0 8px; }
+    .context p { color: var(--muted); font-size: 12px; margin: 0; line-height: 1.65; }
+    .empty, .error { color: #a7bdd6; padding: 23px; font-size: 14px; line-height: 1.6; }
+    .error { color: #ffc2c2; border: 1px solid #71434b; border-radius: 12px; background: #32202d; }
+    .small-empty { padding: 3px 22px 20px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    @media (max-width: 850px) {
+      .columns { grid-template-columns: 1fr; }
+      .aside { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 590px) {
+      .topbar-inner { padding: 16px; }
+      .top-label { display: none; }
+      .shell { padding: 25px 16px 55px; }
+      .search { flex-direction: column; }
+      .search button { min-height: 46px; }
+      .aside { grid-template-columns: 1fr; }
+      .panel-heading { padding: 19px; }
+      .insights-list { padding: 0 19px; }
+      .insight { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; }
+      .insight-number { width: 30px; height: 30px; }
+    }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <header>
-      <div class="brand">MarketScope</div>
-      <div class="subtitle">Competitive intelligence, backed by sources.</div>
-    </header>
-    <div class="search">
-      <input id="companyInput" type="text" placeholder="Enter a company name" aria-label="Company name">
-      <button id="generateBtn" type="button">Analyze</button>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand-lockup"><div class="logo" aria-hidden="true">M</div>
+        <div><div class="brand">MarketScope</div><div class="brand-sub">Competitive Intelligence</div></div>
+      </div>
+      <div class="top-label">Evidence-linked insights</div>
     </div>
-    <div id="loader" role="status">Researching and analyzing…</div>
+  </header>
+  <div class="shell">
+    <form id="searchForm" class="search">
+      <input id="companyInput" type="text" maxlength="50" placeholder="Search a company (e.g. Microsoft)" aria-label="Company name" autocomplete="off" required>
+      <button id="generateBtn" type="submit">Analyze</button>
+    </form>
+    <div id="loader" role="status" aria-live="polite">Gathering research and preparing insights…</div>
     <main id="output" aria-live="polite"></main>
   </div>
   <script>
     const input = document.getElementById("companyInput");
+    const form = document.getElementById("searchForm");
     const button = document.getElementById("generateBtn");
     const loader = document.getElementById("loader");
     const output = document.getElementById("output");
 
-    button.addEventListener("click", analyze);
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") analyze();
-    });
+    form.addEventListener("submit", event => { event.preventDefault(); analyze(); });
 
-    function addText(tag, text, className, parent) {
-      const el = document.createElement(tag);
-      if (className) el.className = className;
-      el.textContent = text;
-      parent.appendChild(el);
-      return el;
+    function addText(tag, content, className, parent) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      element.textContent = content;
+      parent.appendChild(element);
+      return element;
     }
-
+    function trustedUrl(value) {
+      try { const url = new URL(value); return ["http:", "https:"].includes(url.protocol) ? url.href : null; }
+      catch (_) { return null; }
+    }
+    function sourceLink(source, text, cssClass) {
+      const href = trustedUrl(source.url);
+      if (!href) return null;
+      const link = document.createElement("a");
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.className = cssClass;
+      link.textContent = text;
+      link.title = source.title || href;
+      link.setAttribute("aria-label", "Read source: " + (source.title || href));
+      return link;
+    }
+    function formattedDate(raw) {
+      if (!raw) return null;
+      const date = new Date(raw);
+      if (Number.isNaN(date.getTime())) return null;
+      return { value: date.getTime(), text: new Intl.DateTimeFormat("en-GB", {day: "numeric", month: "short", year: "numeric", timeZone: "UTC"}).format(date) };
+    }
     function render(data) {
       output.replaceChildren();
-      addText("div", "Strategic intelligence", "eyebrow", output);
-      addText("h1", data.company_name + " — Key insights", "", output);
-      addText("p", "Selected findings from retrieved evidence. Source links appear beneath each insight.", "description", output);
+      const heading = document.createElement("div");
+      heading.className = "report-header";
+      addText("div", "Company intelligence", "eyebrow", heading);
+      addText("h1", data.company_name + " — Insights Report", "", heading);
+      addText("p", "Selected findings from retrieved evidence. Every insight links to its supporting sources.", "report-description", heading);
+      output.appendChild(heading);
 
+      const columns = document.createElement("div");
+      columns.className = "columns";
+      const report = document.createElement("section");
+      report.className = "panel";
+      const panelHeading = document.createElement("div");
+      panelHeading.className = "panel-heading";
+      addText("h2", "Strategic insights", "", panelHeading);
+      addText("span", "Source-backed findings", "panel-note", panelHeading);
+      report.appendChild(panelHeading);
+      const list = document.createElement("div");
+      list.className = "insights-list";
       const insights = Array.isArray(data.insight_items) ? data.insight_items : [];
-      if (insights.length === 0) {
-        addText("div", "No source-backed insights could be presented from this research run.", "empty", output);
-      }
-
+      const citedUrls = new Map();
       for (const [index, insight] of insights.entries()) {
-        const section = document.createElement("section");
-        section.className = "insight";
-        addText("div", "INSIGHT " + (index + 1), "insight-label", section);
-        addText("p", insight.text, "insight-text", section);
-        const links = document.createElement("div");
-        links.className = "sources";
-        addText("span", "Sources", "source-label", links);
-
-        for (const [sourceIndex, source] of insight.sources.entries()) {
-          try {
-            const url = new URL(source.url);
-            if (!(["https:", "http:"].includes(url.protocol))) continue;
-            const link = document.createElement("a");
-            link.href = url.href;
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            link.className = "source-chip";
-            link.textContent = "Source " + (sourceIndex + 1) + " ↗";
-            link.title = source.title || url.hostname;
-            link.setAttribute("aria-label", "Read source: " + (source.title || url.hostname));
-            links.appendChild(link);
-          } catch (_) {
-            // Ignore malformed links; never insert unsafe hrefs.
-          }
+        const item = document.createElement("article");
+        item.className = "insight";
+        addText("span", String(index + 1).padStart(2, "0"), "insight-number", item);
+        const content = document.createElement("div");
+        addText("p", insight.text || "", "insight-text", content);
+        const citations = document.createElement("div");
+        citations.className = "source-links";
+        const sources = Array.isArray(insight.sources) ? insight.sources : [];
+        let cited = 0;
+        for (const source of sources) {
+          if (!trustedUrl(source.url)) continue;
+          const chip = sourceLink(source, "Source " + (cited + 1) + " ↗", "source-chip");
+          if (!chip) continue;
+          if (cited === 0) addText("span", "Evidence", "source-label", citations);
+          citations.appendChild(chip);
+          cited++;
+          if (!citedUrls.has(source.url)) citedUrls.set(source.url, source);
         }
-        section.appendChild(links);
-        output.appendChild(section);
+        content.appendChild(citations);
+        item.appendChild(content);
+        list.appendChild(item);
       }
+      if (!insights.length) addText("p", "No source-backed insights are available from this run.", "empty", list);
+      report.appendChild(list);
+      columns.appendChild(report);
+
+      const aside = document.createElement("aside");
+      aside.className = "aside";
+      const timelinePanel = document.createElement("section");
+      timelinePanel.className = "panel";
+      const timelineHeading = document.createElement("div");
+      timelineHeading.className = "panel-heading";
+      addText("h2", "Source timeline", "", timelineHeading);
+      timelinePanel.appendChild(timelineHeading);
+      addText("p", "Publication dates of cited articles, not the dates of company events.", "timeline-intro", timelinePanel);
+      const fullSources = Array.isArray(data.sources) ? data.sources : [];
+      const dates = new Map(fullSources.filter(s => s && typeof s.url === "string").map(s => [s.url, s.published_at]));
+      const timelineItems = [...citedUrls.values()].map(source => {
+        const date = formattedDate(dates.get(source.url));
+        return date ? { source, date } : null;
+      }).filter(Boolean).sort((a,b) => b.date.value - a.date.value).slice(0,6);
+      if (timelineItems.length) {
+        const timeline = document.createElement("ol");
+        timeline.className = "timeline";
+        for (const { source, date } of timelineItems) {
+          const entry = document.createElement("li");
+          entry.className = "timeline-item";
+          addText("div", date.text, "timeline-date", entry);
+          const link = sourceLink(source, source.title || new URL(source.url).hostname, "timeline-link");
+          if (link) entry.appendChild(link);
+          timeline.appendChild(entry);
+        }
+        timelinePanel.appendChild(timeline);
+      } else {
+        addText("p", "No publication dates were provided for the cited sources.", "small-empty", timelinePanel);
+      }
+      aside.appendChild(timelinePanel);
+
+      const context = document.createElement("section");
+      context.className = "panel context";
+      addText("h2", "About these findings", "", context);
+      addText("p", "The report reflects the articles retrieved for this search. Open the source links to verify claims and dates; it is not a complete record of company activity.", "", context);
+      aside.appendChild(context);
+      columns.appendChild(aside);
+      output.appendChild(columns);
       output.style.display = "block";
     }
-
     async function analyze() {
       const company = input.value.trim();
-      if (!company) return alert("Please enter a company name.");
+      if (!company || button.disabled) return;
       button.disabled = true;
       button.textContent = "Analyzing…";
       loader.style.display = "block";
       output.style.display = "none";
       try {
-        const response = await fetch("/api/v1/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ company_name: company })
-        });
+        const response = await fetch("/api/v1/analyze", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({company_name: company}) });
         const data = await response.json();
-        if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Analysis failed.");
+        if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Analysis request failed.");
         render(data);
       } catch (error) {
         output.replaceChildren();
-        addText("p", "Error: " + error.message, "error", output);
+        addText("p", "Error: " + (error && error.message ? error.message : "Analysis failed."), "error", output);
         output.style.display = "block";
       } finally {
         button.disabled = false;
