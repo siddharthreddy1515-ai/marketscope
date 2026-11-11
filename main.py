@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, field_validator
 
-from workflow import run_workflow
+from workflow import run_workflow, SIGNAL_CATEGORIES
 
 logging.basicConfig(level=logging.INFO)
 
@@ -93,17 +93,9 @@ class InsightItemResponse(BaseModel):
     @field_validator("category")
     @classmethod
     def normalize_category(cls, value: str) -> str:
-        allowed = {
-            "Product & Innovation",
-            "M&A / Partnerships",
-            "Market Expansion",
-            "Hiring & Talent",
-            "Other",
-        }
-
         return (
             value
-            if value in allowed
+            if value in SIGNAL_CATEGORIES
             else "Other"
         )
 
