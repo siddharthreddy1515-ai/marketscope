@@ -1,4 +1,4 @@
-# main.py
+
 import asyncio
 import logging
 import re
@@ -11,7 +11,11 @@ from pydantic import BaseModel, field_validator
 from workflow import run_workflow
 
 logging.basicConfig(level=logging.INFO)
-app = FastAPI(title="MarketScope Multi-Agent", version="0.2.0")
+
+app = FastAPI(
+    title="MarketScope Multi-Agent",
+    version="0.2.0",
+)
 
 
 class AnalyzeRequest(BaseModel):
@@ -21,12 +25,25 @@ class AnalyzeRequest(BaseModel):
     @classmethod
     def validate_company_name(cls, v: str) -> str:
         v = v.strip()
+
         if not v:
-            raise ValueError("Company name cannot be empty.")
+            raise ValueError(
+                "Company name cannot be empty."
+            )
+
         if len(v) > 50:
-            raise ValueError("Company name must be under 50 characters.")
-        if not re.match(r"^[a-zA-Z0-9\s\-\.]+$", v):
-            raise ValueError("Company name contains invalid characters.")
+            raise ValueError(
+                "Company name must be under 50 characters."
+            )
+
+        if not re.match(
+            r"^[a-zA-Z0-9\s\-\.]+$",
+            v,
+        ):
+            raise ValueError(
+                "Company name contains invalid characters."
+            )
+
         return v
 
 
@@ -45,6 +62,24 @@ class InsightSourceResponse(BaseModel):
 class InsightItemResponse(BaseModel):
     text: str
     sources: list[InsightSourceResponse]
+    category: str = "Other"
+
+    @field_validator("category")
+    @classmethod
+    def normalize_category(cls, value: str) -> str:
+        allowed = {
+            "Product & Innovation",
+            "M&A / Partnerships",
+            "Market Expansion",
+            "Hiring & Talent",
+            "Other",
+        }
+
+        return (
+            value
+            if value in allowed
+            else "Other"
+        )
 
 
 class ResearchStatsResponse(BaseModel):
@@ -64,21 +99,37 @@ class AnalyzeResponse(BaseModel):
     insight_items: list[InsightItemResponse]
 
 
-@app.post("/api/v1/analyze", response_model=AnalyzeResponse)
+@app.post(
+    "/api/v1/analyze",
+    response_model=AnalyzeResponse,
+)
 async def analyze_endpoint(request: AnalyzeRequest):
     try:
         result = await asyncio.wait_for(
             run_workflow(request.company_name),
             timeout=60.0,
         )
+
     except asyncio.TimeoutError:
-        logging.error("Analysis timed out for %s", request.company_name)
+        logging.error(
+            "Analysis timed out for %s",
+            request.company_name,
+        )
+
         raise HTTPException(
             status_code=504,
-            detail="The request timed out. Please try again.",
+            detail=(
+                "The request timed out. "
+                "Please try again."
+            ),
         )
+
     except Exception:
-        logging.exception("Analysis failed for %s", request.company_name)
+        logging.exception(
+            "Analysis failed for %s",
+            request.company_name,
+        )
+
         raise HTTPException(
             status_code=500,
             detail="An internal error occurred.",
@@ -86,28 +137,52 @@ async def analyze_endpoint(request: AnalyzeRequest):
 
     if (
         result.get("status") != "completed"
-        or not isinstance(result.get("report"), str)
+        or not isinstance(
+            result.get("report"),
+            str,
+        )
     ):
         logging.warning(
             "Research could not produce a report for %s",
             request.company_name,
         )
+
         raise HTTPException(
             status_code=502,
-            detail="Unable to generate a report from the available research.",
+            detail=(
+                "Unable to generate a report from "
+                "the available research."
+            ),
         )
 
     return AnalyzeResponse(
         company_name=request.company_name,
         status=result["status"],
         report=result["report"],
-        research_attempts=result.get("research_attempts", 0),
-        sources=result.get("sources", []),
-        source_stats=result.get(
-            "source_stats", {"returned": 0, "accepted": 0, "discarded": 0}
+        research_attempts=result.get(
+            "research_attempts",
+            0,
         ),
-        research_warnings=result.get("research_warnings", []),
-        insight_items=result.get("insight_items", []),
+        sources=result.get(
+            "sources",
+            [],
+        ),
+        source_stats=result.get(
+            "source_stats",
+            {
+                "returned": 0,
+                "accepted": 0,
+                "discarded": 0,
+            },
+        ),
+        research_warnings=result.get(
+            "research_warnings",
+            [],
+        ),
+        insight_items=result.get(
+            "insight_items",
+            [],
+        ),
     )
 
 
@@ -118,8 +193,20 @@ async def health():
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_gui():
-    html_path = os.path.join(os.path.dirname(__file__), "index.html")
+    html_path = os.path.join(
+        os.path.dirname(__file__),
+        "index.html",
+    )
+
     if os.path.exists(html_path):
-        with open(html_path, "r", encoding="utf-8") as f:
+        with open(
+            html_path,
+            "r",
+            encoding="utf-8",
+        ) as f:
             return f.read()
-    return "<h1>MarketScope API is running. GUI file not found.</h1>"
+
+    return (
+        "<h1>MarketScope API is running. "
+        "GUI file not found.</h1>"
+    )

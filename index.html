@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,10 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1425">
   <title>MarketScope | Competitive Intelligence</title>
+
   <style>
     :root {
       color-scheme: dark;
-      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, ui-sans-serif, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+
       --bg: #0b1425;
       --panel: #17243b;
       --panel-light: #1b2b46;
@@ -19,307 +23,1505 @@
       --green: #56d7b0;
       --gold: #f3c46b;
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: radial-gradient(ellipse 55% 300px at 48% -120px, #1b3963 0%, transparent 100%), var(--bg); color: var(--text); }
-    button, input { font: inherit; }
-    button { cursor: pointer; }
-    a { -webkit-tap-highlight-color: transparent; }
-    .topbar { border-bottom: 1px solid #243653; background: rgba(12, 23, 42, .92); }
-    .topbar-inner { max-width: 1340px; margin: 0 auto; min-height: 74px; padding: 13px 30px; display: flex; gap: 22px; align-items: center; justify-content: space-between; }
-    .branding { display: flex; gap: 11px; align-items: center; }
-    .brand-logo { display: grid; place-items: center; width: 41px; height: 41px; border-radius: 12px; background: linear-gradient(140deg, #84ddff, #399eff 72%); font-size: 22px; font-weight: 900; color: #10243c; box-shadow: 0 3px 24px #3e9dff31; }
-    .brand-name { color: var(--sky); font-size: 19px; font-weight: 760; letter-spacing: -.45px; }
-    .brand-sub { font-size: 11px; color: #a1b6cf; margin-top: 2px; }
-    .workflow-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .workflow-badges span { padding: 7px 10px; font-size: 11px; color: #afc1d8; background: #14243b; border: 1px solid #2a405e; border-radius: 99px; }
-    .workflow-badges span:first-child::before { content: "●"; color: var(--green); margin-right: 5px; }
-    .shell { max-width: 1340px; margin: 0 auto; padding: 20px 30px 90px; }
-    .search { display: flex; gap: 12px; margin-bottom: 19px; }
-    .search input { flex: 1; min-width: 0; background: #15233a; border: 1px solid #2d4260; color: var(--text); padding: 13px 16px; border-radius: 9px; outline: none; font-size: 14px; }
-    .search input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px #4ebaff22; }
-    .search input::placeholder { color: #879db9; }
-    .search button { background: #42b8f9; color: #07172b; padding: 0 24px; border: 0; border-radius: 9px; font-weight: 750; min-height: 45px; }
-    .search button:hover { background: #73ccff; }
-    .search button:disabled { opacity: .6; cursor: default; }
-    #loader { display: none; padding: 0 2px 13px; font-size: 12px; color: #a8d9fc; }
-    #output { display: none; }
-    .demo-label { display: none; background: #142c46; border: 1px solid #37668d; padding: 11px 15px; border-radius: 9px; margin-bottom: 17px; font-size: 12px; color: #bfdef9; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 13px; margin-bottom: 18px; }
-    .kpi { min-height: 120px; padding: 18px 19px; background: radial-gradient(circle at 90% 8%, #254a75 0%, transparent 22%), #182741; border: 1px solid var(--border); border-radius: 13px; }
-    .kpi-label { text-transform: uppercase; color: #a3b5cd; font-size: 10px; letter-spacing: .09em; font-weight: 690; }
-    .kpi-value { color: #f7faff; margin: 9px 0 5px; font-size: 27px; font-weight: 780; line-height: 1; letter-spacing: -.7px; }
-    .kpi-value.signal { color: #76ccff; }
-    .kpi-note { color: #8aa2bd; font-size: 11px; line-height: 1.45; }
-    .kpi-note.supported { color: #72dec1; }
-    .dashboard { display: grid; grid-template-columns: minmax(0,1.9fr) minmax(300px,.87fr); gap: 17px; align-items: start; }
-    .main-column, .aside-column { min-width: 0; display: grid; gap: 17px; }
-    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
-    .panel-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #293b54; }
-    .panel-head h2 { font-size: 16px; margin: 0; font-weight: 750; letter-spacing: -.2px; }
-    .panel-head small { color: #8da9c7; font-size: 10px; }
-    .panel-icon { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 8px; color: #8fd2ff; background: #28486a; border-radius: 6px; font-size: 12px; vertical-align: 1px; }
-    .panel-tag { color: #7fe5c4; background: #19443e; border: 1px solid #28675b; font-size: 10px; border-radius: 99px; padding: 5px 9px; white-space: nowrap; }
-    .insights { padding: 0 20px; }
-    .insight { padding: 19px 0 21px; border-bottom: 1px solid #2b3e59; display: grid; grid-template-columns: 33px minmax(0,1fr); gap: 12px; }
-    .insight:last-child { border-bottom: 0; }
-    .insight-icon { display: grid; place-items: center; width: 33px; height: 33px; background: #263e5d; border-radius: 9px; color: #95cfff; font-size: 12px; font-weight: 800; }
-    .insight-title { font-size: 12px; color: #89c8ff; font-weight: 720; margin: 0 0 7px; letter-spacing: .035em; }
-    .insight-text { font-size: 13px; line-height: 1.72; color: #dbe7f6; margin: 0; overflow-wrap: anywhere; }
-    .source-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 11px; }
-    .source-label { color: #829cb9; font-size: 10px; margin-right: 2px; }
-    .source-chip { color: #aedfff; border: 1px solid #355c7e; background: #142e45; padding: 5px 9px; border-radius: 7px; font-size: 10px; text-decoration: none; }
-    .source-chip:hover, .source-chip:focus-visible { color: white; background: #235270; border-color: #5db7f6; }
-    .panel-content { padding: 19px 20px; }
-    .snapshot-label { color: #85c8fa; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
-    .snapshot-text { color: #dbe6f4; font-size: 12px; line-height: 1.75; margin: 0; }
-    .snapshot-note { color: #8199b6; font-size: 10px; margin: 13px 0 0; }
-    .muted { color: var(--muted); }
-    .empty-state { padding: 20px; color: #95a9c3; font-size: 12px; line-height: 1.65; }
-    .sentiment-body { display: flex; gap: 16px; align-items: center; padding: 20px; }
-    .empty-donut { flex-shrink: 0; width: 98px; height: 98px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#36506e 0deg 360deg); position: relative; }
-    .empty-donut::before { content: ""; position: absolute; inset: 11px; background: var(--panel); border-radius: 50%; }
-    .empty-donut span { position: relative; font-size: 22px; color: #8ca4c0; font-weight: 750; }
-    .sentiment-copy strong { display: block; font-size: 12px; margin-bottom: 5px; color: #cddbeb; }
-    .sentiment-copy p { margin: 0; color: #91a6c1; line-height: 1.55; font-size: 11px; }
-    .breakdown-body { padding: 16px 20px 18px; }
-    .breakdown-note { font-size: 11px; line-height: 1.6; color: #93a8c2; margin: 0 0 13px; }
-    .breakdown-row { padding: 8px 0; border-top: 1px solid #273b56; display: flex; justify-content: space-between; gap: 12px; font-size: 11px; }
-    .breakdown-row span:first-child { color: #b1c2d8; }
-    .breakdown-row span:last-child { color: #7d97b3; }
-    .competitor-body { padding: 18px 20px; }
-    .competitor-placeholder { text-align: left; display: flex; align-items: start; gap: 10px; }
-    .competitor-placeholder b { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; border: 1px solid #36516e; border-radius: 8px; color: #81bded; font-weight: 800; }
-    .competitor-placeholder p { margin: 0; color: #9cacc4; font-size: 11px; line-height: 1.65; }
-    .timeline-label { font-size: 11px; color: #90a7c3; margin: 0; padding: 14px 20px 0; line-height: 1.6; }
-    .timeline { list-style: none; margin: 0; padding: 17px 20px 14px 24px; }
-    .timeline li { padding: 0 0 18px 18px; border-left: 1px solid #406587; margin-left: 5px; position: relative; }
-    .timeline li:last-child { border-left-color: transparent; padding-bottom: 6px; }
-    .timeline li::before { content: ""; position: absolute; left: -4.5px; top: 3px; width: 8px; height: 8px; border-radius: 100%; background: #41bdfa; box-shadow: 0 0 10px #3bb6ef35; }
-    .timeline-date { font-size: 11px; color: #83cdfc; font-weight: 700; margin-bottom: 5px; }
-    .timeline a { color: #d2e3f4; text-decoration: none; font-size: 11px; line-height: 1.5; display: block; overflow-wrap: anywhere; }
-    .timeline a:hover { color: #78cbff; text-decoration: underline; }
-    .coverage { margin-top: 12px; color: #8da4be; font-size: 11px; }
-    .error-box { padding: 16px; background: #33222d; border: 1px solid #98576b; border-radius: 10px; color: #ffd1d9; }
-    @media(max-width:970px) { .dashboard { grid-template-columns: minmax(0,1.4fr) minmax(270px,1fr); } .sentiment-body { gap: 10px; } }
-    @media(max-width:790px) { .dashboard { grid-template-columns: 1fr; } .aside-column { grid-template-columns: repeat(2,minmax(0,1fr)); } .kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media(max-width:560px) { .topbar-inner { padding: 14px 17px; } .workflow-badges { display: none; } .shell { padding: 16px 15px 50px; } .search { flex-direction: column; } .search button { min-height: 44px; } .aside-column { grid-template-columns: 1fr; } .kpi { min-height: 104px; padding: 14px; } .panel-head { padding: 15px; } .insights { padding: 0 15px; } .panel-content { padding: 15px; } }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(
+          ellipse 55% 300px at 48% -120px,
+          #1b3963 0%,
+          transparent 100%
+        ),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .topbar {
+      border-bottom: 1px solid #243653;
+      background: rgba(12, 23, 42, .92);
+    }
+
+    .topbar-inner {
+      max-width: 1340px;
+      margin: 0 auto;
+      min-height: 74px;
+      padding: 13px 30px;
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .branding {
+      display: flex;
+      gap: 11px;
+      align-items: center;
+    }
+
+    .brand-logo {
+      display: grid;
+      place-items: center;
+      width: 41px;
+      height: 41px;
+      border-radius: 12px;
+      background: linear-gradient(
+        140deg,
+        #84ddff,
+        #399eff 72%
+      );
+      font-size: 22px;
+      font-weight: 900;
+      color: #10243c;
+      box-shadow: 0 3px 24px #3e9dff31;
+    }
+
+    .brand-name {
+      color: var(--sky);
+      font-size: 19px;
+      font-weight: 760;
+      letter-spacing: -.45px;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: #a1b6cf;
+      margin-top: 2px;
+    }
+
+    .workflow-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .workflow-badges span {
+      padding: 7px 10px;
+      font-size: 11px;
+      color: #afc1d8;
+      background: #14243b;
+      border: 1px solid #2a405e;
+      border-radius: 99px;
+    }
+
+    .workflow-badges span:first-child::before {
+      content: "●";
+      color: var(--green);
+      margin-right: 5px;
+    }
+
+    .shell {
+      max-width: 1340px;
+      margin: 0 auto;
+      padding: 20px 30px 90px;
+    }
+
+    .search {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 19px;
+    }
+
+    .search input {
+      flex: 1;
+      min-width: 0;
+      background: #15233a;
+      border: 1px solid #2d4260;
+      color: var(--text);
+      padding: 13px 16px;
+      border-radius: 9px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .search input:focus {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px #4ebaff22;
+    }
+
+    .search input::placeholder {
+      color: #879db9;
+    }
+
+    .search button {
+      background: #42b8f9;
+      color: #07172b;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 9px;
+      font-weight: 750;
+      min-height: 45px;
+    }
+
+    .search button:hover {
+      background: #73ccff;
+    }
+
+    .search button:disabled {
+      opacity: .6;
+      cursor: default;
+    }
+
+    #loader {
+      display: none;
+      padding: 0 2px 13px;
+      font-size: 12px;
+      color: #a8d9fc;
+    }
+
+    #output {
+      display: none;
+    }
+
+    .demo-label {
+      display: none;
+      background: #142c46;
+      border: 1px solid #37668d;
+      padding: 11px 15px;
+      border-radius: 9px;
+      margin-bottom: 17px;
+      font-size: 12px;
+      color: #bfdef9;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 13px;
+      margin-bottom: 18px;
+    }
+
+    .kpi {
+      min-height: 120px;
+      padding: 18px 19px;
+      background:
+        radial-gradient(
+          circle at 90% 8%,
+          #254a75 0%,
+          transparent 22%
+        ),
+        #182741;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+    }
+
+    .kpi-label {
+      text-transform: uppercase;
+      color: #a3b5cd;
+      font-size: 10px;
+      letter-spacing: .09em;
+      font-weight: 690;
+    }
+
+    .kpi-value {
+      color: #f7faff;
+      margin: 9px 0 5px;
+      font-size: 27px;
+      font-weight: 780;
+      line-height: 1;
+      letter-spacing: -.7px;
+    }
+
+    .kpi-value.signal {
+      color: #76ccff;
+    }
+
+    .kpi-note {
+      color: #8aa2bd;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .kpi-note.supported {
+      color: #72dec1;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1.9fr) minmax(300px, .87fr);
+      gap: 17px;
+      align-items: start;
+    }
+
+    .main-column,
+    .aside-column {
+      min-width: 0;
+      display: grid;
+      gap: 17px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid #293b54;
+    }
+
+    .panel-head h2 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 750;
+      letter-spacing: -.2px;
+    }
+
+    .panel-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      margin-right: 8px;
+      color: #8fd2ff;
+      background: #28486a;
+      border-radius: 6px;
+      font-size: 12px;
+      vertical-align: 1px;
+    }
+
+    .panel-tag {
+      color: #7fe5c4;
+      background: #19443e;
+      border: 1px solid #28675b;
+      font-size: 10px;
+      border-radius: 99px;
+      padding: 5px 9px;
+      white-space: nowrap;
+    }
+
+    .insights {
+      padding: 0 20px;
+    }
+
+    .insight {
+      padding: 19px 0 21px;
+      border-bottom: 1px solid #2b3e59;
+      display: grid;
+      grid-template-columns: 33px minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .insight:last-child {
+      border-bottom: 0;
+    }
+
+    .insight-icon {
+      display: grid;
+      place-items: center;
+      width: 33px;
+      height: 33px;
+      background: #263e5d;
+      border-radius: 9px;
+      color: #95cfff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .insight-title {
+      font-size: 12px;
+      color: #89c8ff;
+      font-weight: 720;
+      margin: 0 0 7px;
+      letter-spacing: .035em;
+    }
+
+    .category-chip {
+      display: inline-block;
+      color: #9fd7ff;
+      border: 1px solid #365779;
+      background: #18324d;
+      border-radius: 6px;
+      font-size: 10px;
+      padding: 3px 6px;
+      margin: 0 0 8px;
+    }
+
+    .insight-text {
+      font-size: 13px;
+      line-height: 1.72;
+      color: #dbe7f6;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .source-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-top: 11px;
+    }
+
+    .source-label {
+      color: #829cb9;
+      font-size: 10px;
+      margin-right: 2px;
+    }
+
+    .source-chip {
+      color: #aedfff;
+      border: 1px solid #355c7e;
+      background: #142e45;
+      padding: 5px 9px;
+      border-radius: 7px;
+      font-size: 10px;
+      text-decoration: none;
+    }
+
+    .source-chip:hover,
+    .source-chip:focus-visible {
+      color: white;
+      background: #235270;
+      border-color: #5db7f6;
+    }
+
+    .panel-content {
+      padding: 19px 20px;
+    }
+
+    .snapshot-label {
+      color: #85c8fa;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 10px;
+    }
+
+    .snapshot-text {
+      color: #dbe6f4;
+      font-size: 12px;
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    .snapshot-note {
+      color: #8199b6;
+      font-size: 10px;
+      margin: 13px 0 0;
+    }
+
+    .empty-state {
+      padding: 20px;
+      color: #95a9c3;
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .sentiment-body {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .empty-donut {
+      flex-shrink: 0;
+      width: 98px;
+      height: 98px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(#36506e 0deg 360deg);
+      position: relative;
+    }
+
+    .empty-donut::before {
+      content: "";
+      position: absolute;
+      inset: 11px;
+      background: var(--panel);
+      border-radius: 50%;
+    }
+
+    .empty-donut span {
+      position: relative;
+      font-size: 22px;
+      color: #8ca4c0;
+      font-weight: 750;
+    }
+
+    .sentiment-copy strong {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #cddbeb;
+    }
+
+    .sentiment-copy p {
+      margin: 0;
+      color: #91a6c1;
+      line-height: 1.55;
+      font-size: 11px;
+    }
+
+    .breakdown-body {
+      padding: 16px 20px 18px;
+    }
+
+    .breakdown-note {
+      font-size: 11px;
+      line-height: 1.6;
+      color: #93a8c2;
+      margin: 0 0 13px;
+    }
+
+    .breakdown-item {
+      border-top: 1px solid #273b56;
+      padding: 10px 0;
+    }
+
+    .breakdown-item:first-of-type {
+      border-top: 0;
+    }
+
+    .breakdown-item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 11px;
+      margin-bottom: 7px;
+    }
+
+    .breakdown-item-head span:first-child {
+      color: #b1c2d8;
+    }
+
+    .breakdown-item-head span:last-child {
+      color: #9bcfff;
+    }
+
+    .breakdown-track {
+      width: 100%;
+      height: 5px;
+      border-radius: 99px;
+      background: #2a3e5c;
+      overflow: hidden;
+    }
+
+    .breakdown-fill {
+      height: 100%;
+      background: #4abaff;
+      border-radius: 99px;
+      transition: width .2s ease;
+    }
+
+    .competitor-body {
+      padding: 18px 20px;
+    }
+
+    .competitor-placeholder {
+      text-align: left;
+      display: flex;
+      align-items: start;
+      gap: 10px;
+    }
+
+    .competitor-placeholder b {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      border: 1px solid #36516e;
+      border-radius: 8px;
+      color: #81bded;
+      font-weight: 800;
+    }
+
+    .competitor-placeholder p {
+      margin: 0;
+      color: #9cacc4;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .timeline-label {
+      font-size: 11px;
+      color: #90a7c3;
+      margin: 0;
+      padding: 14px 20px 0;
+      line-height: 1.6;
+    }
+
+    .timeline {
+      list-style: none;
+      margin: 0;
+      padding: 17px 20px 14px 24px;
+    }
+
+    .timeline li {
+      padding: 0 0 18px 18px;
+      border-left: 1px solid #406587;
+      margin-left: 5px;
+      position: relative;
+    }
+
+    .timeline li:last-child {
+      border-left-color: transparent;
+      padding-bottom: 6px;
+    }
+
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      left: -4.5px;
+      top: 3px;
+      width: 8px;
+      height: 8px;
+      border-radius: 100%;
+      background: #41bdfa;
+      box-shadow: 0 0 10px #3bb6ef35;
+    }
+
+    .timeline-date {
+      font-size: 11px;
+      color: #83cdfc;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .timeline a {
+      color: #d2e3f4;
+      text-decoration: none;
+      font-size: 11px;
+      line-height: 1.5;
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    .timeline a:hover {
+      color: #78cbff;
+      text-decoration: underline;
+    }
+
+    .coverage {
+      margin-top: 12px;
+      color: #8da4be;
+      font-size: 11px;
+    }
+
+    .error-box {
+      padding: 16px;
+      background: #33222d;
+      border: 1px solid #98576b;
+      border-radius: 10px;
+      color: #ffd1d9;
+    }
+
+    @media (max-width: 970px) {
+      .dashboard {
+        grid-template-columns:
+          minmax(0, 1.4fr)
+          minmax(270px, 1fr);
+      }
+
+      .sentiment-body {
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 790px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .aside-column {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+      .kpi-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .topbar-inner {
+        padding: 14px 17px;
+      }
+
+      .workflow-badges {
+        display: none;
+      }
+
+      .shell {
+        padding: 16px 15px 50px;
+      }
+
+      .search {
+        flex-direction: column;
+      }
+
+      .search button {
+        min-height: 44px;
+      }
+
+      .aside-column {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi {
+        min-height: 104px;
+        padding: 14px;
+      }
+
+      .panel-head {
+        padding: 15px;
+      }
+
+      .insights {
+        padding: 0 15px;
+      }
+
+      .panel-content {
+        padding: 15px;
+      }
+    }
   </style>
 </head>
+
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="branding">
         <div class="brand-logo" aria-hidden="true">↗</div>
-        <div><div class="brand-name">MarketScope</div><div class="brand-sub">Competitive Intelligence</div></div>
+        <div>
+          <div class="brand-name">MarketScope</div>
+          <div class="brand-sub">Competitive Intelligence</div>
+        </div>
       </div>
-      <div class="workflow-badges" aria-label="MarketScope workflow">
-        <span>Evidence-linked</span><span>Research</span><span>Analysis</span><span>Report</span>
+
+      <div
+        class="workflow-badges"
+        aria-label="MarketScope workflow"
+      >
+        <span>Evidence-linked</span>
+        <span>Research</span>
+        <span>Analysis</span>
+        <span>Report</span>
       </div>
     </div>
   </header>
+
   <div class="shell">
     <form id="searchForm" class="search">
-      <input id="companyInput" placeholder="Search company (e.g. Microsoft)" aria-label="Company name" maxlength="50" autocomplete="off" required>
-      <button type="submit" id="analyzeBtn">Analyze</button>
+      <input
+        id="companyInput"
+        placeholder="Search company (e.g. Microsoft)"
+        aria-label="Company name"
+        maxlength="50"
+        autocomplete="off"
+        required
+      >
+
+      <button type="submit" id="analyzeBtn">
+        Analyze
+      </button>
     </form>
-    <div id="demoLabel" class="demo-label">Preview mode — saved sample research. No Tavily or GPT-4o request was made.</div>
-    <div id="loader" aria-live="polite" role="status">Researching and analyzing company evidence…</div>
+
+    <div id="demoLabel" class="demo-label">
+      Preview mode — saved sample research.
+      No Tavily or GPT-4o request was made.
+    </div>
+
+    <div
+      id="loader"
+      aria-live="polite"
+      role="status"
+    >
+      Researching and analyzing company evidence…
+    </div>
+
     <main id="output" aria-live="polite"></main>
   </div>
-<script>
-  const form = document.getElementById("searchForm");
-  const input = document.getElementById("companyInput");
-  const button = document.getElementById("analyzeBtn");
-  const loader = document.getElementById("loader");
-  const output = document.getElementById("output");
-  const demoLabel = document.getElementById("demoLabel");
-  form.addEventListener("submit", event => { event.preventDefault(); analyze(); });
-  function el(tag, cls, text) {
-    const node = document.createElement(tag);
-    if (cls) node.className = cls;
-    if (text !== undefined) node.textContent = String(text);
-    return node;
-  }
-  function add(parent, tag, cls, text) { const node = el(tag, cls, text); parent.appendChild(node); return node; }
-  function safeLink(source, label, cls = "source-chip") {
-    if (!source || typeof source.url !== "string") return null;
-    let parsed;
-    try { parsed = new URL(source.url); } catch (_) { return null; }
-    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
-    const link = el('a', cls, label);
-    link.href = parsed.href;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.title = source.title || parsed.href;
-    link.setAttribute('aria-label', `Read source: ${source.title || parsed.href}`);
-    return link;
-  }
-  function dateInfo(value) {
-    if (!value) return null;
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return null;
-    return {
-      date,
-      label: new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(date)
-    };
-  }
-  function panel(title, icon, extra = '') {
-    const section = el('section', 'panel');
-    const header = add(section, 'div', 'panel-head');
-    const h2 = add(header, 'h2');
-    add(h2, 'span', 'panel-icon', icon);
-    h2.appendChild(document.createTextNode(title));
-    if (extra) add(header, 'span', 'panel-tag', extra);
-    return section;
-  }
-  function render(data, isDemo = false) {
-    output.replaceChildren();
-    const insights = Array.isArray(data.insight_items) ? data.insight_items : [];
-    const allSources = Array.isArray(data.sources) ? data.sources : [];
-    const cited = new Map();
-    // These four cards follow the design reference, but only the signal count is calculated.
-    const stats = [
-      ['Market Position', '—', 'Not assessed'],
-      ['Signals Found', insights.length, 'Source-backed findings', 'signal'],
-      ['Sentiment', '—', 'Not assessed'],
-      ['Threat Level', '—', 'Not assessed']
+
+  <script>
+    const form = document.getElementById("searchForm");
+    const input = document.getElementById("companyInput");
+    const button = document.getElementById("analyzeBtn");
+    const loader = document.getElementById("loader");
+    const output = document.getElementById("output");
+    const demoLabel = document.getElementById("demoLabel");
+
+    const CATEGORIES = [
+      "Product & Innovation",
+      "M&A / Partnerships",
+      "Market Expansion",
+      "Hiring & Talent",
+      "Other"
     ];
-    const cards = add(output, 'section', 'kpi-grid');
-    cards.setAttribute('aria-label', 'Competitive intelligence overview');
-    for (const [label, value, note, cls] of stats) {
-      const card = add(cards, 'article', 'kpi');
-      add(card, 'div', 'kpi-label', label);
-      add(card, 'div', `kpi-value ${cls || ''}`, value);
-      add(card, 'div', 'kpi-note ' + (cls === 'signal' ? 'supported' : ''), note);
-    }
-    const dash = add(output, 'div', 'dashboard');
-    const left = add(dash, 'div', 'main-column');
-    const right = add(dash, 'aside', 'aside-column');
-    const report = panel(`${data.company_name || 'Company'} — Insights Report`, '▤', 'Source-linked');
-    const list = add(report, 'div', 'insights');
-    insights.forEach((insight, i) => {
-      const item = add(list, 'article', 'insight');
-      add(item, 'div', 'insight-icon', String(i + 1).padStart(2, '0'));
-      const textWrap = add(item, 'div');
-      add(textWrap, 'div', 'insight-title', `STRATEGIC FINDING ${i + 1}`);
-      add(textWrap, 'p', 'insight-text', insight.text || '');
-      const links = add(textWrap, 'div', 'source-row');
-      let count = 0;
-      for (const source of (Array.isArray(insight.sources) ? insight.sources : [])) {
-        const link = safeLink(source, `Source ${count + 1} ↗`);
-        if (!link) continue;
-        if (count === 0) add(links, 'span', 'source-label', 'Evidence');
-        links.appendChild(link);
-        count++;
-        cited.set(source.url, source);
-      }
-      if (!count) add(links, 'span', 'source-label', 'No linked evidence supplied');
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      analyze();
     });
-    if (!insights.length) add(list, 'p', 'empty-state', 'No source-backed strategic insights were identified for this company.');
-    left.appendChild(report);
 
-    const snapshot = panel('Executive Snapshot', '▣');
-    const snapshotBody = add(snapshot, 'div', 'panel-content');
-    if (insights.length) {
-      add(snapshotBody, 'div', 'snapshot-label', 'Highlighted finding');
-      add(snapshotBody, 'p', 'snapshot-text', insights[0].text || '');
-      add(snapshotBody, 'p', 'snapshot-note', 'A highlight from the report above, not a separate market assessment.');
-    } else {
-      add(snapshotBody, 'p', 'snapshot-text', 'No source-backed executive highlight is available from this report.');
-    }
-    left.appendChild(snapshot);
+    function el(tag, cls, text) {
+      const node = document.createElement(tag);
 
-    const sentiment = panel('Sentiment', '◉');
-    const sentimentBody = add(sentiment, 'div', 'sentiment-body');
-    const donut = add(sentimentBody, 'div', 'empty-donut');
-    add(donut, 'span', '', '—');
-    const sentimentText = add(sentimentBody, 'div', 'sentiment-copy');
-    add(sentimentText, 'strong', '', 'Not assessed');
-    add(sentimentText, 'p', '', 'This report does not include a measured sentiment distribution.');
-    right.appendChild(sentiment);
-
-    const breakdown = panel('Signal Breakdown', '▥');
-    const breakdownBody = add(breakdown, 'div', 'breakdown-body');
-    add(breakdownBody, 'p', 'breakdown-note', 'Categories have not been classified in this report.');
-    for (const cat of ['Product & Innovation', 'M&A / Partnerships', 'Market Expansion', 'Hiring & Talent']) {
-      const line = add(breakdownBody, 'div', 'breakdown-row');
-      add(line, 'span', '', cat);
-      add(line, 'span', '', '—');
-    }
-    right.appendChild(breakdown);
-
-    const competitors = panel('Top Competitors', '⇄');
-    const competitorBody = add(competitors, 'div', 'competitor-body');
-    const competitorEmpty = add(competitorBody, 'div', 'competitor-placeholder');
-    add(competitorEmpty, 'b', '', '—');
-    add(competitorEmpty, 'p', '', 'Competitor comparisons are not available from this research run.');
-    right.appendChild(competitors);
-
-    const timelinePanel = panel('Timeline', '◷');
-    add(timelinePanel, 'p', 'timeline-label', 'Publication dates of cited sources (not dates of company events).');
-    const dates = new Map(allSources.filter(s => s && typeof s.url === 'string').map(s => [s.url, s.published_at]));
-    const entries = [...cited.values()].map(source => {
-      const info = dateInfo(dates.get(source.url));
-      return info ? { source, ...info } : null;
-    }).filter(Boolean).sort((a, b) => b.date - a.date).slice(0, 6);
-    if (entries.length) {
-      const timeline = add(timelinePanel, 'ol', 'timeline');
-      for (const item of entries) {
-        const li = add(timeline, 'li');
-        add(li, 'div', 'timeline-date', item.label);
-        const link = safeLink(item.source, item.source.title || 'Read source', 'timeline-link');
-        if (link) li.appendChild(link);
+      if (cls) {
+        node.className = cls;
       }
-    } else {
-      add(timelinePanel, 'p', 'empty-state', 'No publication dates are available for the cited sources.');
-    }
-    right.appendChild(timelinePanel);
 
-    add(output, 'p', 'coverage', 'Insights reflect retrieved source material. Open a citation to verify claims and dates; this is not a comprehensive record of company activity.');
-    output.style.display = 'block';
-    demoLabel.style.display = isDemo ? 'block' : 'none';
-  }
-  async function analyze() {
-    const company = input.value.trim();
-    if (!company || button.disabled) return;
-    demoLabel.style.display = 'none';
-    loader.style.display = 'block';
-    output.style.display = 'none';
-    button.disabled = true;
-    button.textContent = 'Analyzing…';
-    try {
-      const response = await fetch('/api/v1/analyze', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({company_name: company}) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Could not complete the analysis.');
-      render(data);
-    } catch (error) {
-      output.replaceChildren();
-      add(output, 'p', 'error-box', error && error.message ? error.message : 'Analysis failed.');
-      output.style.display = 'block';
-    } finally {
-      loader.style.display = 'none';
-      button.disabled = false;
-      button.textContent = 'Analyze';
+      if (text !== undefined) {
+        node.textContent = String(text);
+      }
+
+      return node;
     }
-  }
-  // Optional local preview: http://127.0.0.1:8000/?preview=1
-  // This uses an illustrative saved example and makes zero API requests.
-  if (new URLSearchParams(location.search).get('preview') === '1') {
-    input.value = 'Microsoft';
-    render({
-      company_name: 'Microsoft',
-      insight_items: [
-        {text: 'Microsoft holds an investment in OpenAI Group PBC valued at approximately $135 billion, representing roughly 27 percent on an as-converted basis, as described in a 2025 partnership update.', sources: [{title: 'The Next Chapter of the Microsoft–OpenAI Partnership', url: 'https://openai.com/index/next-chapter-of-microsoft-openai-partnership'}]},
-        {text: 'OpenAI announced a major 2025 funding round with continued participation from Microsoft, reflecting the ongoing strategic relationship.', sources: [{title: 'What Does Microsoft Own?', url: 'https://www.fool.com/investing/how-to-invest/stocks/what-does-microsoft-own'}]},
-        {text: 'Accenture described Avanade, its joint venture with Microsoft, as a provider of Microsoft-platform services in its 2026 Edge announcement.', sources: [{title: 'Accenture launches Accenture Edge', url: 'https://newsroom.accenture.com/news/2026/accenture-launches-accenture-edge-to-help-mid-market-companies-harness-ai-and-reinvent-how-they-operate'}]}
-      ],
-      sources: [
-        {url: 'https://openai.com/index/next-chapter-of-microsoft-openai-partnership', published_at: 'Tue, 28 Oct 2025 00:00:00 GMT'},
-        {url: 'https://www.fool.com/investing/how-to-invest/stocks/what-does-microsoft-own', published_at: 'Tue, 16 Dec 2025 17:55:57 GMT'},
-        {url: 'https://newsroom.accenture.com/news/2026/accenture-launches-accenture-edge-to-help-mid-market-companies-harness-ai-and-reinvent-how-they-operate', published_at: 'Tue, 23 Jun 2026 07:59:00 GMT'}
-      ]
-    }, true);
-  }
-</script>
+
+    function add(parent, tag, cls, text) {
+      const node = el(tag, cls, text);
+      parent.appendChild(node);
+      return node;
+    }
+
+    function safeLink(source, label, cls = "source-chip") {
+      if (!source || typeof source.url !== "string") {
+        return null;
+      }
+
+      let parsed;
+
+      try {
+        parsed = new URL(source.url);
+      } catch (_) {
+        return null;
+      }
+
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        return null;
+      }
+
+      const link = el("a", cls, label);
+
+      link.href = parsed.href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.title = source.title || parsed.href;
+
+      link.setAttribute(
+        "aria-label",
+        `Read source: ${source.title || parsed.href}`
+      );
+
+      return link;
+    }
+
+    function dateInfo(value) {
+      if (!value) {
+        return null;
+      }
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+
+      return {
+        date,
+        label: new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC"
+        }).format(date)
+      };
+    }
+
+    function panel(title, icon, extra = "") {
+      const section = el("section", "panel");
+      const header = add(section, "div", "panel-head");
+      const heading = add(header, "h2");
+
+      add(heading, "span", "panel-icon", icon);
+
+      heading.appendChild(
+        document.createTextNode(title)
+      );
+
+      if (extra) {
+        add(header, "span", "panel-tag", extra);
+      }
+
+      return section;
+    }
+
+    function render(data, isDemo = false) {
+      output.replaceChildren();
+
+      const insights = Array.isArray(data.insight_items)
+        ? data.insight_items
+        : [];
+
+      const allSources = Array.isArray(data.sources)
+        ? data.sources
+        : [];
+
+      const cited = new Map();
+
+      // Only the insight count is currently calculated.
+      // Other KPI values remain unavailable.
+      const stats = [
+        ["Market Position", "—", "Not assessed"],
+        [
+          "Insights Found",
+          insights.length,
+          "Source-backed findings",
+          "signal"
+        ],
+        ["Sentiment", "—", "Not assessed"],
+        ["Threat Level", "—", "Not assessed"]
+      ];
+
+      const cards = add(
+        output,
+        "section",
+        "kpi-grid"
+      );
+
+      cards.setAttribute(
+        "aria-label",
+        "Competitive intelligence overview"
+      );
+
+      for (const [label, value, note, cls] of stats) {
+        const card = add(
+          cards,
+          "article",
+          "kpi"
+        );
+
+        add(card, "div", "kpi-label", label);
+
+        add(
+          card,
+          "div",
+          `kpi-value ${cls || ""}`,
+          value
+        );
+
+        add(
+          card,
+          "div",
+          "kpi-note " + (
+            cls === "signal" ? "supported" : ""
+          ),
+          note
+        );
+      }
+
+      const dash = add(
+        output,
+        "div",
+        "dashboard"
+      );
+
+      const left = add(
+        dash,
+        "div",
+        "main-column"
+      );
+
+      const right = add(
+        dash,
+        "aside",
+        "aside-column"
+      );
+
+      // INSIGHTS REPORT
+      const report = panel(
+        `${data.company_name || "Company"} — Insights Report`,
+        "▤",
+        "Source-linked"
+      );
+
+      const list = add(
+        report,
+        "div",
+        "insights"
+      );
+
+      insights.forEach((insight, i) => {
+        const item = add(
+          list,
+          "article",
+          "insight"
+        );
+
+        add(
+          item,
+          "div",
+          "insight-icon",
+          String(i + 1).padStart(2, "0")
+        );
+
+        const textWrap = add(
+          item,
+          "div"
+        );
+
+        add(
+          textWrap,
+          "div",
+          "insight-title",
+          `STRATEGIC FINDING ${i + 1}`
+        );
+
+        const category = CATEGORIES.includes(
+          insight.category
+        )
+          ? insight.category
+          : "Other";
+
+        add(
+          textWrap,
+          "div",
+          "category-chip",
+          category
+        );
+
+        add(
+          textWrap,
+          "p",
+          "insight-text",
+          insight.text || ""
+        );
+
+        const links = add(
+          textWrap,
+          "div",
+          "source-row"
+        );
+
+        let count = 0;
+
+        const insightSources = Array.isArray(
+          insight.sources
+        )
+          ? insight.sources
+          : [];
+
+        for (const source of insightSources) {
+          const link = safeLink(
+            source,
+            `Source ${count + 1} ↗`
+          );
+
+          if (!link) {
+            continue;
+          }
+
+          if (count === 0) {
+            add(
+              links,
+              "span",
+              "source-label",
+              "Evidence"
+            );
+          }
+
+          links.appendChild(link);
+          count += 1;
+
+          cited.set(
+            source.url,
+            source
+          );
+        }
+
+        if (!count) {
+          add(
+            links,
+            "span",
+            "source-label",
+            "No linked evidence supplied"
+          );
+        }
+      });
+
+      if (!insights.length) {
+        add(
+          list,
+          "p",
+          "empty-state",
+          "No source-backed strategic insights were identified for this company."
+        );
+      }
+
+      left.appendChild(report);
+
+      // EXECUTIVE SNAPSHOT
+      const snapshot = panel(
+        "Executive Snapshot",
+        "▣"
+      );
+
+      const snapshotBody = add(
+        snapshot,
+        "div",
+        "panel-content"
+      );
+
+      if (insights.length) {
+        add(
+          snapshotBody,
+          "div",
+          "snapshot-label",
+          "Highlighted finding"
+        );
+
+        add(
+          snapshotBody,
+          "p",
+          "snapshot-text",
+          insights[0].text || ""
+        );
+
+        add(
+          snapshotBody,
+          "p",
+          "snapshot-note",
+          "A highlight from the report above, not a separate market assessment."
+        );
+      } else {
+        add(
+          snapshotBody,
+          "p",
+          "snapshot-text",
+          "No source-backed executive highlight is available from this report."
+        );
+      }
+
+      left.appendChild(snapshot);
+
+      // SENTIMENT
+      const sentiment = panel(
+        "Sentiment",
+        "◉"
+      );
+
+      const sentimentBody = add(
+        sentiment,
+        "div",
+        "sentiment-body"
+      );
+
+      const donut = add(
+        sentimentBody,
+        "div",
+        "empty-donut"
+      );
+
+      add(
+        donut,
+        "span",
+        "",
+        "—"
+      );
+
+      const sentimentText = add(
+        sentimentBody,
+        "div",
+        "sentiment-copy"
+      );
+
+      add(
+        sentimentText,
+        "strong",
+        "",
+        "Not assessed"
+      );
+
+      add(
+        sentimentText,
+        "p",
+        "",
+        "This report does not include a measured sentiment distribution."
+      );
+
+      right.appendChild(sentiment);
+
+      // SIGNAL BREAKDOWN
+      const breakdown = panel(
+        "Signal Breakdown",
+        "▥"
+      );
+
+      const breakdownBody = add(
+        breakdown,
+        "div",
+        "breakdown-body"
+      );
+
+      if (!insights.length) {
+        add(
+          breakdownBody,
+          "p",
+          "breakdown-note",
+          "No source-backed insights available to classify."
+        );
+      } else {
+        add(
+          breakdownBody,
+          "p",
+          "breakdown-note",
+          "Share of findings in this report, not company-wide activity."
+        );
+
+        const counts = Object.fromEntries(
+          CATEGORIES.map(
+            category => [category, 0]
+          )
+        );
+
+        for (const insight of insights) {
+          const category = CATEGORIES.includes(
+            insight.category
+          )
+            ? insight.category
+            : "Other";
+
+          counts[category] += 1;
+        }
+
+        for (const category of CATEGORIES) {
+          const count = counts[category];
+
+          const percent = Math.round(
+            100 * count / insights.length
+          );
+
+          const row = add(
+            breakdownBody,
+            "div",
+            "breakdown-item"
+          );
+
+          const heading = add(
+            row,
+            "div",
+            "breakdown-item-head"
+          );
+
+          add(
+            heading,
+            "span",
+            "",
+            category
+          );
+
+          add(
+            heading,
+            "span",
+            "",
+            `${count} · ${percent}%`
+          );
+
+          const track = add(
+            row,
+            "div",
+            "breakdown-track"
+          );
+
+          const fill = add(
+            track,
+            "div",
+            "breakdown-fill"
+          );
+
+          fill.style.width = `${percent}%`;
+
+          track.setAttribute(
+            "role",
+            "img"
+          );
+
+          track.setAttribute(
+            "aria-label",
+            `${category}: ${count} of ${insights.length} findings`
+          );
+        }
+      }
+
+      right.appendChild(breakdown);
+
+      // COMPETITORS
+      const competitors = panel(
+        "Top Competitors",
+        "⇄"
+      );
+
+      const competitorBody = add(
+        competitors,
+        "div",
+        "competitor-body"
+      );
+
+      const competitorEmpty = add(
+        competitorBody,
+        "div",
+        "competitor-placeholder"
+      );
+
+      add(
+        competitorEmpty,
+        "b",
+        "",
+        "—"
+      );
+
+      add(
+        competitorEmpty,
+        "p",
+        "",
+        "Competitor comparisons are not available from this research run."
+      );
+
+      right.appendChild(competitors);
+
+      // TIMELINE
+      const timelinePanel = panel(
+        "Timeline",
+        "◷"
+      );
+
+      add(
+        timelinePanel,
+        "p",
+        "timeline-label",
+        "Publication dates of cited sources (not dates of company events)."
+      );
+
+      const dates = new Map(
+        allSources
+          .filter(
+            source =>
+              source &&
+              typeof source.url === "string"
+          )
+          .map(
+            source => [
+              source.url,
+              source.published_at
+            ]
+          )
+      );
+
+      const entries = [...cited.values()]
+        .map(source => {
+          const info = dateInfo(
+            dates.get(source.url)
+          );
+
+          return info
+            ? { source, ...info }
+            : null;
+        })
+        .filter(Boolean)
+        .sort(
+          (a, b) => b.date - a.date
+        )
+        .slice(0, 6);
+
+      if (entries.length) {
+        const timeline = add(
+          timelinePanel,
+          "ol",
+          "timeline"
+        );
+
+        for (const item of entries) {
+          const li = add(
+            timeline,
+            "li"
+          );
+
+          add(
+            li,
+            "div",
+            "timeline-date",
+            item.label
+          );
+
+          const link = safeLink(
+            item.source,
+            item.source.title || "Read source",
+            "timeline-link"
+          );
+
+          if (link) {
+            li.appendChild(link);
+          }
+        }
+      } else {
+        add(
+          timelinePanel,
+          "p",
+          "empty-state",
+          "No publication dates are available for the cited sources."
+        );
+      }
+
+      right.appendChild(timelinePanel);
+
+      add(
+        output,
+        "p",
+        "coverage",
+        "Insights reflect retrieved source material. Open a citation to verify claims and dates; this is not a comprehensive record of company activity."
+      );
+
+      output.style.display = "block";
+      demoLabel.style.display = isDemo
+        ? "block"
+        : "none";
+    }
+
+    async function analyze() {
+      const company = input.value.trim();
+
+      if (!company || button.disabled) {
+        return;
+      }
+
+      demoLabel.style.display = "none";
+      loader.style.display = "block";
+      output.style.display = "none";
+
+      button.disabled = true;
+      button.textContent = "Analyzing…";
+
+      try {
+        const response = await fetch(
+          "/api/v1/analyze",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              company_name: company
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            typeof data.detail === "string"
+              ? data.detail
+              : "Could not complete the analysis."
+          );
+        }
+
+        render(data);
+
+      } catch (error) {
+        output.replaceChildren();
+
+        add(
+          output,
+          "p",
+          "error-box",
+          error && error.message
+            ? error.message
+            : "Analysis failed."
+        );
+
+        output.style.display = "block";
+
+      } finally {
+        loader.style.display = "none";
+        button.disabled = false;
+        button.textContent = "Analyze";
+      }
+    }
+
+    // Preview mode: zero API calls.
+    if (
+      new URLSearchParams(location.search)
+        .get("preview") === "1"
+    ) {
+      input.value = "Microsoft";
+
+      render({
+        company_name: "Microsoft",
+        insight_items: [
+          {
+            category: "M&A / Partnerships",
+            text: "Microsoft holds an investment in OpenAI Group PBC valued at approximately $135 billion, representing roughly 27 percent on an as-converted basis, as described in a 2025 partnership update.",
+            sources: [
+              {
+                title: "The Next Chapter of the Microsoft–OpenAI Partnership",
+                url: "https://openai.com/index/next-chapter-of-microsoft-openai-partnership"
+              }
+            ]
+          },
+          {
+            category: "M&A / Partnerships",
+            text: "OpenAI announced a major 2025 funding round with continued participation from Microsoft, reflecting the ongoing strategic relationship.",
+            sources: [
+              {
+                title: "What Does Microsoft Own?",
+                url: "https://www.fool.com/investing/how-to-invest/stocks/what-does-microsoft-own"
+              }
+            ]
+          },
+          {
+            category: "M&A / Partnerships",
+            text: "Accenture described Avanade, its joint venture with Microsoft, as a provider of Microsoft-platform services in its 2026 Edge announcement.",
+            sources: [
+              {
+                title: "Accenture launches Accenture Edge",
+                url: "https://newsroom.accenture.com/news/2026/accenture-launches-accenture-edge-to-help-mid-market-companies-harness-ai-and-reinvent-how-they-operate"
+              }
+            ]
+          }
+        ],
+        sources: [
+          {
+            url: "https://openai.com/index/next-chapter-of-microsoft-openai-partnership",
+            published_at: "Tue, 28 Oct 2025 00:00:00 GMT"
+          },
+          {
+            url: "https://www.fool.com/investing/how-to-invest/stocks/what-does-microsoft-own",
+            published_at: "Tue, 16 Dec 2025 17:55:57 GMT"
+          },
+          {
+            url: "https://newsroom.accenture.com/news/2026/accenture-launches-accenture-edge-to-help-mid-market-companies-harness-ai-and-reinvent-how-they-operate",
+            published_at: "Tue, 23 Jun 2026 07:59:00 GMT"
+          }
+        ]
+      }, true);
+    }
+  </script>
 </body>
 </html>
