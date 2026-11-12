@@ -73,6 +73,12 @@ class ResearchStats(TypedDict):
     discarded: int
 
 
+class LLMUsage(TypedDict):
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+
+
 class AgentState(TypedDict):
     company_name: str
     search_results: str
@@ -92,6 +98,7 @@ class AgentState(TypedDict):
     competitor_research_attempts: int
     competitor_research_warnings: list[str]
     competitors: list[CompetitorItem]
+    llm_usage: LLMUsage | None
 
 
 def build_query(company: str) -> str:
@@ -1155,6 +1162,44 @@ DEDICATED COMPETITOR RESEARCH SOURCES
         HumanMessage(content=prompt)
     ])
 
+
+
+    # Capture usage from the existing GPT-4o response.
+    # No additional LLM request is made.
+
+    usage_metadata = getattr(
+        response,
+        "usage_metadata",
+        None,
+    )
+
+    llm_usage = None
+
+    if isinstance(usage_metadata, dict):
+        input_tokens = usage_metadata.get("input_tokens")
+        output_tokens = usage_metadata.get("output_tokens")
+        total_tokens = usage_metadata.get("total_tokens")
+
+        token_counts = (
+            input_tokens,
+            output_tokens,
+            total_tokens,
+        )
+
+        if all(
+            isinstance(count, int)
+            and not isinstance(count, bool)
+            and count >= 0
+            for count in token_counts
+        ):
+            llm_usage = {
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "total_tokens": total_tokens,
+            }
+
+
+
     raw_insights = (
         response.content
         if isinstance(response.content, str)
@@ -1194,6 +1239,7 @@ DEDICATED COMPETITOR RESEARCH SOURCES
         "source_sentiments": source_sentiments,
         "sentiment_distribution": sentiment_distribution,
         "competitors": competitors,
+        "llm_usage": llm_usage,
     }
 
 
@@ -1533,6 +1579,7 @@ async def run_workflow(company_name: str) -> dict:
             "discarded": 0,
         },
         "research_warnings": [],
+        "llm_usage": None,
     }
 
     result = await app_graph.ainvoke(
@@ -1562,6 +1609,7 @@ async def run_workflow(company_name: str) -> dict:
             "competitor_research_attempts": 0,
             "competitor_research_warnings": [],
             "competitors": [],
+            "llm_usage": None,
             "source_stats": result.get(
                 "source_stats",
                 {},
@@ -1594,6 +1642,7 @@ async def run_workflow(company_name: str) -> dict:
         "error_code": None,
         "research_attempts": attempts,
         "report": report,
+        "llm_usage": result.get("llm_usage"),
         "search_results": result.get(
             "search_results",
             "",
