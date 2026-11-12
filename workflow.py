@@ -17,6 +17,7 @@ from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
 from langfuse.langchain import CallbackHandler
 from langgraph.graph import StateGraph, START, END
+from datetime import date, timedelta
 
 load_dotenv()
 
@@ -105,6 +106,26 @@ def build_competitor_query(company: str) -> str:
         "competing products similar startups "
         "market comparison"
     )
+
+
+def company_news_start_date(
+    attempt_number: int,
+    *,
+    today: date | None = None,
+) -> str:
+    """
+    First company research attempt: last 90 days.
+    Later attempts: last 365 days.
+    """
+    as_of = today if today is not None else date.today()
+
+    lookback_days = (
+        90 if attempt_number == 1 else 365
+    )
+
+    return (
+        as_of - timedelta(days=lookback_days)
+    ).isoformat()
 
 
 def competitor_mock_path(company: str) -> str:
@@ -255,8 +276,15 @@ async def research_node(state: AgentState):
         )
 
         try:
+            attempt_number = (
+                state.get("research_attempts", 0) + 1
+            )
+
             results = await tool.ainvoke({
-                "query": build_query(company)
+                "query": build_query(company),
+                "start_date": company_news_start_date(
+                    attempt_number
+                ),
             })
 
         except Exception as exc:
