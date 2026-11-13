@@ -5,23 +5,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1425">
+
   <title>MarketScope | Competitive Intelligence</title>
 
   <style>
     :root {
       color-scheme: dark;
-      font-family: Inter, ui-sans-serif, -apple-system,
-        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, ui-sans-serif,
+        -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
 
       --bg: #0b1425;
       --panel: #17243b;
-      --panel-light: #1b2b46;
       --border: #293d5b;
       --text: #e9f3ff;
       --muted: #9eafc7;
       --sky: #49b8ff;
       --green: #56d7b0;
       --gold: #f3c46b;
+      --red: #e47b86;
     }
 
     * {
@@ -30,6 +32,7 @@
 
     body {
       margin: 0;
+      color: var(--text);
       background:
         radial-gradient(
           ellipse 55% 300px at 48% -120px,
@@ -37,10 +40,10 @@
           transparent 100%
         ),
         var(--bg);
-      color: var(--text);
     }
 
-    button, input {
+    button,
+    input {
       font: inherit;
     }
 
@@ -48,73 +51,71 @@
       cursor: pointer;
     }
 
-    a {
-      -webkit-tap-highlight-color: transparent;
-    }
-
     .topbar {
-      border-bottom: 1px solid #243653;
       background: rgba(12, 23, 42, .92);
+      border-bottom: 1px solid #243653;
     }
 
     .topbar-inner {
       max-width: 1340px;
-      margin: 0 auto;
+      margin: auto;
       min-height: 74px;
       padding: 13px 30px;
+
       display: flex;
-      gap: 22px;
       align-items: center;
       justify-content: space-between;
+      gap: 22px;
     }
 
     .branding {
       display: flex;
-      gap: 11px;
       align-items: center;
+      gap: 11px;
     }
 
     .brand-logo {
       display: grid;
       place-items: center;
+
       width: 41px;
       height: 41px;
+
       border-radius: 12px;
       background: linear-gradient(
         140deg,
         #84ddff,
         #399eff 72%
       );
+
+      color: #10243c;
       font-size: 22px;
       font-weight: 900;
-      color: #10243c;
-      box-shadow: 0 3px 24px #3e9dff31;
     }
 
     .brand-name {
       color: var(--sky);
       font-size: 19px;
       font-weight: 760;
-      letter-spacing: -.45px;
     }
 
     .brand-sub {
+      margin-top: 2px;
       font-size: 11px;
       color: #a1b6cf;
-      margin-top: 2px;
     }
 
     .workflow-badges {
       display: flex;
-      align-items: center;
-      gap: 8px;
       flex-wrap: wrap;
+      gap: 8px;
     }
 
     .workflow-badges span {
       padding: 7px 10px;
       font-size: 11px;
       color: #afc1d8;
+
       background: #14243b;
       border: 1px solid #2a405e;
       border-radius: 99px;
@@ -128,26 +129,37 @@
 
     .shell {
       max-width: 1340px;
-      margin: 0 auto;
+      margin: auto;
       padding: 20px 30px 90px;
     }
 
+    /* Search form */
+
     .search {
       display: flex;
+      flex-wrap: wrap;
       gap: 12px;
       margin-bottom: 19px;
     }
 
     .search input {
-      flex: 1;
       min-width: 0;
       background: #15233a;
       border: 1px solid #2d4260;
       color: var(--text);
+
       padding: 13px 16px;
       border-radius: 9px;
       outline: none;
       font-size: 14px;
+    }
+
+    #companyInput {
+      flex: 2 1 240px;
+    }
+
+    #websiteInput {
+      flex: 1 1 230px;
     }
 
     .search input:focus {
@@ -162,11 +174,13 @@
     .search button {
       background: #42b8f9;
       color: #07172b;
+
       padding: 0 24px;
+      min-height: 45px;
+
       border: 0;
       border-radius: 9px;
       font-weight: 750;
-      min-height: 45px;
     }
 
     .search button:hover {
@@ -181,8 +195,8 @@
     #loader {
       display: none;
       padding: 0 2px 13px;
-      font-size: 12px;
       color: #a8d9fc;
+      font-size: 12px;
     }
 
     #output {
@@ -191,18 +205,24 @@
 
     .demo-label {
       display: none;
+      margin-bottom: 17px;
+      padding: 11px 15px;
+
       background: #142c46;
       border: 1px solid #37668d;
-      padding: 11px 15px;
       border-radius: 9px;
-      margin-bottom: 17px;
-      font-size: 12px;
+
       color: #bfdef9;
+      font-size: 12px;
     }
+
+    /* KPI section */
 
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
       gap: 13px;
       margin-bottom: 18px;
     }
@@ -210,32 +230,25 @@
     .kpi {
       min-height: 120px;
       padding: 18px 19px;
-      background:
-        radial-gradient(
-          circle at 90% 8%,
-          #254a75 0%,
-          transparent 22%
-        ),
-        #182741;
+
+      background: #182741;
       border: 1px solid var(--border);
       border-radius: 13px;
     }
 
     .kpi-label {
-      text-transform: uppercase;
       color: #a3b5cd;
       font-size: 10px;
+      text-transform: uppercase;
       letter-spacing: .09em;
       font-weight: 690;
     }
 
     .kpi-value {
-      color: #f7faff;
       margin: 9px 0 5px;
+      color: #f7faff;
       font-size: 27px;
       font-weight: 780;
-      line-height: 1;
-      letter-spacing: -.7px;
     }
 
     .kpi-value.signal {
@@ -252,9 +265,14 @@
       color: #72dec1;
     }
 
+    /* Dashboard layout */
+
     .dashboard {
       display: grid;
-      grid-template-columns: minmax(0, 1.9fr) minmax(300px, .87fr);
+      grid-template-columns:
+        minmax(0, 1.9fr)
+        minmax(300px, .87fr);
+
       gap: 17px;
       align-items: start;
     }
@@ -267,161 +285,55 @@
     }
 
     .panel {
+      overflow: hidden;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
-      overflow: hidden;
     }
 
     .panel-head {
       display: flex;
-      gap: 12px;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
+
       padding: 18px 20px;
       border-bottom: 1px solid #293b54;
     }
 
     .panel-head h2 {
-      font-size: 16px;
       margin: 0;
+      font-size: 16px;
       font-weight: 750;
-      letter-spacing: -.2px;
     }
 
     .panel-icon {
       display: inline-grid;
       place-items: center;
+
       width: 22px;
       height: 22px;
       margin-right: 8px;
-      color: #8fd2ff;
+
       background: #28486a;
       border-radius: 6px;
+      color: #8fd2ff;
+
       font-size: 12px;
-      vertical-align: 1px;
     }
 
     .panel-tag {
       color: #7fe5c4;
       background: #19443e;
       border: 1px solid #28675b;
-      font-size: 10px;
+
+      padding: 5px 9px;
       border-radius: 99px;
-      padding: 5px 9px;
-      white-space: nowrap;
-    }
-
-    .insights {
-      padding: 0 20px;
-    }
-
-    .insight {
-      padding: 19px 0 21px;
-      border-bottom: 1px solid #2b3e59;
-      display: grid;
-      grid-template-columns: 33px minmax(0, 1fr);
-      gap: 12px;
-    }
-
-    .insight:last-child {
-      border-bottom: 0;
-    }
-
-    .insight-icon {
-      display: grid;
-      place-items: center;
-      width: 33px;
-      height: 33px;
-      background: #263e5d;
-      border-radius: 9px;
-      color: #95cfff;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .insight-title {
-      font-size: 12px;
-      color: #89c8ff;
-      font-weight: 720;
-      margin: 0 0 7px;
-      letter-spacing: .035em;
-    }
-
-    .category-chip {
-      display: inline-block;
-      color: #9fd7ff;
-      border: 1px solid #365779;
-      background: #18324d;
-      border-radius: 6px;
       font-size: 10px;
-      padding: 3px 6px;
-      margin: 0 0 8px;
-    }
-
-    .insight-text {
-      font-size: 13px;
-      line-height: 1.72;
-      color: #dbe7f6;
-      margin: 0;
-      overflow-wrap: anywhere;
-    }
-
-    .source-row {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      flex-wrap: wrap;
-      margin-top: 11px;
-    }
-
-    .source-label {
-      color: #829cb9;
-      font-size: 10px;
-      margin-right: 2px;
-    }
-
-    .source-chip {
-      color: #aedfff;
-      border: 1px solid #355c7e;
-      background: #142e45;
-      padding: 5px 9px;
-      border-radius: 7px;
-      font-size: 10px;
-      text-decoration: none;
-    }
-
-    .source-chip:hover,
-    .source-chip:focus-visible {
-      color: white;
-      background: #235270;
-      border-color: #5db7f6;
     }
 
     .panel-content {
       padding: 19px 20px;
-    }
-
-    .snapshot-label {
-      color: #85c8fa;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 10px;
-    }
-
-    .snapshot-text {
-      color: #dbe6f4;
-      font-size: 12px;
-      line-height: 1.75;
-      margin: 0;
-    }
-
-    .snapshot-note {
-      color: #8199b6;
-      font-size: 10px;
-      margin: 13px 0 0;
     }
 
     .empty-state {
@@ -431,51 +343,153 @@
       line-height: 1.65;
     }
 
+    /* Insights */
+
+    .insights {
+      padding: 0 20px;
+    }
+
+    .insight {
+      display: grid;
+      grid-template-columns: 33px minmax(0, 1fr);
+      gap: 12px;
+
+      padding: 19px 0 21px;
+      border-bottom: 1px solid #2b3e59;
+    }
+
+    .insight:last-child {
+      border-bottom: 0;
+    }
+
+    .insight-icon {
+      display: grid;
+      place-items: center;
+
+      width: 33px;
+      height: 33px;
+
+      background: #263e5d;
+      border-radius: 9px;
+      color: #95cfff;
+
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .insight-title {
+      margin: 0 0 7px;
+      color: #89c8ff;
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .category-chip {
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 3px 6px;
+
+      background: #18324d;
+      border: 1px solid #365779;
+      border-radius: 6px;
+
+      color: #9fd7ff;
+      font-size: 10px;
+    }
+
+    .insight-text {
+      margin: 0;
+      color: #dbe7f6;
+      font-size: 13px;
+      line-height: 1.72;
+      overflow-wrap: anywhere;
+    }
+
+    /* Citations */
+
+    .source-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 11px;
+    }
+
+    .source-label {
+      color: #829cb9;
+      font-size: 10px;
+    }
+
+    .source-chip {
+      color: #aedfff;
+      background: #142e45;
+      border: 1px solid #355c7e;
+
+      padding: 5px 9px;
+      border-radius: 7px;
+
+      font-size: 10px;
+      text-decoration: none;
+    }
+
+    .source-chip:hover {
+      color: white;
+      background: #235270;
+    }
+
+    /* Executive summary */
+
+    .snapshot-label {
+      margin-bottom: 10px;
+      color: #85c8fa;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .snapshot-text {
+      margin: 0;
+      color: #dbe6f4;
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    /* Sentiment */
+
     .sentiment-body {
       display: flex;
-      gap: 16px;
       align-items: center;
+      gap: 16px;
       padding: 20px;
     }
 
     .empty-donut {
+      position: relative;
+      display: grid;
+      place-items: center;
+
       flex-shrink: 0;
       width: 98px;
       height: 98px;
+
       border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: conic-gradient(#36506e 0deg 360deg);
-      position: relative;
+      background: conic-gradient(
+        #36506e 0deg 360deg
+      );
     }
 
     .empty-donut::before {
       content: "";
       position: absolute;
       inset: 11px;
-      background: var(--panel);
       border-radius: 50%;
+      background: var(--panel);
     }
 
     .empty-donut span {
       position: relative;
       font-size: 22px;
-      color: #8ca4c0;
       font-weight: 750;
-    }
-
-    .sentiment-copy strong {
-      display: block;
-      font-size: 12px;
-      margin-bottom: 5px;
-      color: #cddbeb;
-    }
-
-    .sentiment-copy p {
-      margin: 0;
-      color: #91a6c1;
-      line-height: 1.55;
-      font-size: 11px;
     }
 
     .sentiment-legend {
@@ -483,11 +497,18 @@
       min-width: 0;
     }
 
+    .sentiment-legend strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
     .sentiment-legend-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
+
       margin-top: 8px;
       font-size: 11px;
     }
@@ -502,72 +523,57 @@
     .sentiment-swatch {
       width: 9px;
       height: 9px;
-      flex-shrink: 0;
       border-radius: 50%;
-    }
-
-    .sentiment-legend-value {
-      white-space: nowrap;
-      color: #dbe7f6;
     }
 
     .sentiment-coverage {
       margin: 0 20px 18px;
+      color: #91a6c1;
       font-size: 10px;
       line-height: 1.6;
-      color: #91a6c1;
     }
+
+    /* Signal breakdown */
 
     .breakdown-body {
       padding: 16px 20px 18px;
     }
 
     .breakdown-note {
+      margin: 0 0 13px;
+      color: #93a8c2;
       font-size: 11px;
       line-height: 1.6;
-      color: #93a8c2;
-      margin: 0 0 13px;
     }
 
     .breakdown-item {
-      border-top: 1px solid #273b56;
       padding: 10px 0;
-    }
-
-    .breakdown-item:first-of-type {
-      border-top: 0;
+      border-top: 1px solid #273b56;
     }
 
     .breakdown-item-head {
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      font-size: 11px;
       margin-bottom: 7px;
-    }
-
-    .breakdown-item-head span:first-child {
-      color: #b1c2d8;
-    }
-
-    .breakdown-item-head span:last-child {
-      color: #9bcfff;
+      font-size: 11px;
     }
 
     .breakdown-track {
       width: 100%;
       height: 5px;
-      border-radius: 99px;
-      background: #2a3e5c;
       overflow: hidden;
+      background: #2a3e5c;
+      border-radius: 99px;
     }
 
     .breakdown-fill {
       height: 100%;
       background: #4abaff;
       border-radius: 99px;
-      transition: width .2s ease;
     }
+
+    /* Competitors */
 
     .competitor-body {
       padding: 18px 20px;
@@ -583,62 +589,29 @@
     }
 
     .competitor-entry:last-child {
-      padding-bottom: 0;
-      border-bottom: none;
+      border-bottom: 0;
     }
 
     .competitor-name {
+      margin: 0 0 7px;
       color: #dff2ff;
       font-size: 13px;
-      font-weight: 750;
-      margin: 0 0 7px;
     }
 
     .competitor-overlap {
+      margin: 0;
       color: #a9bfd9;
       font-size: 11px;
       line-height: 1.65;
-      margin: 0;
     }
 
-    .competitor-empty {
-      color: #9cacc4;
-      font-size: 11px;
-      line-height: 1.65;
-      margin: 0;
-    }
-
-    .competitor-placeholder {
-      text-align: left;
-      display: flex;
-      align-items: start;
-      gap: 10px;
-    }
-
-    .competitor-placeholder b {
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-      width: 30px;
-      height: 30px;
-      border: 1px solid #36516e;
-      border-radius: 8px;
-      color: #81bded;
-      font-weight: 800;
-    }
-
-    .competitor-placeholder p {
-      margin: 0;
-      color: #9cacc4;
-      font-size: 11px;
-      line-height: 1.65;
-    }
+    /* Timeline */
 
     .timeline-label {
-      font-size: 11px;
-      color: #90a7c3;
       margin: 0;
       padding: 14px 20px 0;
+      color: #90a7c3;
+      font-size: 11px;
       line-height: 1.6;
     }
 
@@ -649,15 +622,14 @@
     }
 
     .timeline li {
+      position: relative;
+      margin-left: 5px;
       padding: 0 0 18px 18px;
       border-left: 1px solid #406587;
-      margin-left: 5px;
-      position: relative;
     }
 
     .timeline li:last-child {
       border-left-color: transparent;
-      padding-bottom: 6px;
     }
 
     .timeline li::before {
@@ -665,30 +637,30 @@
       position: absolute;
       left: -4.5px;
       top: 3px;
+
       width: 8px;
       height: 8px;
-      border-radius: 100%;
+
       background: #41bdfa;
-      box-shadow: 0 0 10px #3bb6ef35;
+      border-radius: 50%;
     }
 
     .timeline-date {
-      font-size: 11px;
-      color: #83cdfc;
-      font-weight: 700;
       margin-bottom: 5px;
+      color: #83cdfc;
+      font-size: 11px;
+      font-weight: 700;
     }
 
-    .timeline a {
+    .timeline-link {
       color: #d2e3f4;
-      text-decoration: none;
       font-size: 11px;
       line-height: 1.5;
-      display: block;
+      text-decoration: none;
       overflow-wrap: anywhere;
     }
 
-    .timeline a:hover {
+    .timeline-link:hover {
       color: #78cbff;
       text-decoration: underline;
     }
@@ -697,6 +669,7 @@
       margin-top: 12px;
       color: #8da4be;
       font-size: 11px;
+      line-height: 1.6;
     }
 
     .error-box {
@@ -705,18 +678,6 @@
       border: 1px solid #98576b;
       border-radius: 10px;
       color: #ffd1d9;
-    }
-
-    @media (max-width: 970px) {
-      .dashboard {
-        grid-template-columns:
-          minmax(0, 1.4fr)
-          minmax(270px, 1fr);
-      }
-
-      .sentiment-body {
-        gap: 10px;
-      }
     }
 
     @media (max-width: 790px) {
@@ -760,34 +721,32 @@
         grid-template-columns: 1fr;
       }
 
-      .kpi {
-        min-height: 104px;
-        padding: 14px;
-      }
-
-      .panel-head {
-        padding: 15px;
-      }
-
-      .insights {
-        padding: 0 15px;
-      }
-
-      .panel-content {
-        padding: 15px;
+      .kpi-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
       }
     }
   </style>
 </head>
 
 <body>
+
   <header class="topbar">
     <div class="topbar-inner">
+
       <div class="branding">
-        <div class="brand-logo" aria-hidden="true">↗</div>
+        <div class="brand-logo" aria-hidden="true">
+          ↗
+        </div>
+
         <div>
-          <div class="brand-name">MarketScope</div>
-          <div class="brand-sub">Competitive Intelligence</div>
+          <div class="brand-name">
+            MarketScope
+          </div>
+
+          <div class="brand-sub">
+            Competitive Intelligence
+          </div>
         </div>
       </div>
 
@@ -800,23 +759,39 @@
         <span>Analysis</span>
         <span>Report</span>
       </div>
+
     </div>
   </header>
 
   <div class="shell">
+
     <form id="searchForm" class="search">
+
       <input
         id="companyInput"
-        placeholder="Search company (e.g. Microsoft)"
+        type="text"
+        placeholder="Search company (e.g. Linear)"
         aria-label="Company name"
         maxlength="50"
         autocomplete="off"
         required
       >
 
-      <button type="submit" id="analyzeBtn">
+      <input
+        id="websiteInput"
+        type="text"
+        placeholder="Official website (optional, e.g. linear.app)"
+        aria-label="Official company website (optional)"
+        autocomplete="off"
+      >
+
+      <button
+        type="submit"
+        id="analyzeBtn"
+      >
         Analyze
       </button>
+
     </form>
 
     <div id="demoLabel" class="demo-label">
@@ -826,37 +801,67 @@
 
     <div
       id="loader"
-      aria-live="polite"
       role="status"
+      aria-live="polite"
     >
       Researching and analyzing company evidence…
     </div>
 
-    <main id="output" aria-live="polite"></main>
+    <main
+      id="output"
+      aria-live="polite"
+    ></main>
+
   </div>
 
   <script>
-    const form = document.getElementById("searchForm");
-    const input = document.getElementById("companyInput");
-    const button = document.getElementById("analyzeBtn");
-    const loader = document.getElementById("loader");
-    const output = document.getElementById("output");
-    const demoLabel = document.getElementById("demoLabel");
+    // ============================================
+    // DOM references
+    // ============================================
+
+    const form = document.getElementById(
+      "searchForm"
+    );
+
+    const input = document.getElementById(
+      "companyInput"
+    );
+
+    const websiteInput = document.getElementById(
+      "websiteInput"
+    );
+
+    const button = document.getElementById(
+      "analyzeBtn"
+    );
+
+    const loader = document.getElementById(
+      "loader"
+    );
+
+    const output = document.getElementById(
+      "output"
+    );
+
+    const demoLabel = document.getElementById(
+      "demoLabel"
+    );
 
     const CATEGORIES = [
       "Product & Innovation",
+      "Funding & Investment",
       "M&A / Partnerships",
       "Market Expansion",
       "Hiring & Talent",
       "Other"
     ];
 
-    form.addEventListener("submit", event => {
-      event.preventDefault();
-      analyze();
-    });
 
-    function el(tag, cls, text) {
+    // ============================================
+    // DOM utilities
+    // ============================================
+
+    function el(tag, cls = "", text) {
       const node = document.createElement(tag);
 
       if (cls) {
@@ -870,14 +875,23 @@
       return node;
     }
 
-    function add(parent, tag, cls, text) {
+
+    function add(parent, tag, cls = "", text) {
       const node = el(tag, cls, text);
       parent.appendChild(node);
       return node;
     }
 
-    function safeLink(source, label, cls = "source-chip") {
-      if (!source || typeof source.url !== "string") {
+
+    function safeLink(
+      source,
+      label,
+      cls = "source-chip"
+    ) {
+      if (
+        !source ||
+        typeof source.url !== "string"
+      ) {
         return null;
       }
 
@@ -889,90 +903,197 @@
         return null;
       }
 
-      if (!["http:", "https:"].includes(parsed.protocol)) {
+      if (
+        !["http:", "https:"].includes(
+          parsed.protocol
+        )
+      ) {
         return null;
       }
 
-      const link = el("a", cls, label);
+      const link = el(
+        "a",
+        cls,
+        label
+      );
 
       link.href = parsed.href;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.title = source.title || parsed.href;
 
-      link.setAttribute(
-        "aria-label",
-        `Read source: ${source.title || parsed.href}`
+      link.title = (
+        source.title || parsed.href
       );
 
       return link;
     }
+
+
+    function appendSourceLinks(
+      parent,
+      sources,
+      onValidSource
+    ) {
+      const validSources = Array.isArray(sources)
+        ? sources
+        : [];
+
+      let count = 0;
+
+      for (const source of validSources) {
+        const link = safeLink(
+          source,
+          `Source ${count + 1} ↗`
+        );
+
+        if (!link) {
+          continue;
+        }
+
+        if (count === 0) {
+          add(
+            parent,
+            "span",
+            "source-label",
+            "Evidence"
+          );
+        }
+
+        parent.appendChild(link);
+
+        if (onValidSource) {
+          onValidSource(source);
+        }
+
+        count += 1;
+      }
+
+      return count;
+    }
+
 
     function dateInfo(value) {
       if (!value) {
         return null;
       }
 
-      const date = new Date(value);
+      const parsed = new Date(value);
 
-      if (Number.isNaN(date.getTime())) {
+      if (Number.isNaN(parsed.getTime())) {
         return null;
       }
 
       return {
-        date,
-        label: new Intl.DateTimeFormat("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          timeZone: "UTC"
-        }).format(date)
+        date: parsed,
+        label: new Intl.DateTimeFormat(
+          "en-GB",
+          {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            timeZone: "UTC"
+          }
+        ).format(parsed)
       };
     }
 
-    function panel(title, icon, extra = "") {
-      const section = el("section", "panel");
-      const header = add(section, "div", "panel-head");
-      const heading = add(header, "h2");
 
-      add(heading, "span", "panel-icon", icon);
+    function panel(
+      title,
+      symbol,
+      extra = ""
+    ) {
+      const section = el(
+        "section",
+        "panel"
+      );
+
+      const header = add(
+        section,
+        "div",
+        "panel-head"
+      );
+
+      const heading = add(
+        header,
+        "h2"
+      );
+
+      add(
+        heading,
+        "span",
+        "panel-icon",
+        symbol
+      );
 
       heading.appendChild(
         document.createTextNode(title)
       );
 
       if (extra) {
-        add(header, "span", "panel-tag", extra);
+        add(
+          header,
+          "span",
+          "panel-tag",
+          extra
+        );
       }
 
       return section;
     }
 
-    function render(data, isDemo = false) {
+
+    // ============================================
+    // Dashboard rendering
+    // ============================================
+
+    function render(
+      data,
+      isDemo = false
+    ) {
       output.replaceChildren();
 
-      const insights = Array.isArray(data.insight_items)
+      const insights = Array.isArray(
+        data.insight_items
+      )
         ? data.insight_items
         : [];
 
-      const allSources = Array.isArray(data.sources)
+      const allSources = Array.isArray(
+        data.sources
+      )
         ? data.sources
         : [];
 
       const cited = new Map();
 
-      // Only insight counts are computed from report data.
-      // Other unavailable KPI values are not invented.
+
+      // ----------------------------------------
+      // KPI cards
+      // ----------------------------------------
+
       const stats = [
-        ["Market Position", "—", "Not assessed"],
+        [
+          "Market Position",
+          "—",
+          "Not assessed"
+        ],
         [
           "Insights Found",
           insights.length,
           "Source-backed findings",
           "signal"
         ],
-        ["Sentiment", "—", "Not assessed"],
-        ["Threat Level", "—", "Not assessed"]
+        [
+          "Sentiment",
+          "—",
+          "See source coverage below"
+        ],
+        [
+          "Threat Level",
+          "—",
+          "Not assessed"
+        ]
       ];
 
       const cards = add(
@@ -986,14 +1107,22 @@
         "Competitive intelligence overview"
       );
 
-      for (const [label, value, note, cls] of stats) {
+      for (
+        const [label, value, note, cls]
+        of stats
+      ) {
         const card = add(
           cards,
           "article",
           "kpi"
         );
 
-        add(card, "div", "kpi-label", label);
+        add(
+          card,
+          "div",
+          "kpi-label",
+          label
+        );
 
         add(
           card,
@@ -1005,243 +1134,221 @@
         add(
           card,
           "div",
-          "kpi-note " + (
-            cls === "signal" ? "supported" : ""
-          ),
+          "kpi-note",
           note
         );
       }
 
-      const dash = add(
+
+      // ----------------------------------------
+      // Dashboard columns
+      // ----------------------------------------
+
+      const dashboard = add(
         output,
         "div",
         "dashboard"
       );
 
       const left = add(
-        dash,
+        dashboard,
         "div",
         "main-column"
       );
 
       const right = add(
-        dash,
+        dashboard,
         "aside",
         "aside-column"
       );
 
-      // INSIGHTS REPORT
-      const report = panel(
+
+      // ----------------------------------------
+      // Strategic insights
+      // ----------------------------------------
+
+      const insightsPanel = panel(
         `${data.company_name || "Company"} — Insights Report`,
         "▤",
         "Source-linked"
       );
 
-      const list = add(
-        report,
+      const insightList = add(
+        insightsPanel,
         "div",
         "insights"
       );
 
-      insights.forEach((insight, i) => {
-        const item = add(
-          list,
-          "article",
-          "insight"
-        );
-
-        add(
-          item,
-          "div",
-          "insight-icon",
-          String(i + 1).padStart(2, "0")
-        );
-
-        const textWrap = add(
-          item,
-          "div"
-        );
-
-        add(
-          textWrap,
-          "div",
-          "insight-title",
-          `STRATEGIC FINDING ${i + 1}`
-        );
-
-        const category = CATEGORIES.includes(
-          insight.category
-        )
-          ? insight.category
-          : "Other";
-
-        add(
-          textWrap,
-          "div",
-          "category-chip",
-          category
-        );
-
-        add(
-          textWrap,
-          "p",
-          "insight-text",
-          insight.text || ""
-        );
-
-        const links = add(
-          textWrap,
-          "div",
-          "source-row"
-        );
-
-        let count = 0;
-
-        const insightSources = Array.isArray(
-          insight.sources
-        )
-          ? insight.sources
-          : [];
-
-        for (const source of insightSources) {
-          const link = safeLink(
-            source,
-            `Source ${count + 1} ↗`
+      insights.forEach(
+        (insight, index) => {
+          const item = add(
+            insightList,
+            "article",
+            "insight"
           );
 
-          if (!link) {
-            continue;
-          }
-
-          if (count === 0) {
-            add(
-              links,
-              "span",
-              "source-label",
-              "Evidence"
-            );
-          }
-
-          links.appendChild(link);
-          count += 1;
-
-          cited.set(
-            source.url,
-            source
-          );
-        }
-
-        if (!count) {
           add(
-            links,
-            "span",
-            "source-label",
-            "No linked evidence supplied"
+            item,
+            "div",
+            "insight-icon",
+            String(index + 1).padStart(
+              2,
+              "0"
+            )
+          );
+
+          const body = add(
+            item,
+            "div"
+          );
+
+          add(
+            body,
+            "div",
+            "insight-title",
+            `STRATEGIC FINDING ${index + 1}`
+          );
+
+          const category = CATEGORIES.includes(
+            insight.category
+          )
+            ? insight.category
+            : "Other";
+
+          add(
+            body,
+            "div",
+            "category-chip",
+            category
+          );
+
+          add(
+            body,
+            "p",
+            "insight-text",
+            insight.text || ""
+          );
+
+          const linkRow = add(
+            body,
+            "div",
+            "source-row"
+          );
+
+          appendSourceLinks(
+            linkRow,
+            insight.sources,
+            source => {
+              cited.set(
+                source.url,
+                source
+              );
+            }
           );
         }
-      });
+      );
 
       if (!insights.length) {
         add(
-          list,
+          insightList,
           "p",
           "empty-state",
-          "No source-backed strategic insights were identified for this company."
+          "No source-backed strategic insights were identified."
         );
       }
 
-      left.appendChild(report);
+      left.appendChild(
+        insightsPanel
+      );
 
-      // EXECUTIVE SNAPSHOT
-      const snapshot = panel(
+
+      // ----------------------------------------
+      // Executive snapshot
+      // ----------------------------------------
+
+      const summaryPanel = panel(
         "Executive Snapshot",
         "▣"
       );
 
-      const snapshotBody = add(
-        snapshot,
+      const summaryBody = add(
+        summaryPanel,
         "div",
         "panel-content"
       );
 
-      const summary = data.executive_summary;
-      const summaryLinks = [];
+      const summary = (
+        data.executive_summary
+      );
 
-      if (
+      const summarySources = (
         summary &&
         Array.isArray(summary.sources)
-      ) {
-        for (const source of summary.sources) {
-          const link = safeLink(
-            source,
-            `Source ${summaryLinks.length + 1} ↗`
-          );
-
-          if (link) {
-            summaryLinks.push(link);
-          }
-        }
-      }
+      )
+        ? summary.sources
+        : [];
 
       if (
         summary &&
         typeof summary.text === "string" &&
         summary.text.trim() &&
-        summaryLinks.length > 0
+        summarySources.length
       ) {
         add(
-          snapshotBody,
+          summaryBody,
           "div",
           "snapshot-label",
           "STRATEGIC OVERVIEW"
         );
 
         add(
-          snapshotBody,
+          summaryBody,
           "p",
           "snapshot-text",
           summary.text
         );
 
-        const linksRow = add(
-          snapshotBody,
+        const row = add(
+          summaryBody,
           "div",
           "source-row"
         );
 
-        add(
-          linksRow,
-          "span",
-          "source-label",
-          "Evidence"
+        appendSourceLinks(
+          row,
+          summarySources,
+          source => {
+            cited.set(
+              source.url,
+              source
+            );
+          }
         );
-
-        for (const link of summaryLinks) {
-          linksRow.appendChild(link);
-        }
-
       } else {
         add(
-          snapshotBody,
+          summaryBody,
           "p",
           "snapshot-text",
-          "No source-backed executive summary is available for this report."
+          "No source-backed executive summary is available."
         );
       }
 
-      // Important: display the completed panel.
-      left.appendChild(snapshot);
+      left.appendChild(
+        summaryPanel
+      );
 
-      // SENTIMENT
 
-      // SENTIMENT — RETRIEVED SOURCE COVERAGE
-      const sentiment = panel(
+      // ----------------------------------------
+      // Source sentiment
+      // ----------------------------------------
+
+      const sentimentPanel = panel(
         "Sentiment",
         "◉"
       );
 
       const sentimentBody = add(
-        sentiment,
+        sentimentPanel,
         "div",
         "sentiment-body"
       );
@@ -1252,13 +1359,15 @@
         "empty-donut"
       );
 
-      const sentimentText = add(
+      const sentimentLegend = add(
         sentimentBody,
         "div",
-        "sentiment-copy sentiment-legend"
+        "sentiment-legend"
       );
 
-      const distribution = data.sentiment_distribution;
+      const distribution = (
+        data.sentiment_distribution
+      );
 
       const fields = [
         "positive",
@@ -1269,35 +1378,47 @@
         "total_sources"
       ];
 
-      // Only display a chart when the backend
-      // provides internally consistent counts.
-      const validDistribution =
+      const validDistribution = (
         distribution &&
         fields.every(
           key =>
-            Number.isInteger(distribution[key]) &&
+            Number.isInteger(
+              distribution[key]
+            ) &&
             distribution[key] >= 0
         ) &&
         distribution.assessed > 0 &&
-        distribution.assessed ===
+        distribution.assessed === (
           distribution.positive +
           distribution.neutral +
-          distribution.negative &&
-        distribution.total_sources ===
+          distribution.negative
+        ) &&
+        distribution.total_sources === (
           distribution.assessed +
-          distribution.unassessed;
+          distribution.unassessed
+        )
+      );
 
       if (validDistribution) {
-        const total = distribution.assessed;
+        const total = (
+          distribution.assessed
+        );
 
-        const positivePct =
-          100 * distribution.positive / total;
+        const positivePct = (
+          100 *
+          distribution.positive /
+          total
+        );
 
-        const neutralPct =
-          100 * distribution.neutral / total;
+        const neutralPct = (
+          100 *
+          distribution.neutral /
+          total
+        );
 
-        const neutralEnd =
-          positivePct + neutralPct;
+        const neutralEnd = (
+          positivePct + neutralPct
+        );
 
         donut.style.background = `
           conic-gradient(
@@ -1314,17 +1435,11 @@
           `${total}/${distribution.total_sources}`
         );
 
-        donut.setAttribute("role", "img");
-        donut.setAttribute(
-          "aria-label",
-          `${total} of ${distribution.total_sources} sources assessed`
-        );
-
         add(
-          sentimentText,
+          sentimentLegend,
           "strong",
           "",
-          "Retrieved coverage"
+          "Retrieved source coverage"
         );
 
         const groups = [
@@ -1347,11 +1462,13 @@
 
         for (const group of groups) {
           const percent = Math.round(
-            100 * group.count / total
+            100 *
+            group.count /
+            total
           );
 
           const row = add(
-            sentimentText,
+            sentimentLegend,
             "div",
             "sentiment-legend-row"
           );
@@ -1368,56 +1485,73 @@
             "sentiment-swatch"
           );
 
-          swatch.style.background = group.color;
+          swatch.style.background = (
+            group.color
+          );
 
-          add(label, "span", "", group.name);
+          add(
+            label,
+            "span",
+            "",
+            group.name
+          );
 
           add(
             row,
             "span",
-            "sentiment-legend-value",
+            "",
             `${group.count} · ${percent}%`
           );
         }
 
         add(
-          sentiment,
+          sentimentPanel,
           "p",
           "sentiment-coverage",
           `${total} of ${distribution.total_sources} retrieved sources assessed. ` +
           `${distribution.unassessed} unassessed. ` +
-          "Percentages describe assessed coverage only."
+          "Percentages describe assessed sources only."
         );
 
       } else {
-        add(donut, "span", "", "—");
+        add(
+          donut,
+          "span",
+          "",
+          "—"
+        );
 
         add(
-          sentimentText,
+          sentimentLegend,
           "strong",
           "",
           "Not assessed"
         );
 
         add(
-          sentimentText,
+          sentimentLegend,
           "p",
           "",
           "No usable source-level sentiment distribution is available."
         );
       }
 
-      right.appendChild(sentiment);
+      right.appendChild(
+        sentimentPanel
+      );
 
 
-      // SIGNAL BREAKDOWN
-      const breakdown = panel(
+      // ----------------------------------------
+      // Signal breakdown
+      // ----------------------------------------
+
+      const breakdownPanel = panel(
         "Signal Breakdown",
         "▥"
       );
 
       const breakdownBody = add(
-        breakdown,
+        breakdownPanel,
         "div",
         "breakdown-body"
       );
@@ -1429,6 +1563,7 @@
           "breakdown-note",
           "No source-backed insights available to classify."
         );
+
       } else {
         add(
           breakdownBody,
@@ -1439,13 +1574,18 @@
 
         const counts = Object.fromEntries(
           CATEGORIES.map(
-            category => [category, 0]
+            category => [
+              category,
+              0
+            ]
           )
         );
 
         for (const insight of insights) {
-          const category = CATEGORIES.includes(
-            insight.category
+          const category = (
+            CATEGORIES.includes(
+              insight.category
+            )
           )
             ? insight.category
             : "Other";
@@ -1457,7 +1597,9 @@
           const count = counts[category];
 
           const percent = Math.round(
-            100 * count / insights.length
+            100 *
+            count /
+            insights.length
           );
 
           const row = add(
@@ -1498,46 +1640,41 @@
             "breakdown-fill"
           );
 
-          fill.style.width = `${percent}%`;
-
-          track.setAttribute(
-            "role",
-            "img"
-          );
-
-          track.setAttribute(
-            "aria-label",
-            `${category}: ${count} of ${insights.length} findings`
+          fill.style.width = (
+            `${percent}%`
           );
         }
       }
 
-      right.appendChild(breakdown);
+      right.appendChild(
+        breakdownPanel
+      );
 
 
-      // RELEVANT COMPETITORS
-      // Values come from FastAPI, not hardcoded lists.
+      // ----------------------------------------
+      // Competitor intelligence
+      // ----------------------------------------
 
-      const competitors = panel(
+      const competitorsPanel = panel(
         "Relevant Competitors",
         "⇄"
       );
 
       const competitorBody = add(
-        competitors,
+        competitorsPanel,
         "div",
         "competitor-body"
       );
 
-      const competitorRecords = Array.isArray(
+      const records = Array.isArray(
         data.competitors
       )
         ? data.competitors
         : [];
 
-      let displayedCompetitors = 0;
+      let displayed = 0;
 
-      for (const record of competitorRecords) {
+      for (const record of records) {
         if (
           !record ||
           typeof record.name !== "string" ||
@@ -1548,13 +1685,13 @@
           continue;
         }
 
-        const recordSources = Array.isArray(
-          record.sources
+        const sourceLinks = [];
+
+        const recordSources = (
+          Array.isArray(record.sources)
         )
           ? record.sources
           : [];
-
-        const sourceLinks = [];
 
         for (const source of recordSources) {
           const link = safeLink(
@@ -1567,8 +1704,6 @@
           }
         }
 
-        // Only display competitor records that
-        // include usable research citations.
         if (!sourceLinks.length) {
           continue;
         }
@@ -1593,38 +1728,44 @@
           record.overlap
         );
 
-        const linksRow = add(
+        const row = add(
           entry,
           "div",
           "source-row"
         );
 
         add(
-          linksRow,
+          row,
           "span",
           "source-label",
           "Evidence"
         );
 
         for (const link of sourceLinks) {
-          linksRow.appendChild(link);
+          row.appendChild(link);
         }
 
-        displayedCompetitors += 1;
+        displayed += 1;
       }
 
-      if (!displayedCompetitors) {
+      if (!displayed) {
         add(
           competitorBody,
           "p",
-          "competitor-empty",
-          "No evidence-backed competitors were identified from this research run."
+          "competitor-overlap",
+          "No evidence-backed competitors were identified."
         );
       }
 
-      right.appendChild(competitors);
+      right.appendChild(
+        competitorsPanel
+      );
 
-      // TIMELINE
+
+      // ----------------------------------------
+      // Evidence timeline
+      // ----------------------------------------
+
       const timelinePanel = panel(
         "Timeline",
         "◷"
@@ -1634,7 +1775,7 @@
         timelinePanel,
         "p",
         "timeline-label",
-        "Publication dates of cited sources (not dates of company events)."
+        "Publication dates of cited sources, not necessarily company event dates."
       );
 
       const dates = new Map(
@@ -1652,14 +1793,19 @@
           )
       );
 
-      const entries = [...cited.values()]
+      const entries = [
+        ...cited.values()
+      ]
         .map(source => {
           const info = dateInfo(
             dates.get(source.url)
           );
 
           return info
-            ? { source, ...info }
+            ? {
+                source,
+                ...info
+              }
             : null;
         })
         .filter(Boolean)
@@ -1676,13 +1822,13 @@
         );
 
         for (const item of entries) {
-          const li = add(
+          const entry = add(
             timeline,
             "li"
           );
 
           add(
-            li,
+            entry,
             "div",
             "timeline-date",
             item.label
@@ -1695,37 +1841,60 @@
           );
 
           if (link) {
-            li.appendChild(link);
+            entry.appendChild(link);
           }
         }
+
       } else {
         add(
           timelinePanel,
           "p",
           "empty-state",
-          "No publication dates are available for the cited sources."
+          "No publication dates are available for cited sources."
         );
       }
 
-      right.appendChild(timelinePanel);
+      right.appendChild(
+        timelinePanel
+      );
+
+
+      // ----------------------------------------
+      // Coverage limitation
+      // ----------------------------------------
 
       add(
         output,
         "p",
         "coverage",
-        "Insights reflect retrieved source material. Open a citation to verify claims and dates; this is not a comprehensive record of company activity."
+        "Insights reflect retrieved evidence, not a comprehensive record. Open citations to verify facts and dates."
       );
 
       output.style.display = "block";
-      demoLabel.style.display = isDemo
-        ? "block"
-        : "none";
+
+      demoLabel.style.display = (
+        isDemo
+          ? "block"
+          : "none"
+      );
     }
+
+
+    // ============================================
+    // API request
+    // ============================================
 
     async function analyze() {
       const company = input.value.trim();
 
-      if (!company || button.disabled) {
+      const website = (
+        websiteInput.value.trim()
+      );
+
+      if (
+        !company ||
+        button.disabled
+      ) {
         return;
       }
 
@@ -1745,7 +1914,8 @@
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
-              company_name: company
+              company_name: company,
+              official_domain: website || null
             })
           }
         );
@@ -1760,7 +1930,6 @@
           );
         }
 
-        // REAL company data from FastAPI.
         render(data);
 
       } catch (error) {
@@ -1784,21 +1953,27 @@
       }
     }
 
-    // DEV-ONLY PREVIEW
-    //
-    // This is completely fictional sample data.
-    // It is only used with ?preview=1 to check the UI.
-    // It is NOT a prompt or example sent to GPT-4o.
-    // It is NOT returned for normal user searches.
-    //
-    // All URLs below use example.com placeholders.
-    // They are not real research citations.
+
+    form.addEventListener(
+      "submit",
+      event => {
+        event.preventDefault();
+        analyze();
+      }
+    );
+
+
+    // ============================================
+    // Development-only preview
+    // ============================================
 
     if (
-      new URLSearchParams(location.search)
-        .get("preview") === "1"
+      new URLSearchParams(
+        location.search
+      ).get("preview") === "1"
     ) {
       input.value = "ExampleCo";
+      websiteInput.value = "";
 
       const demoSource1 = {
         title: "Fictional partnership announcement",
@@ -1818,44 +1993,9 @@
       render({
         company_name: "ExampleCo",
 
-        competitors: [
-          {
-            name: "Summit Metrics",
-            overlap:
-              "In this fictional example, both companies provide analytics dashboards for small businesses.",
-            sources: [
-              {
-                title: "Fictional analytics market comparison",
-                url: "https://example.com/demo-competitor-1"
-              }
-            ]
-          },
-          {
-            name: "Pioneer BI",
-            overlap:
-              "In this fictional example, both companies offer customer reporting tools for retail businesses.",
-            sources: [
-              {
-                title: "Fictional reporting software comparison",
-                url: "https://example.com/demo-competitor-2"
-              }
-            ]
-          }
-        ],
-
-
-        sentiment_distribution: {
-          positive: 0,
-          neutral: 3,
-          negative: 0,
-          assessed: 3,
-          unassessed: 0,
-          total_sources: 3
-        },
-
         executive_summary: {
           text:
-            "In this fictional example, ExampleCo announced two partnerships and a product launch. Together, these developments illustrate a focus on building and distributing analytics tools; they do not establish any market leadership or business impact.",
+            "In this fictional example, ExampleCo announced partnerships and introduced a reporting product. These developments do not establish market leadership or business impact.",
           sources: [
             demoSource1,
             demoSource2,
@@ -1867,13 +2007,13 @@
           {
             category: "M&A / Partnerships",
             text:
-              "Fictional ExampleCo partnered with Northstar Labs to co-develop an analytics integration.",
+              "Fictional ExampleCo announced an analytics integration partnership with Northstar Labs.",
             sources: [demoSource1]
           },
           {
             category: "Product & Innovation",
             text:
-              "Fictional ExampleCo introduced a reporting dashboard for customers.",
+              "Fictional ExampleCo introduced a reporting dashboard.",
             sources: [demoSource2]
           },
           {
@@ -1883,6 +2023,44 @@
             sources: [demoSource3]
           }
         ],
+
+        competitors: [
+          {
+            name: "Summit Metrics",
+            overlap:
+              "In this fictional example, both companies provide analytics dashboards for small businesses.",
+            sources: [
+              {
+                title:
+                  "Fictional analytics market comparison",
+                url:
+                  "https://example.com/demo-competitor-1"
+              }
+            ]
+          },
+          {
+            name: "Pioneer BI",
+            overlap:
+              "In this fictional example, both companies offer customer reporting tools.",
+            sources: [
+              {
+                title:
+                  "Fictional reporting software comparison",
+                url:
+                  "https://example.com/demo-competitor-2"
+              }
+            ]
+          }
+        ],
+
+        sentiment_distribution: {
+          positive: 0,
+          neutral: 3,
+          negative: 0,
+          assessed: 3,
+          unassessed: 0,
+          total_sources: 3
+        },
 
         sources: [
           {
