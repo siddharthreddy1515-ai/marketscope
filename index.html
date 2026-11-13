@@ -5,16 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1425">
-
   <title>MarketScope | Competitive Intelligence</title>
 
   <style>
     :root {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       color-scheme: dark;
-      font-family: Inter, ui-sans-serif,
-        -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
-
       --bg: #0b1425;
       --panel: #17243b;
       --border: #293d5b;
@@ -26,30 +22,19 @@
       --red: #e47b86;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
+      background: radial-gradient(
+        ellipse 55% 300px at 48% -120px,
+        #1b3963 0%, transparent 100%
+      ), var(--bg);
       color: var(--text);
-      background:
-        radial-gradient(
-          ellipse 55% 300px at 48% -120px,
-          #1b3963 0%,
-          transparent 100%
-        ),
-        var(--bg);
     }
 
-    button,
-    input {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
 
     .topbar {
       background: rgba(12, 23, 42, .92);
@@ -61,7 +46,6 @@
       margin: auto;
       min-height: 74px;
       padding: 13px 30px;
-
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -75,19 +59,12 @@
     }
 
     .brand-logo {
-      display: grid;
-      place-items: center;
-
       width: 41px;
       height: 41px;
-
       border-radius: 12px;
-      background: linear-gradient(
-        140deg,
-        #84ddff,
-        #399eff 72%
-      );
-
+      background: linear-gradient(140deg, #84ddff, #399eff 72%);
+      display: grid;
+      place-items: center;
       color: #10243c;
       font-size: 22px;
       font-weight: 900;
@@ -115,7 +92,6 @@
       padding: 7px 10px;
       font-size: 11px;
       color: #afc1d8;
-
       background: #14243b;
       border: 1px solid #2a405e;
       border-radius: 99px;
@@ -133,13 +109,11 @@
       padding: 20px 30px 90px;
     }
 
-    /* Search form */
-
     .search {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 19px;
+      margin-bottom: 10px;
     }
 
     .search input {
@@ -147,49 +121,64 @@
       background: #15233a;
       border: 1px solid #2d4260;
       color: var(--text);
-
       padding: 13px 16px;
       border-radius: 9px;
       outline: none;
       font-size: 14px;
     }
 
-    #companyInput {
-      flex: 2 1 240px;
-    }
-
-    #websiteInput {
-      flex: 1 1 230px;
-    }
+    #companyInput { flex: 2 1 240px; }
+    #websiteInput { flex: 1 1 230px; }
 
     .search input:focus {
       border-color: var(--sky);
       box-shadow: 0 0 0 3px #4ebaff22;
     }
 
-    .search input::placeholder {
-      color: #879db9;
-    }
+    .search input::placeholder { color: #879db9; }
 
     .search button {
-      background: #42b8f9;
-      color: #07172b;
-
       padding: 0 24px;
       min-height: 45px;
-
       border: 0;
       border-radius: 9px;
       font-weight: 750;
+      background: #42b8f9;
+      color: #07172b;
     }
 
-    .search button:hover {
-      background: #73ccff;
-    }
-
+    .search button:hover { background: #73ccff; }
     .search button:disabled {
       opacity: .6;
       cursor: default;
+    }
+
+    /* HTML export button */
+
+    .export-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin: 0 0 19px;
+    }
+
+    .export-actions button {
+      padding: 10px 16px;
+      border: 1px solid #426182;
+      border-radius: 9px;
+      background: #172d46;
+      color: #cbe9ff;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .export-actions button:hover:not(:disabled) {
+      background: #264a6a;
+      border-color: #68bfff;
+    }
+
+    .export-actions button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
     }
 
     #loader {
@@ -199,30 +188,23 @@
       font-size: 12px;
     }
 
-    #output {
-      display: none;
-    }
+    #output, .demo-label { display: none; }
 
     .demo-label {
-      display: none;
       margin-bottom: 17px;
       padding: 11px 15px;
-
       background: #142c46;
       border: 1px solid #37668d;
       border-radius: 9px;
-
       color: #bfdef9;
       font-size: 12px;
     }
 
-    /* KPI section */
+    /* KPI cards */
 
     .kpi-grid {
       display: grid;
-      grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 13px;
       margin-bottom: 18px;
     }
@@ -230,7 +212,6 @@
     .kpi {
       min-height: 120px;
       padding: 18px 19px;
-
       background: #182741;
       border: 1px solid var(--border);
       border-radius: 13px;
@@ -251,9 +232,7 @@
       font-weight: 780;
     }
 
-    .kpi-value.signal {
-      color: #76ccff;
-    }
+    .kpi-value.signal { color: #76ccff; }
 
     .kpi-note {
       color: #8aa2bd;
@@ -261,24 +240,16 @@
       line-height: 1.45;
     }
 
-    .kpi-note.supported {
-      color: #72dec1;
-    }
-
-    /* Dashboard layout */
+    /* Dashboard panels */
 
     .dashboard {
       display: grid;
-      grid-template-columns:
-        minmax(0, 1.9fr)
-        minmax(300px, .87fr);
-
+      grid-template-columns: minmax(0, 1.9fr) minmax(300px, .87fr);
       gap: 17px;
       align-items: start;
     }
 
-    .main-column,
-    .aside-column {
+    .main-column, .aside-column {
       min-width: 0;
       display: grid;
       gap: 17px;
@@ -296,7 +267,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-
       padding: 18px 20px;
       border-bottom: 1px solid #293b54;
     }
@@ -310,15 +280,12 @@
     .panel-icon {
       display: inline-grid;
       place-items: center;
-
       width: 22px;
       height: 22px;
       margin-right: 8px;
-
       background: #28486a;
       border-radius: 6px;
       color: #8fd2ff;
-
       font-size: 12px;
     }
 
@@ -326,15 +293,12 @@
       color: #7fe5c4;
       background: #19443e;
       border: 1px solid #28675b;
-
       padding: 5px 9px;
       border-radius: 99px;
       font-size: 10px;
     }
 
-    .panel-content {
-      padding: 19px 20px;
-    }
+    .panel-content { padding: 19px 20px; }
 
     .empty-state {
       padding: 20px;
@@ -343,36 +307,28 @@
       line-height: 1.65;
     }
 
-    /* Insights */
+    /* Strategic insights */
 
-    .insights {
-      padding: 0 20px;
-    }
+    .insights { padding: 0 20px; }
 
     .insight {
       display: grid;
       grid-template-columns: 33px minmax(0, 1fr);
       gap: 12px;
-
       padding: 19px 0 21px;
       border-bottom: 1px solid #2b3e59;
     }
 
-    .insight:last-child {
-      border-bottom: 0;
-    }
+    .insight:last-child { border-bottom: 0; }
 
     .insight-icon {
       display: grid;
       place-items: center;
-
       width: 33px;
       height: 33px;
-
       background: #263e5d;
       border-radius: 9px;
       color: #95cfff;
-
       font-size: 12px;
       font-weight: 800;
     }
@@ -388,11 +344,9 @@
       display: inline-block;
       margin-bottom: 8px;
       padding: 3px 6px;
-
       background: #18324d;
       border: 1px solid #365779;
       border-radius: 6px;
-
       color: #9fd7ff;
       font-size: 10px;
     }
@@ -424,10 +378,8 @@
       color: #aedfff;
       background: #142e45;
       border: 1px solid #355c7e;
-
       padding: 5px 9px;
       border-radius: 7px;
-
       font-size: 10px;
       text-decoration: none;
     }
@@ -467,15 +419,11 @@
       position: relative;
       display: grid;
       place-items: center;
-
       flex-shrink: 0;
       width: 98px;
       height: 98px;
-
       border-radius: 50%;
-      background: conic-gradient(
-        #36506e 0deg 360deg
-      );
+      background: conic-gradient(#36506e 0deg 360deg);
     }
 
     .empty-donut::before {
@@ -508,7 +456,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-
       margin-top: 8px;
       font-size: 11px;
     }
@@ -535,9 +482,7 @@
 
     /* Signal breakdown */
 
-    .breakdown-body {
-      padding: 16px 20px 18px;
-    }
+    .breakdown-body { padding: 16px 20px 18px; }
 
     .breakdown-note {
       margin: 0 0 13px;
@@ -575,22 +520,15 @@
 
     /* Competitors */
 
-    .competitor-body {
-      padding: 18px 20px;
-    }
+    .competitor-body { padding: 18px 20px; }
 
     .competitor-entry {
       padding: 15px 0;
       border-bottom: 1px solid #2b3e59;
     }
 
-    .competitor-entry:first-child {
-      padding-top: 0;
-    }
-
-    .competitor-entry:last-child {
-      border-bottom: 0;
-    }
+    .competitor-entry:first-child { padding-top: 0; }
+    .competitor-entry:last-child { border-bottom: 0; }
 
     .competitor-name {
       margin: 0 0 7px;
@@ -637,10 +575,8 @@
       position: absolute;
       left: -4.5px;
       top: 3px;
-
       width: 8px;
       height: 8px;
-
       background: #41bdfa;
       border-radius: 50%;
     }
@@ -681,50 +617,22 @@
     }
 
     @media (max-width: 790px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-
+      .dashboard { grid-template-columns: 1fr; }
       .aside-column {
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-
       .kpi-grid {
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
     @media (max-width: 560px) {
-      .topbar-inner {
-        padding: 14px 17px;
-      }
-
-      .workflow-badges {
-        display: none;
-      }
-
-      .shell {
-        padding: 16px 15px 50px;
-      }
-
-      .search {
-        flex-direction: column;
-      }
-
-      .search button {
-        min-height: 44px;
-      }
-
-      .aside-column {
-        grid-template-columns: 1fr;
-      }
-
-      .kpi-grid {
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
-      }
+      .topbar-inner { padding: 14px 17px; }
+      .workflow-badges { display: none; }
+      .shell { padding: 16px 15px 50px; }
+      .search { flex-direction: column; }
+      .search button { min-height: 44px; }
+      .aside-column { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -733,40 +641,26 @@
 
   <header class="topbar">
     <div class="topbar-inner">
-
       <div class="branding">
-        <div class="brand-logo" aria-hidden="true">
-          ↗
-        </div>
-
+        <div class="brand-logo" aria-hidden="true">↗</div>
         <div>
-          <div class="brand-name">
-            MarketScope
-          </div>
-
-          <div class="brand-sub">
-            Competitive Intelligence
-          </div>
+          <div class="brand-name">MarketScope</div>
+          <div class="brand-sub">Competitive Intelligence</div>
         </div>
       </div>
 
-      <div
-        class="workflow-badges"
-        aria-label="MarketScope workflow"
-      >
+      <div class="workflow-badges" aria-label="MarketScope workflow">
         <span>Evidence-linked</span>
         <span>Research</span>
         <span>Analysis</span>
         <span>Report</span>
       </div>
-
     </div>
   </header>
 
   <div class="shell">
 
     <form id="searchForm" class="search">
-
       <input
         id="companyInput"
         type="text"
@@ -785,32 +679,31 @@
         autocomplete="off"
       >
 
-      <button
-        type="submit"
-        id="analyzeBtn"
-      >
+      <button type="submit" id="analyzeBtn">
         Analyze
       </button>
-
     </form>
+
+    <div class="export-actions">
+      <button
+        type="button"
+        id="downloadReportButton"
+        disabled
+      >
+        Download HTML Report
+      </button>
+    </div>
 
     <div id="demoLabel" class="demo-label">
       Preview mode — fictional ExampleCo sample data.
       No Tavily or GPT-4o request was made.
     </div>
 
-    <div
-      id="loader"
-      role="status"
-      aria-live="polite"
-    >
+    <div id="loader" role="status" aria-live="polite">
       Researching and analyzing company evidence…
     </div>
 
-    <main
-      id="output"
-      aria-live="polite"
-    ></main>
+    <main id="output" aria-live="polite"></main>
 
   </div>
 
@@ -819,33 +712,16 @@
     // DOM references
     // ============================================
 
-    const form = document.getElementById(
-      "searchForm"
-    );
+    const form = document.getElementById("searchForm");
+    const input = document.getElementById("companyInput");
+    const websiteInput = document.getElementById("websiteInput");
+    const button = document.getElementById("analyzeBtn");
+    const loader = document.getElementById("loader");
+    const output = document.getElementById("output");
+    const demoLabel = document.getElementById("demoLabel");
 
-    const input = document.getElementById(
-      "companyInput"
-    );
-
-    const websiteInput = document.getElementById(
-      "websiteInput"
-    );
-
-    const button = document.getElementById(
-      "analyzeBtn"
-    );
-
-    const loader = document.getElementById(
-      "loader"
-    );
-
-    const output = document.getElementById(
-      "output"
-    );
-
-    const demoLabel = document.getElementById(
-      "demoLabel"
-    );
+    const downloadReportButton =
+      document.getElementById("downloadReportButton");
 
     const CATEGORIES = [
       "Product & Innovation",
@@ -856,9 +732,13 @@
       "Other"
     ];
 
+    // Keep only the current completed analysis.
+    let latestReportData = null;
+    let latestReportIsDemo = false;
+
 
     // ============================================
-    // DOM utilities
+    // Safe DOM utilities
     // ============================================
 
     function el(tag, cls = "", text) {
@@ -875,72 +755,49 @@
       return node;
     }
 
-
     function add(parent, tag, cls = "", text) {
       const node = el(tag, cls, text);
       parent.appendChild(node);
       return node;
     }
 
-
-    function safeLink(
-      source,
-      label,
-      cls = "source-chip"
-    ) {
-      if (
-        !source ||
-        typeof source.url !== "string"
-      ) {
-        return null;
-      }
-
-      let parsed;
-
+    function safeUrl(value) {
       try {
-        parsed = new URL(source.url);
-      } catch (_) {
+        const parsed = new URL(value);
+
+        return ["http:", "https:"].includes(parsed.protocol)
+          ? parsed.href
+          : null;
+      } catch {
         return null;
       }
+    }
 
-      if (
-        !["http:", "https:"].includes(
-          parsed.protocol
-        )
-      ) {
+    function safeLink(source, text, cls = "source-chip") {
+      const href = safeUrl(source?.url);
+
+      if (!href) {
         return null;
       }
 
       const link = el(
         "a",
         cls,
-        label
+        text || source?.title || "Read source"
       );
 
-      link.href = parsed.href;
+      link.href = href;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-
-      link.title = (
-        source.title || parsed.href
-      );
+      link.title = source?.title || href;
 
       return link;
     }
 
-
-    function appendSourceLinks(
-      parent,
-      sources,
-      onValidSource
-    ) {
-      const validSources = Array.isArray(sources)
-        ? sources
-        : [];
-
+    function appendSourceLinks(parent, sources, onValidSource) {
       let count = 0;
 
-      for (const source of validSources) {
+      for (const source of Array.isArray(sources) ? sources : []) {
         const link = safeLink(
           source,
           `Source ${count + 1} ↗`
@@ -951,12 +808,7 @@
         }
 
         if (count === 0) {
-          add(
-            parent,
-            "span",
-            "source-label",
-            "Evidence"
-          );
+          add(parent, "span", "source-label", "Evidence");
         }
 
         parent.appendChild(link);
@@ -971,72 +823,41 @@
       return count;
     }
 
-
     function dateInfo(value) {
       if (!value) {
         return null;
       }
 
-      const parsed = new Date(value);
+      const date = new Date(value);
 
-      if (Number.isNaN(parsed.getTime())) {
+      if (Number.isNaN(date.getTime())) {
         return null;
       }
 
       return {
-        date: parsed,
-        label: new Intl.DateTimeFormat(
-          "en-GB",
-          {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            timeZone: "UTC"
-          }
-        ).format(parsed)
+        date,
+        label: new Intl.DateTimeFormat("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC"
+        }).format(date)
       };
     }
 
+    function panel(title, symbol, extra = "") {
+      const section = el("section", "panel");
+      const head = add(section, "div", "panel-head");
+      const heading = add(head, "h2");
 
-    function panel(
-      title,
-      symbol,
-      extra = ""
-    ) {
-      const section = el(
-        "section",
-        "panel"
-      );
-
-      const header = add(
-        section,
-        "div",
-        "panel-head"
-      );
-
-      const heading = add(
-        header,
-        "h2"
-      );
-
-      add(
-        heading,
-        "span",
-        "panel-icon",
-        symbol
-      );
+      add(heading, "span", "panel-icon", symbol);
 
       heading.appendChild(
         document.createTextNode(title)
       );
 
       if (extra) {
-        add(
-          header,
-          "span",
-          "panel-tag",
-          extra
-        );
+        add(head, "span", "panel-tag", extra);
       }
 
       return section;
@@ -1047,21 +868,14 @@
     // Dashboard rendering
     // ============================================
 
-    function render(
-      data,
-      isDemo = false
-    ) {
+    function render(data, isDemo = false) {
       output.replaceChildren();
 
-      const insights = Array.isArray(
-        data.insight_items
-      )
+      const insights = Array.isArray(data.insight_items)
         ? data.insight_items
         : [];
 
-      const allSources = Array.isArray(
-        data.sources
-      )
+      const sources = Array.isArray(data.sources)
         ? data.sources
         : [];
 
@@ -1072,57 +886,29 @@
       // KPI cards
       // ----------------------------------------
 
-      const stats = [
-        [
-          "Market Position",
-          "—",
-          "Not assessed"
-        ],
-        [
-          "Insights Found",
-          insights.length,
-          "Source-backed findings",
-          "signal"
-        ],
-        [
-          "Sentiment",
-          "—",
-          "See source coverage below"
-        ],
-        [
-          "Threat Level",
-          "—",
-          "Not assessed"
-        ]
-      ];
-
-      const cards = add(
-        output,
-        "section",
-        "kpi-grid"
-      );
+      const cards = add(output, "section", "kpi-grid");
 
       cards.setAttribute(
         "aria-label",
         "Competitive intelligence overview"
       );
 
-      for (
-        const [label, value, note, cls]
-        of stats
-      ) {
-        const card = add(
-          cards,
-          "article",
-          "kpi"
-        );
+      const kpis = [
+        ["Market Position", "—", "Not assessed"],
+        [
+          "Insights Found",
+          insights.length,
+          "Source-backed findings",
+          "signal"
+        ],
+        ["Sentiment", "—", "See source coverage below"],
+        ["Threat Level", "—", "Not assessed"]
+      ];
 
-        add(
-          card,
-          "div",
-          "kpi-label",
-          label
-        );
+      for (const [label, value, note, cls] of kpis) {
+        const card = add(cards, "article", "kpi");
+
+        add(card, "div", "kpi-label", label);
 
         add(
           card,
@@ -1131,36 +917,17 @@
           value
         );
 
-        add(
-          card,
-          "div",
-          "kpi-note",
-          note
-        );
+        add(card, "div", "kpi-note", note);
       }
 
 
       // ----------------------------------------
-      // Dashboard columns
+      // Dashboard layout
       // ----------------------------------------
 
-      const dashboard = add(
-        output,
-        "div",
-        "dashboard"
-      );
-
-      const left = add(
-        dashboard,
-        "div",
-        "main-column"
-      );
-
-      const right = add(
-        dashboard,
-        "aside",
-        "aside-column"
-      );
+      const dashboard = add(output, "div", "dashboard");
+      const left = add(dashboard, "div", "main-column");
+      const right = add(dashboard, "aside", "aside-column");
 
 
       // ----------------------------------------
@@ -1179,74 +946,51 @@
         "insights"
       );
 
-      insights.forEach(
-        (insight, index) => {
-          const item = add(
-            insightList,
-            "article",
-            "insight"
-          );
+      insights.forEach((insight, index) => {
+        const item = add(
+          insightList,
+          "article",
+          "insight"
+        );
 
-          add(
-            item,
-            "div",
-            "insight-icon",
-            String(index + 1).padStart(
-              2,
-              "0"
-            )
-          );
+        add(
+          item,
+          "div",
+          "insight-icon",
+          String(index + 1).padStart(2, "0")
+        );
 
-          const body = add(
-            item,
-            "div"
-          );
+        const body = add(item, "div");
 
-          add(
-            body,
-            "div",
-            "insight-title",
-            `STRATEGIC FINDING ${index + 1}`
-          );
+        add(
+          body,
+          "div",
+          "insight-title",
+          `STRATEGIC FINDING ${index + 1}`
+        );
 
-          const category = CATEGORIES.includes(
-            insight.category
-          )
+        add(
+          body,
+          "div",
+          "category-chip",
+          CATEGORIES.includes(insight.category)
             ? insight.category
-            : "Other";
+            : "Other"
+        );
 
-          add(
-            body,
-            "div",
-            "category-chip",
-            category
-          );
+        add(
+          body,
+          "p",
+          "insight-text",
+          insight.text || ""
+        );
 
-          add(
-            body,
-            "p",
-            "insight-text",
-            insight.text || ""
-          );
-
-          const linkRow = add(
-            body,
-            "div",
-            "source-row"
-          );
-
-          appendSourceLinks(
-            linkRow,
-            insight.sources,
-            source => {
-              cited.set(
-                source.url,
-                source
-              );
-            }
-          );
-        }
-      );
+        appendSourceLinks(
+          add(body, "div", "source-row"),
+          insight.sources,
+          source => cited.set(source.url, source)
+        );
+      });
 
       if (!insights.length) {
         add(
@@ -1257,9 +1001,7 @@
         );
       }
 
-      left.appendChild(
-        insightsPanel
-      );
+      left.appendChild(insightsPanel);
 
 
       // ----------------------------------------
@@ -1277,22 +1019,16 @@
         "panel-content"
       );
 
-      const summary = (
-        data.executive_summary
-      );
+      const summary = data.executive_summary;
 
-      const summarySources = (
-        summary &&
-        Array.isArray(summary.sources)
-      )
+      const summarySources = Array.isArray(summary?.sources)
         ? summary.sources
         : [];
 
       if (
-        summary &&
-        typeof summary.text === "string" &&
+        typeof summary?.text === "string" &&
         summary.text.trim() &&
-        summarySources.length
+        summarySources.some(s => safeUrl(s?.url))
       ) {
         add(
           summaryBody,
@@ -1308,21 +1044,10 @@
           summary.text
         );
 
-        const row = add(
-          summaryBody,
-          "div",
-          "source-row"
-        );
-
         appendSourceLinks(
-          row,
+          add(summaryBody, "div", "source-row"),
           summarySources,
-          source => {
-            cited.set(
-              source.url,
-              source
-            );
-          }
+          source => cited.set(source.url, source)
         );
       } else {
         add(
@@ -1333,19 +1058,14 @@
         );
       }
 
-      left.appendChild(
-        summaryPanel
-      );
+      left.appendChild(summaryPanel);
 
 
       // ----------------------------------------
       // Source sentiment
       // ----------------------------------------
 
-      const sentimentPanel = panel(
-        "Sentiment",
-        "◉"
-      );
+      const sentimentPanel = panel("Sentiment", "◉");
 
       const sentimentBody = add(
         sentimentPanel,
@@ -1359,15 +1079,13 @@
         "empty-donut"
       );
 
-      const sentimentLegend = add(
+      const legend = add(
         sentimentBody,
         "div",
         "sentiment-legend"
       );
 
-      const distribution = (
-        data.sentiment_distribution
-      );
+      const d = data.sentiment_distribution;
 
       const fields = [
         "positive",
@@ -1378,53 +1096,34 @@
         "total_sources"
       ];
 
-      const validDistribution = (
-        distribution &&
+      const valid = (
+        d &&
         fields.every(
-          key =>
-            Number.isInteger(
-              distribution[key]
-            ) &&
-            distribution[key] >= 0
+          key => Number.isInteger(d[key]) && d[key] >= 0
         ) &&
-        distribution.assessed > 0 &&
-        distribution.assessed === (
-          distribution.positive +
-          distribution.neutral +
-          distribution.negative
+        d.assessed > 0 &&
+        d.assessed === (
+          d.positive + d.neutral + d.negative
         ) &&
-        distribution.total_sources === (
-          distribution.assessed +
-          distribution.unassessed
+        d.total_sources === (
+          d.assessed + d.unassessed
         )
       );
 
-      if (validDistribution) {
-        const total = (
-          distribution.assessed
-        );
-
+      if (valid) {
         const positivePct = (
-          100 *
-          distribution.positive /
-          total
+          100 * d.positive / d.assessed
         );
 
         const neutralPct = (
-          100 *
-          distribution.neutral /
-          total
-        );
-
-        const neutralEnd = (
-          positivePct + neutralPct
+          100 * d.neutral / d.assessed
         );
 
         donut.style.background = `
           conic-gradient(
             #56d7b0 0% ${positivePct}%,
-            #f3c46b ${positivePct}% ${neutralEnd}%,
-            #e47b86 ${neutralEnd}% 100%
+            #f3c46b ${positivePct}% ${positivePct + neutralPct}%,
+            #e47b86 ${positivePct + neutralPct}% 100%
           )
         `;
 
@@ -1432,75 +1131,52 @@
           donut,
           "span",
           "",
-          `${total}/${distribution.total_sources}`
+          `${d.assessed}/${d.total_sources}`
         );
 
         add(
-          sentimentLegend,
+          legend,
           "strong",
           "",
           "Retrieved source coverage"
         );
 
         const groups = [
-          {
-            name: "Positive",
-            count: distribution.positive,
-            color: "#56d7b0"
-          },
-          {
-            name: "Neutral",
-            count: distribution.neutral,
-            color: "#f3c46b"
-          },
-          {
-            name: "Negative",
-            count: distribution.negative,
-            color: "#e47b86"
-          }
+          ["Positive", "positive", "#56d7b0"],
+          ["Neutral", "neutral", "#f3c46b"],
+          ["Negative", "negative", "#e47b86"]
         ];
 
-        for (const group of groups) {
-          const percent = Math.round(
-            100 *
-            group.count /
-            total
-          );
-
+        for (const [label, key, color] of groups) {
           const row = add(
-            sentimentLegend,
+            legend,
             "div",
             "sentiment-legend-row"
           );
 
-          const label = add(
+          const name = add(
             row,
             "span",
             "sentiment-legend-label"
           );
 
           const swatch = add(
-            label,
+            name,
             "span",
             "sentiment-swatch"
           );
 
-          swatch.style.background = (
-            group.color
-          );
+          swatch.style.background = color;
 
-          add(
-            label,
-            "span",
-            "",
-            group.name
-          );
+          add(name, "span", "", label);
 
           add(
             row,
             "span",
             "",
-            `${group.count} · ${percent}%`
+            `${d[key]} · ${
+              Math.round(100 * d[key] / d.assessed)
+            }%`
           );
         }
 
@@ -1508,37 +1184,23 @@
           sentimentPanel,
           "p",
           "sentiment-coverage",
-          `${total} of ${distribution.total_sources} retrieved sources assessed. ` +
-          `${distribution.unassessed} unassessed. ` +
+          `${d.assessed} of ${d.total_sources} retrieved sources assessed. ` +
+          `${d.unassessed} unassessed. ` +
           "Percentages describe assessed sources only."
         );
-
       } else {
-        add(
-          donut,
-          "span",
-          "",
-          "—"
-        );
+        add(donut, "span", "", "—");
+        add(legend, "strong", "", "Not assessed");
 
         add(
-          sentimentLegend,
-          "strong",
-          "",
-          "Not assessed"
-        );
-
-        add(
-          sentimentLegend,
+          legend,
           "p",
           "",
           "No usable source-level sentiment distribution is available."
         );
       }
 
-      right.appendChild(
-        sentimentPanel
-      );
+      right.appendChild(sentimentPanel);
 
 
       // ----------------------------------------
@@ -1563,7 +1225,6 @@
           "breakdown-note",
           "No source-backed insights available to classify."
         );
-
       } else {
         add(
           breakdownBody,
@@ -1573,19 +1234,12 @@
         );
 
         const counts = Object.fromEntries(
-          CATEGORIES.map(
-            category => [
-              category,
-              0
-            ]
-          )
+          CATEGORIES.map(category => [category, 0])
         );
 
         for (const insight of insights) {
-          const category = (
-            CATEGORIES.includes(
-              insight.category
-            )
+          const category = CATEGORIES.includes(
+            insight.category
           )
             ? insight.category
             : "Other";
@@ -1595,11 +1249,8 @@
 
         for (const category of CATEGORIES) {
           const count = counts[category];
-
           const percent = Math.round(
-            100 *
-            count /
-            insights.length
+            100 * count / insights.length
           );
 
           const row = add(
@@ -1614,13 +1265,7 @@
             "breakdown-item-head"
           );
 
-          add(
-            heading,
-            "span",
-            "",
-            category
-          );
-
+          add(heading, "span", "", category);
           add(
             heading,
             "span",
@@ -1634,21 +1279,15 @@
             "breakdown-track"
           );
 
-          const fill = add(
+          add(
             track,
             "div",
             "breakdown-fill"
-          );
-
-          fill.style.width = (
-            `${percent}%`
-          );
+          ).style.width = `${percent}%`;
         }
       }
 
-      right.appendChild(
-        breakdownPanel
-      );
+      right.appendChild(breakdownPanel);
 
 
       // ----------------------------------------
@@ -1666,45 +1305,30 @@
         "competitor-body"
       );
 
-      const records = Array.isArray(
-        data.competitors
-      )
-        ? data.competitors
-        : [];
-
       let displayed = 0;
 
-      for (const record of records) {
+      for (
+        const record of Array.isArray(data.competitors)
+          ? data.competitors
+          : []
+      ) {
         if (
-          !record ||
-          typeof record.name !== "string" ||
+          typeof record?.name !== "string" ||
           !record.name.trim() ||
-          typeof record.overlap !== "string" ||
+          typeof record?.overlap !== "string" ||
           !record.overlap.trim()
         ) {
           continue;
         }
 
-        const sourceLinks = [];
+        const hasValidSource = (
+          Array.isArray(record.sources) &&
+          record.sources.some(
+            source => safeUrl(source?.url)
+          )
+        );
 
-        const recordSources = (
-          Array.isArray(record.sources)
-        )
-          ? record.sources
-          : [];
-
-        for (const source of recordSources) {
-          const link = safeLink(
-            source,
-            `Source ${sourceLinks.length + 1} ↗`
-          );
-
-          if (link) {
-            sourceLinks.push(link);
-          }
-        }
-
-        if (!sourceLinks.length) {
+        if (!hasValidSource) {
           continue;
         }
 
@@ -1728,22 +1352,10 @@
           record.overlap
         );
 
-        const row = add(
-          entry,
-          "div",
-          "source-row"
+        appendSourceLinks(
+          add(entry, "div", "source-row"),
+          record.sources
         );
-
-        add(
-          row,
-          "span",
-          "source-label",
-          "Evidence"
-        );
-
-        for (const link of sourceLinks) {
-          row.appendChild(link);
-        }
 
         displayed += 1;
       }
@@ -1757,19 +1369,14 @@
         );
       }
 
-      right.appendChild(
-        competitorsPanel
-      );
+      right.appendChild(competitorsPanel);
 
 
       // ----------------------------------------
-      // Evidence timeline
+      // Publication timeline
       // ----------------------------------------
 
-      const timelinePanel = panel(
-        "Timeline",
-        "◷"
-      );
+      const timelinePanel = panel("Timeline", "◷");
 
       add(
         timelinePanel,
@@ -1779,39 +1386,27 @@
       );
 
       const dates = new Map(
-        allSources
+        sources
           .filter(
-            source =>
-              source &&
-              typeof source.url === "string"
+            source => typeof source?.url === "string"
           )
           .map(
-            source => [
-              source.url,
-              source.published_at
-            ]
+            source => [source.url, source.published_at]
           )
       );
 
-      const entries = [
-        ...cited.values()
-      ]
+      const entries = [...cited.values()]
         .map(source => {
           const info = dateInfo(
             dates.get(source.url)
           );
 
           return info
-            ? {
-                source,
-                ...info
-              }
+            ? { source, ...info }
             : null;
         })
         .filter(Boolean)
-        .sort(
-          (a, b) => b.date - a.date
-        )
+        .sort((a, b) => b.date - a.date)
         .slice(0, 6);
 
       if (entries.length) {
@@ -1822,13 +1417,10 @@
         );
 
         for (const item of entries) {
-          const entry = add(
-            timeline,
-            "li"
-          );
+          const li = add(timeline, "li");
 
           add(
-            entry,
+            li,
             "div",
             "timeline-date",
             item.label
@@ -1841,10 +1433,9 @@
           );
 
           if (link) {
-            entry.appendChild(link);
+            li.appendChild(link);
           }
         }
-
       } else {
         add(
           timelinePanel,
@@ -1854,13 +1445,11 @@
         );
       }
 
-      right.appendChild(
-        timelinePanel
-      );
+      right.appendChild(timelinePanel);
 
 
       // ----------------------------------------
-      // Coverage limitation
+      // Coverage limitation and export state
       // ----------------------------------------
 
       add(
@@ -1872,12 +1461,362 @@
 
       output.style.display = "block";
 
-      demoLabel.style.display = (
-        isDemo
-          ? "block"
-          : "none"
+      demoLabel.style.display = isDemo
+        ? "block"
+        : "none";
+
+      // Only completed, rendered reports can be exported.
+      latestReportData = data;
+      latestReportIsDemo = Boolean(isDemo);
+      downloadReportButton.disabled = false;
+    }
+
+
+    // ============================================
+    // HTML export
+    // ============================================
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(
+        /[&<>"']/g,
+        char => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        })[char]
       );
     }
+
+    function sourceHtml(source) {
+      const label = escapeHtml(
+        source?.title || source?.url || "Source"
+      );
+
+      const href = safeUrl(source?.url);
+
+      return href
+        ? `<a href="${escapeHtml(href)}"
+             target="_blank"
+             rel="noopener noreferrer">${label}</a>`
+        : label;
+    }
+
+    function citationsHtml(sources) {
+      if (
+        !Array.isArray(sources) ||
+        !sources.length
+      ) {
+        return '<p class="muted">No citations provided.</p>';
+      }
+
+      return `
+        <ul class="citations">
+          ${sources.map(
+            source => `<li>${sourceHtml(source)}</li>`
+          ).join("")}
+        </ul>
+      `;
+    }
+
+    function listHtml(items, format, emptyText) {
+      if (
+        !Array.isArray(items) ||
+        !items.length
+      ) {
+        return `<p class="muted">${
+          escapeHtml(emptyText)
+        }</p>`;
+      }
+
+      return `
+        <ol>
+          ${items.map(format).join("")}
+        </ol>
+      `;
+    }
+
+    function buildReportHtml(data, isDemo = false) {
+      const company = escapeHtml(
+        data.company_name || "Company"
+      );
+
+      const summary = data.executive_summary;
+      const stats = data.source_stats || {};
+      const d = data.sentiment_distribution;
+
+      const downloadedAt = escapeHtml(
+        new Date().toLocaleString()
+      );
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>MarketScope — ${company}</title>
+
+<style>
+body {
+  font-family: system-ui, Arial, sans-serif;
+  max-width: 900px;
+  margin: 45px auto;
+  padding: 0 24px;
+  line-height: 1.65;
+  color: #172033;
+  background: white;
+}
+
+h1, h2, h3 { line-height: 1.3; }
+h1 { font-size: 30px; }
+
+h2 {
+  font-size: 21px;
+  border-bottom: 1px solid #d8dee8;
+  padding-bottom: 8px;
+  margin-top: 34px;
+}
+
+h3 { font-size: 16px; }
+li { margin-bottom: 16px; }
+
+a {
+  color: #1556b0;
+  overflow-wrap: anywhere;
+}
+
+.muted { color: #64748b; }
+
+.report-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.citations {
+  padding-left: 22px;
+  font-size: 14px;
+}
+
+.warning {
+  border-left: 3px solid #b45309;
+  padding-left: 12px;
+}
+
+.demo {
+  background: #fff1cc;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+@media print {
+  body {
+    max-width: none;
+    margin: 0;
+  }
+}
+</style>
+</head>
+
+<body>
+<h1>MarketScope — ${company}</h1>
+
+<p class="muted">
+  Competitive Intelligence Report<br>
+  Downloaded: ${downloadedAt}
+</p>
+
+${isDemo
+  ? `<p class="demo">
+       Preview mode: fictional ExampleCo data,
+       not real company research.
+     </p>`
+  : ""}
+
+<section>
+  <h2>Executive Summary</h2>
+  <div class="report-text">${
+    escapeHtml(summary?.text || "Not available.")
+  }</div>
+  ${citationsHtml(summary?.sources)}
+</section>
+
+<section>
+  <h2>Strategic Insights</h2>
+  ${listHtml(
+    data.insight_items,
+    item => `
+      <li>
+        <h3>${escapeHtml(item?.category || "Other")}</h3>
+        <div class="report-text">${
+          escapeHtml(item?.text)
+        }</div>
+        ${citationsHtml(item?.sources)}
+      </li>
+    `,
+    "No strategic insights available."
+  )}
+</section>
+
+<section>
+  <h2>Competitor Analysis</h2>
+  ${listHtml(
+    data.competitors,
+    item => `
+      <li>
+        <h3>${escapeHtml(item?.name)}</h3>
+        <div class="report-text">${
+          escapeHtml(item?.overlap)
+        }</div>
+        ${citationsHtml(item?.sources)}
+      </li>
+    `,
+    "No competitors identified."
+  )}
+</section>
+
+<section>
+  <h2>Source Sentiment</h2>
+
+  ${d
+    ? `
+      <p>
+        Positive: ${escapeHtml(d.positive)} |
+        Neutral: ${escapeHtml(d.neutral)} |
+        Negative: ${escapeHtml(d.negative)}
+      </p>
+      <p class="muted">
+        Assessed: ${escapeHtml(d.assessed)} |
+        Unassessed: ${escapeHtml(d.unassessed)}
+      </p>
+    `
+    : "<p>Not available.</p>"
+  }
+
+  ${listHtml(
+    data.source_sentiments,
+    item => `
+      <li>
+        ${escapeHtml(item?.label)} —
+        ${sourceHtml(item)}
+      </li>
+    `,
+    "No individual sentiment assessments available."
+  )}
+</section>
+
+<section>
+  <h2>Research Coverage</h2>
+
+  <p>
+    Research attempts:
+    ${escapeHtml(data.research_attempts ?? "Unknown")}
+  </p>
+
+  <p>
+    Returned: ${escapeHtml(stats.returned ?? "Unknown")} |
+    Accepted: ${escapeHtml(stats.accepted ?? "Unknown")} |
+    Discarded: ${escapeHtml(stats.discarded ?? "Unknown")}
+  </p>
+
+  <h3>Research Warnings</h3>
+
+  ${listHtml(
+    data.research_warnings,
+    warning => `
+      <li class="warning">${escapeHtml(warning)}</li>
+    `,
+    "No research warnings recorded."
+  )}
+</section>
+
+<section>
+  <h2>Evidence Sources</h2>
+
+  ${listHtml(
+    data.sources,
+    source => `
+      <li>
+        ${sourceHtml(source)}
+        <div class="muted">
+          Published: ${
+            escapeHtml(
+              source?.published_at || "Date unavailable"
+            )
+          }
+        </div>
+      </li>
+    `,
+    "No sources available."
+  )}
+</section>
+
+<section>
+  <h2>Full Report Text</h2>
+  <div class="report-text">${
+    escapeHtml(data.report || "Not available.")
+  }</div>
+</section>
+
+<footer>
+  <p class="muted">
+    MarketScope reports reflect retrieved evidence,
+    not necessarily a comprehensive record.
+    Verify important claims using the cited sources.
+  </p>
+</footer>
+</body>
+</html>`;
+    }
+
+
+    // ============================================
+    // Download handler
+    // ============================================
+
+    downloadReportButton.addEventListener(
+      "click",
+      () => {
+        if (!latestReportData) {
+          return;
+        }
+
+        const html = buildReportHtml(
+          latestReportData,
+          latestReportIsDemo
+        );
+
+        const blob = new Blob(
+          [html],
+          { type: "text/html;charset=utf-8" }
+        );
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        const company = String(
+          latestReportData.company_name || "company"
+        )
+          .replace(/[^a-zA-Z0-9_-]/g, "-")
+          .slice(0, 60);
+
+        link.href = url;
+
+        link.download =
+          `marketscope-${company}${
+            latestReportIsDemo ? "-preview" : ""
+          }.html`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 1000);
+      }
+    );
 
 
     // ============================================
@@ -1886,17 +1825,17 @@
 
     async function analyze() {
       const company = input.value.trim();
+      const website = websiteInput.value.trim();
 
-      const website = (
-        websiteInput.value.trim()
-      );
-
-      if (
-        !company ||
-        button.disabled
-      ) {
+      if (!company || button.disabled) {
         return;
       }
+
+      // Prevent an old report being downloaded
+      // while a new analysis is running.
+      latestReportData = null;
+      latestReportIsDemo = false;
+      downloadReportButton.disabled = true;
 
       demoLabel.style.display = "none";
       loader.style.display = "block";
@@ -1924,24 +1863,31 @@
 
         if (!response.ok) {
           throw new Error(
-            typeof data.detail === "string"
+            typeof data?.detail === "string"
               ? data.detail
               : "Could not complete the analysis."
+          );
+        }
+
+        if (!data || data.status !== "completed") {
+          throw new Error(
+            "The analysis did not complete successfully."
           );
         }
 
         render(data);
 
       } catch (error) {
+        latestReportData = null;
+        downloadReportButton.disabled = true;
+
         output.replaceChildren();
 
         add(
           output,
           "p",
           "error-box",
-          error && error.message
-            ? error.message
-            : "Analysis failed."
+          error?.message || "Analysis failed."
         );
 
         output.style.display = "block";
@@ -1953,7 +1899,6 @@
       }
     }
 
-
     form.addEventListener(
       "submit",
       event => {
@@ -1964,7 +1909,7 @@
 
 
     // ============================================
-    // Development-only preview
+    // Fictional ExampleCo preview
     // ============================================
 
     if (
@@ -1975,32 +1920,44 @@
       input.value = "ExampleCo";
       websiteInput.value = "";
 
-      const demoSource1 = {
+      const s1 = {
         title: "Fictional partnership announcement",
         url: "https://example.com/demo-partnership"
       };
 
-      const demoSource2 = {
+      const s2 = {
         title: "Fictional product announcement",
         url: "https://example.com/demo-product"
       };
 
-      const demoSource3 = {
+      const s3 = {
         title: "Fictional integration announcement",
         url: "https://example.com/demo-integration"
       };
 
       render({
         company_name: "ExampleCo",
+        status: "completed",
+
+        report:
+          "Fictional ExampleCo announced analytics partnerships and a reporting dashboard. This is preview data, not real research.",
+
+        research_attempts: 0,
+
+        source_stats: {
+          returned: 3,
+          accepted: 3,
+          discarded: 0
+        },
+
+        research_warnings: [
+          "Preview data only; no live research was performed."
+        ],
 
         executive_summary: {
           text:
             "In this fictional example, ExampleCo announced partnerships and introduced a reporting product. These developments do not establish market leadership or business impact.",
-          sources: [
-            demoSource1,
-            demoSource2,
-            demoSource3
-          ]
+          sources: [s1, s2, s3]
         },
 
         insight_items: [
@@ -2008,19 +1965,19 @@
             category: "M&A / Partnerships",
             text:
               "Fictional ExampleCo announced an analytics integration partnership with Northstar Labs.",
-            sources: [demoSource1]
+            sources: [s1]
           },
           {
             category: "Product & Innovation",
             text:
               "Fictional ExampleCo introduced a reporting dashboard.",
-            sources: [demoSource2]
+            sources: [s2]
           },
           {
             category: "M&A / Partnerships",
             text:
               "Fictional ExampleCo announced a data integration partnership with Harbor Data.",
-            sources: [demoSource3]
+            sources: [s3]
           }
         ],
 
@@ -2031,10 +1988,8 @@
               "In this fictional example, both companies provide analytics dashboards for small businesses.",
             sources: [
               {
-                title:
-                  "Fictional analytics market comparison",
-                url:
-                  "https://example.com/demo-competitor-1"
+                title: "Fictional analytics market comparison",
+                url: "https://example.com/demo-competitor-1"
               }
             ]
           },
@@ -2044,10 +1999,8 @@
               "In this fictional example, both companies offer customer reporting tools.",
             sources: [
               {
-                title:
-                  "Fictional reporting software comparison",
-                url:
-                  "https://example.com/demo-competitor-2"
+                title: "Fictional reporting software comparison",
+                url: "https://example.com/demo-competitor-2"
               }
             ]
           }
@@ -2062,17 +2015,23 @@
           total_sources: 3
         },
 
+        source_sentiments: [
+          { source_id: "S1", label: "neutral", ...s1 },
+          { source_id: "S2", label: "neutral", ...s2 },
+          { source_id: "S3", label: "neutral", ...s3 }
+        ],
+
         sources: [
           {
-            ...demoSource1,
+            ...s1,
             published_at: "2026-09-15"
           },
           {
-            ...demoSource2,
+            ...s2,
             published_at: "2026-09-21"
           },
           {
-            ...demoSource3,
+            ...s3,
             published_at: "2026-10-03"
           }
         ]
