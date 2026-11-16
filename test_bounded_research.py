@@ -41,7 +41,7 @@ def setup_fake_services(monkeypatch, responses):
     class FakeLLM:
         async def ainvoke(self, *args, **kwargs):
             return SimpleNamespace(
-                content="- Mocked strategic insight."
+                content="- Acme announced a development. [S1]"
             )
 
     monkeypatch.setenv("MOCK_TAVILY", "false")

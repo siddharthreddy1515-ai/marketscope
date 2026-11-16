@@ -59,6 +59,10 @@ const nodes = {};
 const downloads = [];
 const blobs = [];
 let fetchCalls = 0;
+const malformedAnalysis = process.argv[3] === 'malformed';
+const errorMessage = malformedAnalysis
+  ? 'The analysis response could not be read. Please try again.'
+  : 'Simulated error';
 
 class FakeNode {
   constructor(tag) {
@@ -144,8 +148,9 @@ const context = vm.createContext({
 
     return {
       ok: false,
+      status: malformedAnalysis ? 502 : 500,
       json: async () => ({
-        detail: 'Simulated error'
+        detail: errorMessage
       })
     };
   }
@@ -308,6 +313,38 @@ nodes.companyInput.value = 'Tesla';
     vm.runInContext('latestReportData', context),
     null
   );
+  assert.ok(nodes.output.children.some(node =>
+    node.textContent === errorMessage
+  ));
+
+  if (malformedAnalysis) {
+    nodes.downloadReportButton.handlers.click();
+    assert.equal(blobs.length, 1, 'Malformed analysis must not export stale data');
+    return;
+  }
+
+  const warning = process.argv[2] === 'partial'
+    ? 'Some generated findings were excluded because they could not be validated.'
+    : 'Insufficient evidence for a company overview.';
+  context.sample = {
+    ...context.sample,
+    analysis_status: process.argv[2],
+    analysis_warnings: process.argv[2] === 'partial' ? [warning] : [],
+    ...(process.argv[2] === 'insufficient_evidence'
+      ? {executive_summary: null, insight_items: []}
+      : {})
+  };
+  vm.runInContext('render(sample)', context);
+  const containsWarning = node => node.textContent === warning
+    || (node.children || []).some(containsWarning);
+  assert.ok(containsWarning(nodes.output), 'Missing dashboard analysis notice');
+  const exportHtml = vm.runInContext('buildReportHtml(sample)', context);
+  assert.ok(exportHtml.includes(warning), 'Missing exported analysis notice');
+  assert.ok(exportHtml.includes('href="https://example.com/press"'));
+  if (process.argv[2] === 'insufficient_evidence') {
+    assert.ok(exportHtml.includes('Evidence-only report'));
+  }
+  assert.equal(nodes.downloadReportButton.disabled, false);
 
   process.stdout.write(
     'Export runtime checks passed\n'
@@ -320,7 +357,16 @@ nodes.companyInput.value = 'Tesla';
 """
 
 
-def test_export_runtime_and_stale_report_guard():
+@pytest.mark.parametrize("analysis_status", ["partial", "insufficient_evidence"])
+def test_export_runtime_and_stale_report_guard(analysis_status):
+    run_export_runtime_check(analysis_status, "generic")
+
+
+def test_malformed_analysis_clears_stale_report():
+    run_export_runtime_check("complete", "malformed")
+
+
+def run_export_runtime_check(analysis_status, error_kind):
     node = shutil.which("node")
 
     if node is None:
@@ -329,7 +375,7 @@ def test_export_runtime_and_stale_report_guard():
         )
 
     result = subprocess.run(
-        [node, "-e", NODE_CHECK, str(INDEX)],
+        [node, "-e", NODE_CHECK, str(INDEX), analysis_status, error_kind],
         capture_output=True,
         text=True,
         timeout=15,

@@ -3,6 +3,7 @@ import asyncio
 import logging
 import os
 import re
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
@@ -146,6 +147,8 @@ class ResearchStatsResponse(BaseModel):
 class AnalyzeResponse(BaseModel):
     company_name: str
     status: str
+    analysis_status: Literal["complete", "partial", "insufficient_evidence"]
+    analysis_warnings: list[str] = Field(default_factory=list)
     report: str
     research_attempts: int
     sources: list[SourceResponse]
@@ -235,6 +238,17 @@ async def analyze_endpoint(
     # Validate workflow result
     # --------------------------------------------------
 
+    analysis_status = result.get("analysis_status")
+    if result.get("error_code") == "ANALYSIS_MALFORMED" or (
+        result.get("status") == "completed"
+        and analysis_status not in ("complete", "partial", "insufficient_evidence")
+    ):
+        logging.warning("Malformed analysis response for %s", request.company_name)
+        raise HTTPException(
+            status_code=502,
+            detail="The analysis response could not be read. Please try again.",
+        )
+
     if (
         result.get("status") != "completed"
         or not isinstance(
@@ -262,6 +276,8 @@ async def analyze_endpoint(
     return AnalyzeResponse(
         company_name=request.company_name,
         status=result["status"],
+        analysis_status=analysis_status,
+        analysis_warnings=result.get("analysis_warnings", []),
 
         executive_summary=result.get(
             "executive_summary"

@@ -89,7 +89,9 @@ class AgentState(TypedDict):
     search_results: str
     insights: str
     insight_items: list[InsightItem]
-    report: str
+    report: str | None
+    analysis_status: str
+    analysis_warnings: list[str]
     retry_count: int
     research_attempts: int
     enrichment_attempted: bool
@@ -806,6 +808,8 @@ async def research_node(state: AgentState):
 def parse_cited_insights(
     text: str,
     sources: list[SourceRecord],
+    *,
+    rejected: set[str] | None = None,
 ) -> list[InsightItem]:
     by_id = {
         f"S{i}": source
@@ -819,11 +823,17 @@ def parse_cited_insights(
 
     for line in text.splitlines():
         bullet = re.match(
-            r"^\s*[-*]\s+(.+)$",
+            r"^\s*[-*](?:\s+|$)(.*)$",
             line,
         )
 
         if not bullet:
+            if rejected is not None and re.match(
+                r"^\s*(?:\d+[.)]\s+\S|INSIGHT\s*:)",
+                line,
+                re.IGNORECASE,
+            ):
+                rejected.add("insight")
             continue
 
         raw = bullet.group(1).strip()
@@ -837,7 +847,7 @@ def parse_cited_insights(
         if (
             category_tag
             and not re.fullmatch(
-                r"S\d+",
+                r"[A-Z]\d+",
                 category_tag.group(1),
             )
         ):
@@ -854,18 +864,9 @@ def parse_cited_insights(
             raw = category_tag.group(2).strip()
 
         cited = re.findall(
-            r"\[(S\d+)\]",
+            r"\[([A-Z]\d+)\]",
             raw,
         )
-
-        if (
-            not cited
-            or any(
-                source_id not in by_id
-                for source_id in cited
-            )
-        ):
-            continue
 
         clean_text = re.sub(
             r"\s*\[S\d+\]",
@@ -873,7 +874,17 @@ def parse_cited_insights(
             raw,
         ).strip()
 
-        if not clean_text:
+        if (
+            not clean_text
+            or not cited
+            or any(source_id not in by_id for source_id in cited)
+        ):
+            if rejected is not None:
+                rejected.add("insight")
+            continue
+
+        # Check later bullets for rejected content even after filling the display slots.
+        if len(result) == 3:
             continue
 
         unique_ids = list(
@@ -894,15 +905,14 @@ def parse_cited_insights(
             "sources": linked_sources,
         })
 
-        if len(result) == 3:
-            break
-
     return result
 
 
 def parse_cited_summary(
     text: str,
     sources: list[SourceRecord],
+    *,
+    rejected: set[str] | None = None,
 ) -> ExecutiveSummary | None:
     by_id = {
         f"S{i}": source
@@ -912,9 +922,10 @@ def parse_cited_summary(
         )
     }
 
+    result: ExecutiveSummary | None = None
     for line in text.splitlines():
         match = re.match(
-            r"^\s*SUMMARY:\s*(.+?)\s*$",
+            r"^\s*SUMMARY:\s*(.*?)\s*$",
             line,
             re.IGNORECASE,
         )
@@ -923,20 +934,13 @@ def parse_cited_summary(
             continue
 
         raw_summary = match.group(1).strip()
+        if raw_summary.casefold() == "none":
+            continue
 
         cited_ids = re.findall(
-            r"\[(S\d+)\]",
+            r"\[([A-Z]\d+)\]",
             raw_summary,
         )
-
-        if not cited_ids:
-            return None
-
-        if any(
-            source_id not in by_id
-            for source_id in cited_ids
-        ):
-            return None
 
         clean_text = re.sub(
             r"\s*\[S\d+\]",
@@ -944,8 +948,18 @@ def parse_cited_summary(
             raw_summary,
         ).strip()
 
-        if not clean_text:
-            return None
+        if (
+            not clean_text
+            or clean_text.casefold() == "none"
+            or not cited_ids
+            or any(source_id not in by_id for source_id in cited_ids)
+        ):
+            if rejected is not None:
+                rejected.add("summary")
+            continue
+
+        if result is not None:
+            continue
 
         unique_ids = list(
             dict.fromkeys(cited_ids)
@@ -959,12 +973,12 @@ def parse_cited_summary(
             for source_id in unique_ids
         ]
 
-        return {
+        result = {
             "text": clean_text,
             "sources": linked_sources,
         }
 
-    return None
+    return result
 
 
 def parse_source_sentiments(
@@ -1397,15 +1411,39 @@ DEDICATED COMPETITOR RESEARCH SOURCES
         else ""
     )
 
+    rejected: set[str] = set()
     mapped = parse_cited_insights(
         raw_insights,
         state["sources"],
+        rejected=rejected,
     )
 
     summary = parse_cited_summary(
         raw_insights,
         state["sources"],
+        rejected=rejected,
     )
+
+    analysis_warnings = []
+    if mapped or summary:
+        analysis_status = "partial" if rejected else "complete"
+        if rejected:
+            analysis_warnings.append(
+                "Some generated findings were excluded because they could not be validated."
+            )
+    else:
+        lines = [line.strip() for line in raw_insights.splitlines() if line.strip()]
+        supplement = (
+            r"SENTIMENT\s+\[S\d+\]:\s*(Positive|Neutral|Negative|Unclear)"
+            r"|COMPETITOR:\s*[^|]+\|.+"
+        )
+        clean_abstention = (
+            not rejected
+            and lines
+            and re.fullmatch(r"SUMMARY:\s*None", lines[0], re.IGNORECASE)
+            and all(re.fullmatch(supplement, line, re.IGNORECASE) for line in lines[1:])
+        )
+        analysis_status = "insufficient_evidence" if clean_abstention else "malformed"
 
     source_sentiments = parse_source_sentiments(
         raw_insights,
@@ -1427,6 +1465,8 @@ DEDICATED COMPETITOR RESEARCH SOURCES
     return {
         "insights": raw_insights,
         "insight_items": mapped,
+        "analysis_status": analysis_status,
+        "analysis_warnings": analysis_warnings,
         "executive_summary": summary,
         "source_sentiments": source_sentiments,
         "sentiment_distribution": sentiment_distribution,
@@ -1440,6 +1480,9 @@ DEDICATED COMPETITOR RESEARCH SOURCES
 # ==================================================
 
 async def report_node(state: AgentState):
+    if state.get("analysis_status") == "malformed":
+        return {"report": None}
+
     print("--- GENERATING REPORT ---")
 
     items = state.get(
@@ -1834,18 +1877,22 @@ async def run_workflow(
         }
 
     report = result.get("report")
+    analysis_status = result["analysis_status"]
+    malformed = analysis_status == "malformed"
 
-    if not report:
+    if not report and not malformed:
         raise RuntimeError(
             "Workflow ended without generating "
             "a report."
         )
 
     return {
-        "status": "completed",
-        "error_code": None,
+        "status": "failed" if malformed else "completed",
+        "error_code": "ANALYSIS_MALFORMED" if malformed else None,
         "research_attempts": attempts,
-        "report": report,
+        "report": None if malformed else report,
+        "analysis_status": analysis_status,
+        "analysis_warnings": result.get("analysis_warnings", []),
         "llm_usage": result.get("llm_usage"),
         "search_results": result.get(
             "search_results",

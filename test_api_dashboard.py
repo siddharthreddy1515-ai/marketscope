@@ -1,4 +1,5 @@
 
+import pytest
 from fastapi.testclient import TestClient
 import main
 
@@ -8,6 +9,7 @@ def test_analyze_returns_research_data(monkeypatch):
     async def fake_workflow(company_name):
         return {
             "status": "completed",
+            "analysis_status": "complete",
             "report": "# Example report",
             "research_attempts": 1,
             "sources": [
@@ -48,6 +50,37 @@ def test_analyze_returns_research_data(monkeypatch):
     assert data["source_stats"]["accepted"] == 1
 
 
+@pytest.mark.parametrize("analysis_status", ["complete", "partial", "insufficient_evidence"])
+def test_analysis_status_and_warnings_reach_api(monkeypatch, analysis_status):
+    warning = "Some generated findings were excluded because they could not be validated."
+    warnings = [warning] if analysis_status == "partial" else []
+
+    async def fake_workflow(company_name):
+        return {
+            "status": "completed", "analysis_status": analysis_status,
+            "analysis_warnings": warnings, "report": "# Acme Report",
+            "research_warnings": ["Research coverage was limited."],
+        }
+
+    monkeypatch.setattr(main, "run_workflow", fake_workflow)
+    response = TestClient(main.app).post("/api/v1/analyze", json={"company_name": "Acme"})
+    assert response.status_code == 200
+    assert response.json()["analysis_status"] == analysis_status
+    assert response.json()["analysis_warnings"] == warnings
+    assert response.json()["research_warnings"] == ["Research coverage was limited."]
+
+
+def test_malformed_analysis_returns_safe_specific_error(monkeypatch):
+    async def fake_workflow(company_name):
+        return {"status": "failed", "error_code": "ANALYSIS_MALFORMED",
+                "report": None, "insights": "Raw model output"}
+
+    monkeypatch.setattr(main, "run_workflow", fake_workflow)
+    response = TestClient(main.app).post("/api/v1/analyze", json={"company_name": "Acme"})
+    assert response.status_code == 502
+    assert response.json() == {"detail": "The analysis response could not be read. Please try again."}
+
+
 def test_failed_research_returns_error(monkeypatch):
 
     async def fake_workflow(company_name):
@@ -77,6 +110,7 @@ def test_executive_summary_reaches_api(monkeypatch):
     async def fake_workflow(company_name):
         return {
             "status": "completed",
+            "analysis_status": "complete",
             "report": "# Acme Report",
             "research_attempts": 1,
             "sources": [
@@ -136,6 +170,7 @@ def test_source_sentiment_reaches_api(monkeypatch):
     async def fake_workflow(company_name):
         return {
             "status": "completed",
+            "analysis_status": "complete",
             "report": "# Acme Report",
             "research_attempts": 1,
             "sources": [
@@ -206,6 +241,7 @@ def test_competitors_reach_api(monkeypatch):
     async def fake_workflow(company_name):
         return {
             "status": "completed",
+            "analysis_status": "complete",
             "report": "# Acme Report",
             "research_attempts": 1,
             "sources": [

@@ -616,6 +616,14 @@
       color: #ffd1d9;
     }
 
+    .analysis-notice {
+      margin: 0 0 14px;
+      padding: 10px 14px;
+      border-left: 3px solid #dfad59;
+      background: #2c2831;
+      color: #ffe0a8;
+    }
+
     @media (max-width: 790px) {
       .dashboard { grid-template-columns: 1fr; }
       .aside-column {
@@ -868,8 +876,21 @@
     // Dashboard rendering
     // ============================================
 
+    function analysisNotices(data) {
+      if (data.analysis_status === "insufficient_evidence") {
+        return ["Insufficient evidence for a company overview."];
+      }
+      return data.analysis_status === "partial" && Array.isArray(data.analysis_warnings)
+        ? data.analysis_warnings
+        : [];
+    }
+
     function render(data, isDemo = false) {
       output.replaceChildren();
+
+      for (const notice of analysisNotices(data)) {
+        add(output, "p", "analysis-notice", notice);
+      }
 
       const insights = Array.isArray(data.insight_items)
         ? data.insight_items
@@ -1623,7 +1644,9 @@ a {
 <h1>MarketScope — ${company}</h1>
 
 <p class="muted">
-  Competitive Intelligence Report<br>
+  ${data.analysis_status === "insufficient_evidence"
+    ? "Evidence-only report"
+    : "Competitive Intelligence Report"}<br>
   Downloaded: ${downloadedAt}
 </p>
 
@@ -1633,6 +1656,10 @@ ${isDemo
        not real company research.
      </p>`
   : ""}
+
+${analysisNotices(data).map(notice =>
+  `<p class="warning">${escapeHtml(notice)}</p>`
+).join("")}
 
 <section>
   <h2>Executive Summary</h2>
