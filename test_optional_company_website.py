@@ -12,6 +12,7 @@ import workflow
 def fake_result():
     return {
         "status": "completed",
+        "analysis_status": "complete",
         "report": "# Linear Report",
         "research_attempts": 1,
         "sources": [],
@@ -151,6 +152,7 @@ def test_workflow_receives_normalized_domain(
                     }
                 ],
                 "report": "# Linear Report",
+                "analysis_status": "complete",
                 "research_attempts": 1,
             }
 

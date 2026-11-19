@@ -157,6 +157,8 @@
 
     .export-actions {
       display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       justify-content: flex-end;
       margin: 0 0 19px;
     }
@@ -200,45 +202,18 @@
       font-size: 12px;
     }
 
-    /* KPI cards */
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 13px;
+    .research-coverage {
       margin-bottom: 18px;
-    }
-
-    .kpi {
-      min-height: 120px;
-      padding: 18px 19px;
-      background: #182741;
+      padding: 14px 18px;
+      background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 13px;
     }
 
-    .kpi-label {
-      color: #a3b5cd;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      font-weight: 690;
-    }
-
-    .kpi-value {
-      margin: 9px 0 5px;
-      color: #f7faff;
-      font-size: 27px;
-      font-weight: 780;
-    }
-
-    .kpi-value.signal { color: #76ccff; }
-
-    .kpi-note {
-      color: #8aa2bd;
-      font-size: 11px;
-      line-height: 1.45;
-    }
+    .research-coverage.limited { border-left: 3px solid #dfad59; }
+    .research-coverage h2 { font-size: 16px; margin: 0 0 6px; }
+    .research-coverage p { font-size: 13px; margin: 4px 0; }
+    .research-coverage ul { font-size: 13px; margin: 8px 0 0; padding-left: 18px; }
 
     /* Dashboard panels */
 
@@ -616,12 +591,17 @@
       color: #ffd1d9;
     }
 
+    .analysis-notice {
+      margin: 0 0 14px;
+      padding: 10px 14px;
+      border-left: 3px solid #dfad59;
+      background: #2c2831;
+      color: #ffe0a8;
+    }
+
     @media (max-width: 790px) {
       .dashboard { grid-template-columns: 1fr; }
       .aside-column {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
@@ -634,6 +614,30 @@
       .search button { min-height: 44px; }
       .aside-column { grid-template-columns: 1fr; }
     }
+
+    .brief-intro { margin: 12px 0 22px; }
+    .brief-eyebrow { color: var(--sky); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; }
+    .brief-intro h1 { font-size: clamp(27px, 4vw, 40px); margin: 7px 0; letter-spacing: -.035em; }
+    .brief-intro p { color: var(--muted); max-width: 780px; line-height: 1.6; margin: 6px 0; }
+    .brief-metrics { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    .brief-metric { border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; background: #122139; flex: 1 1 160px; }
+    .brief-metric strong { display: block; font-size: 25px; color: var(--text); margin-bottom: 3px; }
+    .brief-metric span { color: var(--muted); font-size: 12px; }
+    .source-fact { border-left: 3px solid var(--sky); padding-left: 14px; margin: 15px 0; line-height: 1.7; white-space: pre-wrap; }
+    .fact-label { color: var(--green); font-size: 11px; font-weight: 700; margin-top: 14px; }
+    .interpretation { margin: 16px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .interpretation summary, .diagnostics > summary { cursor: pointer; color: var(--muted); padding: 8px 0; }
+    .brief-questions { padding: 0 20px 16px 38px; color: #c4d3e7; font-size: 13px; line-height: 1.65; }
+    .brief-questions li { margin-bottom: 12px; }
+    .library-controls { padding: 16px 20px; }
+    .library-controls input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px; }
+    .library-source { padding: 17px 20px; border-top: 1px solid var(--border); }
+    .library-source a { color: #b4ddff; line-height: 1.5; font-size: 14px; text-decoration: none; }
+    .library-source .coverage { margin: 8px 0; }
+    .library-source pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; color: #c4d3e7; line-height: 1.65; font-size: 13px; }
+    .diagnostics .panel { margin-top: 15px; }
+    .library-count { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+    .brief-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
   </style>
 </head>
 
@@ -645,7 +649,7 @@
         <div class="brand-logo" aria-hidden="true">↗</div>
         <div>
           <div class="brand-name">MarketScope</div>
-          <div class="brand-sub">Competitive Intelligence</div>
+          <div class="brand-sub">Company intelligence, with the evidence in view</div>
         </div>
       </div>
 
@@ -674,7 +678,7 @@
       <input
         id="websiteInput"
         type="text"
-        placeholder="Official website (optional, e.g. linear.app)"
+        placeholder="Official website recommended (e.g. linear.app)"
         aria-label="Official company website (optional)"
         autocomplete="off"
       >
@@ -690,9 +694,14 @@
         id="downloadReportButton"
         disabled
       >
-        Download HTML Report
+        Download source brief
+      </button>
+      <button type="button" id="downloadEvidenceButton" disabled>
+        Download evidence JSON
       </button>
     </div>
+
+    <p class="brief-note">Dashboard build: source-brief-2026-11-19 · Source passages lead; research coverage may be limited.</p>
 
     <div id="demoLabel" class="demo-label">
       Preview mode — fictional ExampleCo sample data.
@@ -722,6 +731,7 @@
 
     const downloadReportButton =
       document.getElementById("downloadReportButton");
+    const downloadEvidenceButton = document.getElementById("downloadEvidenceButton");
 
     const CATEGORIES = [
       "Product & Innovation",
@@ -765,7 +775,7 @@
       try {
         const parsed = new URL(value);
 
-        return ["http:", "https:"].includes(parsed.protocol)
+        return ["http:", "https:"].includes(parsed.protocol) && !parsed.username && !parsed.password
           ? parsed.href
           : null;
       } catch {
@@ -783,7 +793,7 @@
       const link = el(
         "a",
         cls,
-        text || source?.title || "Read source"
+        text || source?.title || new URL(href).hostname
       );
 
       link.href = href;
@@ -798,10 +808,7 @@
       let count = 0;
 
       for (const source of Array.isArray(sources) ? sources : []) {
-        const link = safeLink(
-          source,
-          `Source ${count + 1} ↗`
-        );
+        const link = safeLink(source);
 
         if (!link) {
           continue;
@@ -821,6 +828,21 @@
       }
 
       return count;
+    }
+
+    function appendEvidence(parent, evidence) {
+      const quotes = (Array.isArray(evidence) ? evidence : []).filter(item =>
+        typeof item?.quote === "string" && item.quote.trim() && safeUrl(item?.url)
+      );
+      if (!quotes.length) return;
+      const details = add(parent, "details", "quoted-evidence");
+      add(details, "summary", "", "Quoted source excerpts");
+      add(details, "p", "coverage", "Check whether these excerpts support the finding. Quote matching does not establish independent verification.");
+      for (const item of quotes) {
+        add(details, "blockquote", "", item.quote);
+        const link = safeLink(item);
+        if (link) details.appendChild(link);
+      }
     }
 
     function dateInfo(value) {
@@ -868,56 +890,348 @@
     // Dashboard rendering
     // ============================================
 
+    function analysisNotices(data) {
+      const warnings = Array.isArray(data.analysis_warnings)
+        ? data.analysis_warnings.filter(warning => typeof warning === "string" && warning.trim()) : [];
+      if (data.analysis_status === "insufficient_evidence") {
+        if (Array.isArray(data.context_items) && data.context_items.length) return ["No primary developments were established. Historical/background context is shown separately.", ...warnings];
+        return ["Insufficient evidence for a company overview.", ...warnings];
+      }
+      return warnings;
+    }
+
+    function researchCoverage(data) {
+      const sources = Array.isArray(data.sources) ? data.sources : null;
+      const accepted = data.source_stats?.accepted ?? sources?.length;
+      const attempts = data.research_attempts;
+      const evidence = data.research_coverage;
+      const backgroundOnly = evidence?.status === "background_only";
+      const limited = backgroundOnly || ["empty", "uncertain"].includes(evidence?.status) || accepted === 0 || accepted === 1;
+      const counts = [
+        Number.isInteger(attempts)
+          ? `${attempts} ${attempts === 1 ? "attempt" : "attempts"}`
+          : "Research attempts unavailable",
+        Number.isInteger(accepted)
+          ? `${accepted} accepted company ${accepted === 1 ? "source" : "sources"}`
+          : "Accepted company source count unavailable"
+      ].join(" · ");
+      const withoutDate = sources?.filter(source => !dateInfo(source?.published_at)).length;
+      let dateNote = "";
+      if (withoutDate) {
+        dateNote = sources.length === 1
+          ? "Publication date unavailable for the company source."
+          : `Publication dates unavailable for ${withoutDate} of ${sources.length} company sources.`;
+      }
+
+      return {
+        limited,
+        title: backgroundOnly ? "Background information report" : limited ? "Limited research coverage" : "Research Coverage",
+        counts,
+        dateNote,
+        evidenceNote: evidence
+          ? `${evidence.development_sources} sources with potential developments · ${evidence.background_sources} background sources · ${evidence.uncertain_sources} uncertain`
+          : "",
+        caution: Array.isArray(evidence?.limitations) && evidence.limitations.length
+          ? evidence.limitations.join(" ")
+          : limited ? "Important developments may be missing from this report." : "",
+        warnings: Array.isArray(data.research_warnings) ? data.research_warnings : []
+      };
+    }
+
+    function summaryForDisplay(data) {
+      const brief = buildCompanyBrief(data);
+      if (brief.cards.length) {
+        const sources = new Map();
+        for (const card of brief.cards) for (const source of card.sources) sources.set(source.url, source);
+        return {text: brief.cards.map(card => card.text).join("\n\n"),
+          sources: [...sources.values()], fromFindings: true, fromQuotes: true};
+      }
+      if (data.analysis_format === "evidence_ids_v2") return null;
+      if (typeof data.executive_summary?.text === "string" && data.executive_summary.text.trim()) {
+        return data.executive_summary;
+      }
+      const findings = (Array.isArray(data.insight_items) ? data.insight_items : []).filter(item =>
+        typeof item?.text === "string" && item.text.trim() &&
+        Array.isArray(item.sources) && item.sources.some(source => safeUrl(source?.url))
+      );
+      if (!findings.length) return null;
+      const sources = new Map();
+      for (const finding of findings) {
+        for (const source of finding.sources) {
+          if (safeUrl(source?.url)) sources.set(source.url, source);
+        }
+      }
+      return {text: findings.map(item => item.text).join(" "), sources: [...sources.values()], fromFindings: true};
+    }
+
+    function sourceKind(url, officialDomain) {
+      if (!officialDomain) return "Source type unknown";
+      try {
+        const domain = new URL(`https://${officialDomain}`).hostname.toLowerCase().replace(/^www\./, "");
+        const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+        return host === domain || host.endsWith(`.${domain}`) ? "Company source" : "External source";
+      } catch { return "Source type unknown"; }
+    }
+
+    function checkedCompanyQuotes(record, data) {
+      const sources = Array.isArray(data.sources) ? data.sources : [];
+      const normalize = value => value.replace(/\s+/g, " ").trim();
+      const isWord = value => value && /[\p{L}\p{N}_]/u.test(value);
+      const quotes = [];
+      for (const evidence of Array.isArray(record?.evidence) ? record.evidence : []) {
+        if (typeof evidence?.source_id !== "string" || !/^S[1-9]\d{0,14}$/.test(evidence.source_id)) return [];
+        const source = sources[Number(evidence.source_id.slice(1)) - 1];
+        if (!source || typeof source.content !== "string" || typeof evidence.quote !== "string" ||
+            !evidence.quote.trim() || !safeUrl(source.url) || safeUrl(source.url) !== safeUrl(evidence.url)) return [];
+        if (data.analysis_format === "evidence_ids_v2") {
+          const id = typeof evidence.evidence_id === "string"
+            ? evidence.evidence_id.match(/^([SC][1-9]\d*)-[0-9a-f]{16}-(\d+)-(\d+)$/) : null;
+          if (!id || id[1] !== evidence.source_id) return [];
+          const start = Number(id[2]), end = Number(id[3]), body = Array.from(source.content);
+          if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end <= start ||
+              end > body.length || body.slice(start, end).join("") !== evidence.quote) return [];
+        }
+        const content = normalize(source.content), quote = normalize(evidence.quote);
+        let found = false;
+        for (let start = content.indexOf(quote); start !== -1; start = content.indexOf(quote, start + 1)) {
+          if (!isWord(content[start - 1]) && !isWord(content[start + quote.length])) { found = true; break; }
+        }
+        if (!found) return [];
+        if (!quotes.some(q => q.url === source.url && normalize(q.quote) === quote)) {
+          quotes.push({quote: evidence.quote, title: source.title, url: source.url, source_id: evidence.source_id,
+            ...(evidence.evidence_id ? {evidence_id: evidence.evidence_id} : {})});
+        }
+      }
+      return quotes;
+    }
+
+    function buildCompanyBrief(data) {
+      const findings = companyObservations(data);
+      const records = new Map();
+      for (const source of Array.isArray(data.sources) ? data.sources : []) {
+        if (safeUrl(source?.url)) records.set(source.url, source);
+      }
+      const cards = findings.map(record => {
+        const evidence = checkedCompanyQuotes(record, data);
+        if (!evidence.length) return null;
+        return {title: evidence[0].title || "Selected source observation", text: evidence.map(e => e.quote).join("\n\n"),
+          interpretation: record.text || "", category: record.category, evidence,
+          sources: [...new Map(evidence.map(e => [e.url, {title: e.title, url: e.url}])).values()]};
+      }).filter(Boolean);
+      const selectedUrls = new Set(cards.flatMap(card => card.sources.map(s => s.url)));
+      const contextCards = (Array.isArray(data.context_items) ? data.context_items : []).map(record => {
+        const evidence = checkedCompanyQuotes(record, data);
+        if (!evidence.length) return null;
+        return {title: evidence[0].title || "Background source", text: evidence.map(e => e.quote).join("\n\n"),
+          interpretation: record.text || "", evidence,
+          sources: [...new Map(evidence.map(e => [e.url, {title: e.title, url: e.url}])).values()],
+          label: record.temporal_status === "historical" ? "Historical context" : "Timing uncertain — background context",
+          note: typeof record.temporal_note === "string" ? record.temporal_note : "Kept separately from selected developments."};
+      }).filter(Boolean);
+      const contextUrls = new Set(contextCards.flatMap(card => card.sources.map(s => s.url)));
+      const library = [...records.values()].map(source => ({...source, used: selectedUrls.has(source.url),
+        usedAsContext: contextUrls.has(source.url),
+        kind: sourceKind(source.url, data.official_domain)}));
+      const additionalSources = library.filter(source => !source.used && !source.usedAsContext);
+      const gaps = [];
+      if (!cards.length) gaps.push("No source-bound company excerpts are available for the selected findings. Treat generated notes as unverified.");
+      const selected = library.filter(source => source.used);
+      if (selected.length && selected.every(source => source.kind === "Company source")) {
+        gaps.push("Selected observations rely entirely on company-published material. Independent corroboration is not established.");
+      }
+      if (!data.official_domain) gaps.push("An official website was not recorded. Company and external source types cannot be distinguished reliably.");
+      if (additionalSources.length) gaps.push(`${additionalSources.length} retrieved sources were not used in these observations. Other useful developments may be present in the source library.`);
+      const unknownDates = selected.filter(source => !dateInfo(source.published_at)).length;
+      if (unknownDates) gaps.push(`Publication dates are unavailable for ${unknownDates} selected sources. Recency and event dates need checking.`);
+      gaps.push("This is a bounded web research brief, not a complete record of company activity or independently verified performance.");
+      const questionMap = {
+        "Product & Innovation": "Which users can access the announced capability, and does it change their workflow, pricing or integrations?",
+        "Funding & Investment": "Is this primary capital or shareholder liquidity, and who received the proceeds?",
+        "M&A / Partnerships": "Is the deal announced or completed, and what scope and commercial terms are actually disclosed?",
+        "Market Expansion": "Is the expansion operational, and is there evidence of customers or revenue in the new market?",
+        "Hiring & Talent": "When does the leadership or hiring change take effect, and what responsibilities are confirmed?",
+        "Other": "What is confirmed by the source, and which consequences still need evidence?"
+      };
+      const categories = [...new Set(findings.map(item => CATEGORIES.includes(item.category) ? item.category : "Other"))];
+      return {cards, contextCards, library, additionalSources, gaps, sourceCount: library.length, selectedSourceCount: selectedUrls.size,
+        questions: categories.map(category => questionMap[category])};
+    }
+
+    function renderBriefOverview(parent, data, brief) {
+      const intro = add(parent, "header", "brief-intro");
+      add(intro, "div", "brief-eyebrow", "MarketScope / Company brief");
+      add(intro, "h1", "", data.company_name || "Company");
+      add(intro, "p", "", "Read the source observations, understand the gaps, and decide what deserves a closer look.");
+      if (data.analysis_format === "evidence_ids_v2") add(intro, "p", "brief-note", "Source-evidence view: generated interpretations are excluded from this display and shared briefs. Selected passages do not establish independent verification or complete coverage.");
+      if (dateInfo(data.generated_at)) add(intro, "p", "brief-note", `Report generated ${new Date(data.generated_at).toLocaleString()} · This is not an event date or a guarantee of current coverage.`);
+      if (data.analysis_window?.start && data.analysis_window?.end) add(intro, "p", "brief-note", `Primary overview window: ${data.analysis_window.start} through ${data.analysis_window.end}. Unknown event timing stays uncertain.`);
+      if (!data.official_domain) add(intro, "p", "analysis-notice", "Name-only research: company identity may be ambiguous. Supply the official website to help separate companies with similar names.");
+      const metrics = add(intro, "div", "brief-metrics");
+      for (const [value, label] of [[brief.cards.length, "Selected observations"],
+        [brief.selectedSourceCount, "Sources behind observations"], [brief.sourceCount, "Company sources retained"]]) {
+        const metric = add(metrics, "div", "brief-metric");
+        add(metric, "strong", "", value);
+        add(metric, "span", "", label);
+      }
+    }
+
+    function renderSourceLibrary(parent, brief) {
+      const library = panel("Source library", "▥", "All retained company sources");
+      const controls = add(library, "div", "library-controls");
+      add(controls, "p", "brief-note", "Company and external labels describe the website, not editorial independence or factual verification.");
+      const query = add(controls, "input");
+      query.type = "search";
+      query.placeholder = "Filter sources by title, website or excerpt";
+      query.setAttribute("aria-label", "Filter company sources");
+      const count = add(controls, "p", "library-count");
+      const list = add(library, "div");
+      const update = () => {
+        list.replaceChildren();
+        const term = String(query.value || "").toLowerCase().trim();
+        const sources = brief.library.filter(source => `${source.title} ${source.url} ${source.content || ""}`.toLowerCase().includes(term));
+        count.textContent = `${sources.length} of ${brief.sourceCount} retained sources · excerpts may be incomplete`;
+        for (const source of sources) {
+          const row = add(list, "article", "library-source");
+          const link = safeLink(source);
+          if (link) row.appendChild(link);
+          add(row, "p", "coverage", `${source.kind} · ${source.used ? "Used in selected observations" : source.usedAsContext ? "Used in historical/background context" : "Additional source — not selected"}`);
+          add(row, "p", "coverage", `Published: ${dateInfo(source.published_at)?.label || "Date unavailable"} · Publication date is not necessarily the event date`);
+          if (typeof source.content === "string" && source.content.trim()) {
+            const details = add(row, "details");
+            add(details, "summary", "brief-note", "Read retrieved excerpt");
+            add(details, "pre", "", source.content);
+          }
+        }
+        if (!sources.length) add(list, "p", "empty-state", "No sources match this filter.");
+      };
+      query.addEventListener("input", update);
+      update();
+      parent.appendChild(library);
+    }
+
+    function findingPresentation(record, data) {
+      const quotes = checkedCompanyQuotes(record, data);
+      if (data.analysis_format === "evidence_ids_v2") return {quotes,
+        text: quotes.length ? quotes.map(q => q.quote).join("\n\n") : "This observation was withheld because its selected body passages could not be checked.",
+        title: "Selected company source passage", label: quotes.length ? "Exact selected source text" : "Selected evidence unavailable",
+        sources: quotes.length ? [...new Map(quotes.map(q => [q.url, {title: q.title, url: q.url}])).values()] : []};
+      return {quotes, text: quotes.length ? quotes.map(q => q.quote).join("\n\n") : record.text || "",
+        title: quotes.length ? quotes[0].title || "Source observation" : record.event || "Generated finding",
+        label: quotes.length ? "Source excerpt" : "Quote support unavailable — generated note",
+        sources: quotes.length ? [...new Map(quotes.map(q => [q.url, {title: q.title, url: q.url}])).values()] : record.sources};
+    }
+
+    function companyObservations(data) {
+      const records = [], byExcerpt = new Map();
+      const normalize = text => text.replace(/\s+/g, " ").trim();
+      for (const item of Array.isArray(data.insight_items) ? data.insight_items : []) {
+        const quotes = checkedCompanyQuotes(item, data);
+        const key = [...new Set(quotes.map(q => normalize(q.quote)))].sort().join("\u0000");
+        const previous = quotes.length ? byExcerpt.get(key) : null;
+        if (previous) {
+          for (const quote of quotes) if (!previous.evidence.some(q => q.url === quote.url && normalize(q.quote) === normalize(quote.quote))) previous.evidence.push(quote);
+          if (!previous.interpretations.includes(item.text)) previous.interpretations.push(item.text);
+          previous.text = previous.interpretations.filter(Boolean).join("\n\n");
+          continue;
+        }
+        const record = {...item, evidence: quotes.length ? quotes : item.evidence,
+          interpretations: [item.text]};
+        records.push(record);
+        if (quotes.length) byExcerpt.set(key, record);
+      }
+      return records;
+    }
+
+    function competitorQuotes(record, data = null) {
+      const sources = Array.isArray(record.sources) ? record.sources : [];
+      return (Array.isArray(record.evidence) ? record.evidence : []).filter(q =>
+        typeof q?.quote === "string" && q.quote.trim() && safeUrl(q.url) &&
+        sources.some(s => safeUrl(s?.url) === safeUrl(q.url)) &&
+        (data?.analysis_format !== "evidence_ids_v2" ||
+          (typeof q.source_id === "string" && /^C[1-9]\d*$/.test(q.source_id) &&
+           typeof q.evidence_id === "string" && q.evidence_id.startsWith(q.source_id + "-") &&
+           /^C[1-9]\d*-[0-9a-f]{16}-\d+-\d+$/.test(q.evidence_id)))
+      );
+    }
+
+    function appendInterpretation(parent, text) {
+      const details = add(parent, "details", "interpretation");
+      add(details, "summary", "", "AI interpretation — review against the excerpts");
+      add(details, "p", "", text);
+      add(details, "p", "brief-note", "Generated wording may add details the selected excerpts do not establish. It is not independently verified.");
+    }
+
+    function renderContext(parent, data, brief) {
+      const warnings = Array.isArray(data.context_warnings) ? data.context_warnings : [];
+      if (!brief.contextCards.length && !warnings.length) return;
+      const section = panel("Historical and background context", "◷", "Separate from primary observations");
+      const body = add(section, "div", "panel-content");
+      add(body, "p", "brief-note", "These items are not counted as recent developments. Unknown event timing remains uncertain.");
+      for (const warning of warnings) add(body, "p", "brief-note", warning);
+      for (const card of brief.contextCards) {
+        const article = add(body, "article", "context-observation");
+        add(article, "h3", "insight-title", data.analysis_format === "evidence_ids_v2" ? "Selected background source passage" : card.title);
+        add(article, "p", "fact-label", card.label);
+        add(article, "blockquote", "source-fact", card.text);
+        appendSourceLinks(add(article, "div", "source-row"), card.sources);
+        add(article, "p", "brief-note", card.note);
+        if (data.analysis_format !== "evidence_ids_v2") appendInterpretation(article, card.interpretation);
+      }
+      parent.appendChild(section);
+    }
+
+    function researchAttemptText(attempt) {
+      const lanes = {first: "Initial search", business: "Broader news search", official: "Official announcements"};
+      const outcomes = {ok: "completed", failed: "failed", invalid_response: "unreadable response"};
+      return `${lanes[attempt.lane] || "Company search"} — ${outcomes[attempt.status] || "unknown outcome"}; ` +
+        `${attempt.new_sources ?? "Unknown"} new company sources`;
+    }
+
     function render(data, isDemo = false) {
       output.replaceChildren();
+      if (typeof data.offline_notice === "string" && data.offline_notice.trim()) add(output, "p", "analysis-notice", data.offline_notice);
 
-      const insights = Array.isArray(data.insight_items)
-        ? data.insight_items
-        : [];
+      for (const notice of analysisNotices(data)) {
+        add(output, "p", "analysis-notice", notice);
+      }
+
+      const insights = companyObservations(data);
 
       const sources = Array.isArray(data.sources)
         ? data.sources
         : [];
 
       const cited = new Map();
+      const brief = buildCompanyBrief(data);
+      renderBriefOverview(output, data, brief);
+      if (data.analysis_format && data.analysis_format !== "evidence_ids_v2") {
+        add(output, "p", "brief-note", "Legacy analysis format: evidence-ID assembly and automatic historical-action separation were not applied to this response.");
+      }
 
-
-      // ----------------------------------------
-      // KPI cards
-      // ----------------------------------------
-
-      const cards = add(output, "section", "kpi-grid");
-
-      cards.setAttribute(
-        "aria-label",
-        "Competitive intelligence overview"
-      );
-
-      const kpis = [
-        ["Market Position", "—", "Not assessed"],
-        [
-          "Insights Found",
-          insights.length,
-          "Source-backed findings",
-          "signal"
-        ],
-        ["Sentiment", "—", "See source coverage below"],
-        ["Threat Level", "—", "Not assessed"]
-      ];
-
-      for (const [label, value, note, cls] of kpis) {
-        const card = add(cards, "article", "kpi");
-
-        add(card, "div", "kpi-label", label);
-
-        add(
-          card,
-          "div",
-          `kpi-value ${cls || ""}`,
-          value
-        );
-
-        add(card, "div", "kpi-note", note);
+      const coverage = researchCoverage(data);
+      const coveragePanel = add(output, "section", coverage.limited
+        ? "research-coverage limited" : "research-coverage");
+      add(coveragePanel, "h2", "", coverage.title);
+      add(coveragePanel, "p", "", coverage.counts);
+      if (coverage.limited && coverage.caution) add(coveragePanel, "p", "", coverage.caution);
+      const coverageDetails = add(coveragePanel, "details");
+      add(coverageDetails, "summary", "", "Research details and limitations");
+      for (const line of [coverage.evidenceNote, coverage.dateNote, coverage.limited ? "" : coverage.caution].filter(Boolean)) {
+        add(coverageDetails, "p", "", line);
+      }
+      if (coverage.warnings.length) {
+        const warnings = add(coverageDetails, "ul");
+        for (const warning of coverage.warnings) {
+          add(warnings, "li", "", warning);
+        }
+      }
+      if (Array.isArray(data.research_history) && data.research_history.length) {
+        const history = add(coverageDetails, "details");
+        add(history, "summary", "", "Searches performed");
+        const attempts = add(history, "ul");
+        for (const attempt of data.research_history) {
+          add(attempts, "li", "", researchAttemptText(attempt));
+        }
       }
 
 
@@ -928,6 +1242,16 @@
       const dashboard = add(output, "div", "dashboard");
       const left = add(dashboard, "div", "main-column");
       const right = add(dashboard, "aside", "aside-column");
+      const gapsPanel = panel("Research gaps", "◌");
+      const gapList = add(gapsPanel, "ul", "brief-questions");
+      for (const gap of brief.gaps) add(gapList, "li", "", gap);
+      right.appendChild(gapsPanel);
+      const questionsPanel = panel("Questions to validate", "?");
+      const questions = add(questionsPanel, "ul", "brief-questions");
+      for (const question of brief.questions.length ? brief.questions : ["Which current development matters to your decision, and what evidence would confirm it?"]) add(questions, "li", "", question);
+      right.appendChild(questionsPanel);
+      const diagnostics = el("details", "diagnostics");
+      add(diagnostics, "summary", "", "Source diagnostics · sentiment, categories and dates");
 
 
       // ----------------------------------------
@@ -935,7 +1259,7 @@
       // ----------------------------------------
 
       const insightsPanel = panel(
-        `${data.company_name || "Company"} — Insights Report`,
+        `${data.company_name || "Company"} — ${data.research_coverage?.status === "background_only" ? "Background report" : "Selected observations"}`,
         "▤",
         "Source-linked"
       );
@@ -947,6 +1271,7 @@
       );
 
       insights.forEach((insight, index) => {
+        const presentation = findingPresentation(insight, data);
         const item = add(
           insightList,
           "article",
@@ -966,10 +1291,10 @@
           body,
           "div",
           "insight-title",
-          `STRATEGIC FINDING ${index + 1}`
+          presentation.title
         );
 
-        add(
+        if (data.analysis_format !== "evidence_ids_v2") add(
           body,
           "div",
           "category-chip",
@@ -978,18 +1303,22 @@
             : "Other"
         );
 
+        add(body, "div", "fact-label", presentation.label);
         add(
           body,
-          "p",
-          "insight-text",
-          insight.text || ""
+          presentation.quotes.length ? "blockquote" : "p",
+          presentation.quotes.length ? "source-fact" : "insight-text",
+          presentation.text
         );
 
         appendSourceLinks(
           add(body, "div", "source-row"),
-          insight.sources,
+          presentation.sources,
           source => cited.set(source.url, source)
         );
+        if (data.analysis_format !== "evidence_ids_v2") appendEvidence(body, insight.evidence);
+        if (insight.temporal_note) add(body, "p", "brief-note", insight.temporal_note);
+        if (presentation.quotes.length && data.analysis_format !== "evidence_ids_v2") appendInterpretation(body, insight.text || "No interpretation supplied.");
       });
 
       if (!insights.length) {
@@ -1019,7 +1348,7 @@
         "panel-content"
       );
 
-      const summary = data.executive_summary;
+      const summary = summaryForDisplay(data);
 
       const summarySources = Array.isArray(summary?.sources)
         ? summary.sources
@@ -1030,11 +1359,12 @@
         summary.text.trim() &&
         summarySources.some(s => safeUrl(s?.url))
       ) {
+        if (!summary.fromQuotes) add(summaryBody, "p", "brief-note", "Quote support unavailable for this overview. Generated wording requires review.");
         add(
           summaryBody,
           "div",
           "snapshot-label",
-          "STRATEGIC OVERVIEW"
+          summary.fromQuotes ? "From source excerpts" : summary.fromFindings ? "From retained findings" : "Overview"
         );
 
         add(
@@ -1058,7 +1388,9 @@
         );
       }
 
-      left.appendChild(summaryPanel);
+      if (data.analysis_format !== "evidence_ids_v2" && !summary?.fromQuotes && (summary || !brief.contextCards.length)) left.appendChild(summaryPanel);
+      renderContext(left, data, brief);
+      renderSourceLibrary(left, brief);
 
 
       // ----------------------------------------
@@ -1110,7 +1442,12 @@
         )
       );
 
-      if (valid) {
+      if (valid && d.assessed === 1) {
+        donut.style.display = "none";
+        const label = d.positive ? "positive" : d.neutral ? "neutral" : "negative";
+        add(legend, "p", "", `1 company source assessed as ${label}.`);
+        add(legend, "p", "", `${d.unassessed} unassessed.`);
+      } else if (valid) {
         const positivePct = (
           100 * d.positive / d.assessed
         );
@@ -1200,7 +1537,7 @@
         );
       }
 
-      right.appendChild(sentimentPanel);
+      diagnostics.appendChild(sentimentPanel);
 
 
       // ----------------------------------------
@@ -1225,6 +1562,10 @@
           "breakdown-note",
           "No source-backed insights available to classify."
         );
+      } else if (insights.length === 1) {
+        const category = CATEGORIES.includes(insights[0].category)
+          ? insights[0].category : "Other";
+        add(breakdownBody, "p", "breakdown-note", `1 finding in ${category}.`);
       } else {
         add(
           breakdownBody,
@@ -1287,7 +1628,7 @@
         }
       }
 
-      right.appendChild(breakdownPanel);
+      diagnostics.appendChild(breakdownPanel);
 
 
       // ----------------------------------------
@@ -1295,7 +1636,7 @@
       // ----------------------------------------
 
       const competitorsPanel = panel(
-        "Relevant Competitors",
+        data.analysis_format === "evidence_ids_v2" ? "Comparison source excerpts" : "Relevant Competitors",
         "⇄"
       );
 
@@ -1342,20 +1683,29 @@
           entry,
           "h3",
           "competitor-name",
-          record.name
+          data.analysis_format === "evidence_ids_v2" ? "Selected comparison source passage" : record.name
         );
 
         add(
           entry,
           "p",
           "competitor-overlap",
-          record.overlap
+          competitorQuotes(record, data).length ? "Comparison source excerpt" : "Selected comparison evidence unavailable"
         );
+        const quotes = competitorQuotes(record, data);
+        if (quotes.length) {
+          for (const quote of quotes) add(entry, "blockquote", "source-fact", quote.quote);
+          if (data.analysis_format !== "evidence_ids_v2") appendInterpretation(entry, record.overlap);
+        } else {
+          add(entry, "p", "competitor-overlap", data.analysis_format === "evidence_ids_v2"
+            ? "No comparison claim is presented without a selected excerpt." : record.overlap);
+        }
 
         appendSourceLinks(
           add(entry, "div", "source-row"),
           record.sources
         );
+        if (data.analysis_format !== "evidence_ids_v2") appendEvidence(entry, record.evidence);
 
         displayed += 1;
       }
@@ -1367,6 +1717,9 @@
           "competitor-overlap",
           "No evidence-backed competitors were identified."
         );
+      }
+      for (const warning of Array.isArray(data.competitor_research_warnings) ? data.competitor_research_warnings : []) {
+        add(competitorBody, "p", "competitor-overlap", warning);
       }
 
       right.appendChild(competitorsPanel);
@@ -1445,7 +1798,8 @@
         );
       }
 
-      right.appendChild(timelinePanel);
+      diagnostics.appendChild(timelinePanel);
+      right.appendChild(diagnostics);
 
 
       // ----------------------------------------
@@ -1469,6 +1823,7 @@
       latestReportData = data;
       latestReportIsDemo = Boolean(isDemo);
       downloadReportButton.disabled = false;
+      downloadEvidenceButton.disabled = false;
     }
 
 
@@ -1503,6 +1858,17 @@
         : label;
     }
 
+    function evidenceHtml(evidence) {
+      const quotes = (Array.isArray(evidence) ? evidence : []).filter(item =>
+        typeof item?.quote === "string" && item.quote.trim() && safeUrl(item?.url)
+      );
+      if (!quotes.length) return "";
+      return `<details><summary>Quoted source excerpts</summary>
+        <p class="muted">Check whether these excerpts support the finding. Quote matching does not establish independent verification.</p>
+        ${quotes.map(item => `<blockquote>${escapeHtml(item.quote)}</blockquote>${sourceHtml(item)}`).join("")}
+      </details>`;
+    }
+
     function citationsHtml(sources) {
       if (
         !Array.isArray(sources) ||
@@ -1518,6 +1884,29 @@
           ).join("")}
         </ul>
       `;
+    }
+
+    function interpretationHtml(text) {
+      return `<details class="interpretation"><summary>AI interpretation — review against the excerpts</summary>
+        <p>${escapeHtml(text)}</p><p class="muted">Generated wording may add details the selected excerpts do not establish. It is not independently verified.</p></details>`;
+    }
+
+    function findingHtml(item, data) {
+      const view = findingPresentation(item, data);
+      return `<li><h3>${escapeHtml(view.title)}</h3><p class="muted">${escapeHtml(view.label)}</p>
+        <${view.quotes.length ? "blockquote" : "div"} class="report-text">${escapeHtml(view.text)}</${view.quotes.length ? "blockquote" : "div"}>
+        ${citationsHtml(view.sources)}${evidenceHtml(item.evidence)}
+        ${item.temporal_note ? `<p class="muted">${escapeHtml(item.temporal_note)}</p>` : ""}
+        ${view.quotes.length ? interpretationHtml(item.text) : ""}</li>`;
+    }
+
+    function competitorHtml(item) {
+      const quotes = competitorQuotes(item);
+      return `<li><h3>${escapeHtml(item.name)}</h3>
+        <p class="muted">${quotes.length ? "Comparison source excerpt" : "Quote support unavailable — generated comparison"}</p>
+        ${quotes.length ? quotes.map(q => `<blockquote>${escapeHtml(q.quote)}</blockquote>`).join("") : `<p>${escapeHtml(item.overlap)}</p>`}
+        ${citationsHtml(item.sources)}${evidenceHtml(item.evidence)}
+        ${quotes.length ? interpretationHtml(item.overlap) : ""}</li>`;
     }
 
     function listHtml(items, format, emptyText) {
@@ -1537,13 +1926,74 @@
       `;
     }
 
+    function buildSelectedEvidenceExport(data) {
+      if (!["complete", "partial", "insufficient_evidence"].includes(data.analysis_status)) {
+        throw new Error("Unavailable or malformed analysis cannot be shared as a completed brief.");
+      }
+      const collect = (items, comparison = false) => (Array.isArray(items) ? items : []).flatMap(record => {
+        const passages = comparison ? competitorQuotes(record, data) : checkedCompanyQuotes(record, data);
+        return passages.length ? [{passages: passages.map(p => ({source_id: p.source_id, evidence_id: p.evidence_id,
+          quote: p.quote, title: p.title, url: p.url}))}] : [];
+      });
+      const observations = collect(companyObservations(data));
+      const context = collect(data.context_items);
+      const comparison_passages = collect(data.competitors, true);
+      const sources = new Map();
+      for (const item of [...observations, ...context, ...comparison_passages]) {
+        for (const p of item.passages) sources.set(p.url, {title: p.title, url: p.url});
+      }
+      const warnings = [...analysisNotices(data), ...(Array.isArray(data.research_warnings) ? data.research_warnings : [])];
+      if (observations.length < companyObservations(data).length) warnings.push("Some observations were withheld because their selected company passages could not be checked.");
+      if (!observations.length) warnings.push("No selected company observations could be assembled. This brief does not establish recent developments.");
+      return {kind: "marketscope-selected-evidence-export", schema_version: 1, report_mode: "selected_source_passages",
+        company_name: data.company_name || "Company", analysis_status: data.analysis_status,
+        analysis_window: data.analysis_window || null, generated_at: data.generated_at || null,
+        offline_notice: typeof data.offline_notice === "string" ? data.offline_notice : null,
+        report_status: observations.length ? "source_passages" : context.length ? "context_only" : "insufficient_evidence",
+        saved_research_coverage: data.research_coverage?.status || "unknown",
+        research_limits: Array.isArray(data.research_coverage?.limitations) ? data.research_coverage.limitations : [],
+        observations, context, comparison_passages, sources: [...sources.values()], warnings: [...new Set(warnings)],
+        limitations: ["Exact selected source passages are shown; source claims are not independently verified.",
+          "Observation counts are not counts of unique material developments. Important events may be missing.",
+          "The reporting window does not establish when each event happened. Unknown event timing remains uncertain.",
+          "Generated interpretations, event labels, raw model reports and unselected source content are excluded from this shared brief."]};
+    }
+
+    function buildSourceReportHtml(data, isDemo = false) {
+      const report = buildSelectedEvidenceExport(data);
+      const section = (items, title) => !items.length ? "" : `<section><h2>${escapeHtml(title)}</h2>${items.map((item, index) =>
+        `<article><h3>Selected source observation ${index + 1}</h3>${item.passages.map(p =>
+          `<blockquote>${escapeHtml(p.quote)}</blockquote><p class="source">Source title: ${sourceHtml(p)}</p>`).join("")}</article>`).join("")}</section>`;
+      const period = report.analysis_window?.start && report.analysis_window?.end
+        ? `<p class="muted">Original overview window: ${escapeHtml(report.analysis_window.start)} through ${escapeHtml(report.analysis_window.end)}. This is not an event date for every observation.</p>` : "";
+      return `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'">
+<title>MarketScope — ${escapeHtml(report.company_name)}</title><style>
+body{font:16px/1.75 system-ui,Arial,sans-serif;color:#17243b;max-width:920px;margin:40px auto;padding:0 24px}h1{font-size:32px;line-height:1.25}h2{font-size:20px;margin-top:34px}h3{font-size:13px;color:#66758b}article{border:1px solid #dce4ef;border-radius:12px;padding:22px;margin:16px 0}blockquote{white-space:pre-wrap;overflow-wrap:anywhere;margin:16px 0;padding-left:16px;border-left:3px solid #7ca9e9}.source,.muted,ul{font-size:13px;color:#66758b}a{color:#235dcc;overflow-wrap:anywhere}.notice{background:#fff3d9;padding:14px;border-radius:8px;color:#7b5b22}@media print{article{break-inside:avoid}body{max-width:none;margin:0}}
+</style></head><body><h1>${escapeHtml(report.company_name)}</h1><p>MarketScope · ${report.saved_research_coverage === "background_only" ? "Background information report" : "Source-linked company brief"}</p>
+${report.offline_notice ? `<p class="notice">${escapeHtml(report.offline_notice)}</p>` : ""}
+${isDemo ? '<p class="notice">Preview mode: fictional ExampleCo data, not real company research.</p>' : ""}
+${report.analysis_status === "partial" ? '<p class="notice">Partial analysis: some model output was not retained.</p>' : ""}
+${report.analysis_status === "insufficient_evidence" ? '<p class="notice">Insufficient evidence for a company overview.</p>' : ""}
+${period}<ul>${report.limitations.map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
+<section><h2>Research coverage and limits</h2><p class="muted">${report.observations.length} selected company observations · ${report.sources.length} cited sources · ${escapeHtml(report.saved_research_coverage)} saved research coverage</p>
+${[...report.research_limits, ...report.warnings].map(line => `<p class="notice">${escapeHtml(line)}</p>`).join("")}</section>
+${section(report.observations, "Selected company source passages")}${!report.observations.length ? '<p>No selected company passages are available.</p>' : ""}
+${section(report.context, "Historical and background context")}${section(report.comparison_passages, "Comparison-source passages")}
+<section><h2>Cited source titles and links</h2>${citationsHtml(report.sources)}</section>
+<footer><p class="muted">Source titles identify documents; they are not proof of the document's claims. Comparison excerpts are supplied by the analysis service and require review against their sources.</p></footer></body></html>`;
+    }
+
     function buildReportHtml(data, isDemo = false) {
+      if (data.analysis_format === "evidence_ids_v2") return buildSourceReportHtml(data, isDemo);
       const company = escapeHtml(
         data.company_name || "Company"
       );
 
-      const summary = data.executive_summary;
+      const summary = summaryForDisplay(data);
+      const brief = buildCompanyBrief(data);
       const stats = data.source_stats || {};
+      const coverage = researchCoverage(data);
       const d = data.sentiment_distribution;
 
       const downloadedAt = escapeHtml(
@@ -1609,6 +2059,10 @@ a {
   padding: 12px;
   border-radius: 8px;
 }
+blockquote { border-left: 3px solid #1680b8; margin: 16px 0; padding-left: 16px; }
+details { margin: 12px 0; }
+summary { cursor: pointer; color: #475569; }
+.interpretation { background: #f4f6fa; padding: 10px 14px; }
 
 @media print {
   body {
@@ -1621,11 +2075,22 @@ a {
 
 <body>
 <h1>MarketScope — ${company}</h1>
+${typeof data.offline_notice === "string" && data.offline_notice.trim() ? `<p class="demo">${escapeHtml(data.offline_notice)}</p>` : ""}
 
 <p class="muted">
-  Competitive Intelligence Report<br>
+  ${data.analysis_status === "insufficient_evidence"
+    ? "Evidence-only report"
+    : data.research_coverage?.status === "background_only"
+      ? "Background information report"
+      : "Competitive Intelligence Report"}<br>
   Downloaded: ${downloadedAt}
+  ${dateInfo(data.generated_at) ? `<br>Report generated: ${escapeHtml(new Date(data.generated_at).toLocaleString())} (not an event date)` : ""}
+  ${data.analysis_window?.start && data.analysis_window?.end ? `<br>Primary overview window: ${escapeHtml(data.analysis_window.start)} through ${escapeHtml(data.analysis_window.end)}` : ""}
 </p>
+${!data.official_domain ? `<p class="notice">Name-only research: company identity may be ambiguous. Supply the official website to help separate companies with similar names.</p>` : ""}
+
+${data.analysis_format && data.analysis_format !== "evidence_ids_v2"
+  ? '<p class="warning">Legacy analysis format: evidence-ID assembly and automatic historical-action separation were not applied to this response.</p>' : ""}
 
 ${isDemo
   ? `<p class="demo">
@@ -1634,8 +2099,41 @@ ${isDemo
      </p>`
   : ""}
 
+${analysisNotices(data).map(notice =>
+  `<p class="warning">${escapeHtml(notice)}</p>`
+).join("")}
+
+<section>
+  <h2>${escapeHtml(coverage.title)}</h2>
+  ${[coverage.counts, coverage.evidenceNote, coverage.dateNote, coverage.caution].filter(Boolean)
+    .map(line => `<p>${escapeHtml(line)}</p>`).join("")}
+  <p>
+    Returned: ${escapeHtml(stats.returned ?? "Unknown")} |
+    Discarded: ${escapeHtml(stats.discarded ?? "Unknown")}
+  </p>
+  <h3>Research Warnings</h3>
+  ${listHtml(
+    coverage.warnings,
+    warning => `<li class="warning">${escapeHtml(warning)}</li>`,
+    "No research warnings recorded."
+  )}
+  ${Array.isArray(data.research_history) && data.research_history.length
+    ? `<h3>Searches performed</h3>${listHtml(data.research_history,
+      attempt => `<li>${escapeHtml(researchAttemptText(attempt))}</li>`, "")}`
+    : ""}
+</section>
+
+<section>
+  <h2>Research gaps</h2>
+  ${listHtml(brief.gaps, gap => `<li>${escapeHtml(gap)}</li>`, "")}
+  <h3>Questions to validate</h3>
+  ${listHtml(brief.questions, question => `<li>${escapeHtml(question)}</li>`, "What evidence would support your next decision?")}
+</section>
+
 <section>
   <h2>Executive Summary</h2>
+  ${summary?.fromQuotes ? '<p class="muted">Assembled from source excerpts. Company announcements and source claims are not independently verified.</p>'
+    : summary?.fromFindings ? '<p class="muted">Assembled from retained findings. Generated wording requires review.</p>' : '<p class="muted">Generated summary — quote support requires review.</p>'}
   <div class="report-text">${
     escapeHtml(summary?.text || "Not available.")
   }</div>
@@ -1643,35 +2141,31 @@ ${isDemo
 </section>
 
 <section>
-  <h2>Strategic Insights</h2>
+  <h2>Findings</h2>
   ${listHtml(
-    data.insight_items,
-    item => `
-      <li>
-        <h3>${escapeHtml(item?.category || "Other")}</h3>
-        <div class="report-text">${
-          escapeHtml(item?.text)
-        }</div>
-        ${citationsHtml(item?.sources)}
-      </li>
-    `,
-    "No strategic insights available."
+    companyObservations(data),
+    item => findingHtml(item, data),
+    "No findings available."
   )}
 </section>
 
+${brief.contextCards.length || (Array.isArray(data.context_warnings) && data.context_warnings.length) ? `
+<section>
+  <h2>Historical and background context</h2>
+  <p class="muted">These items are not counted as recent developments. Unknown event timing remains uncertain.</p>
+  ${(Array.isArray(data.context_warnings) ? data.context_warnings : []).map(w => `<p class="warning">${escapeHtml(w)}</p>`).join("")}
+  ${listHtml(brief.contextCards, card => `<li><h3>${escapeHtml(card.title)}</h3>
+    <p class="muted">${escapeHtml(card.label)}</p><blockquote class="report-text">${escapeHtml(card.text)}</blockquote>
+    ${citationsHtml(card.sources)}<p class="muted">${escapeHtml(card.note)}</p>${interpretationHtml(card.interpretation)}</li>`, "")}
+</section>` : ""}
+
 <section>
   <h2>Competitor Analysis</h2>
+  ${(Array.isArray(data.competitor_research_warnings) ? data.competitor_research_warnings : [])
+    .map(warning => `<p class="warning">${escapeHtml(warning)}</p>`).join("")}
   ${listHtml(
     data.competitors,
-    item => `
-      <li>
-        <h3>${escapeHtml(item?.name)}</h3>
-        <div class="report-text">${
-          escapeHtml(item?.overlap)
-        }</div>
-        ${citationsHtml(item?.sources)}
-      </li>
-    `,
+    item => competitorHtml(item),
     "No competitors identified."
   )}
 </section>
@@ -1707,32 +2201,8 @@ ${isDemo
 </section>
 
 <section>
-  <h2>Research Coverage</h2>
-
-  <p>
-    Research attempts:
-    ${escapeHtml(data.research_attempts ?? "Unknown")}
-  </p>
-
-  <p>
-    Returned: ${escapeHtml(stats.returned ?? "Unknown")} |
-    Accepted: ${escapeHtml(stats.accepted ?? "Unknown")} |
-    Discarded: ${escapeHtml(stats.discarded ?? "Unknown")}
-  </p>
-
-  <h3>Research Warnings</h3>
-
-  ${listHtml(
-    data.research_warnings,
-    warning => `
-      <li class="warning">${escapeHtml(warning)}</li>
-    `,
-    "No research warnings recorded."
-  )}
-</section>
-
-<section>
   <h2>Evidence Sources</h2>
+  <p class="muted">Company and external labels describe the website, not editorial independence or factual verification. Retrieved excerpts may be incomplete.</p>
 
   ${listHtml(
     data.sources,
@@ -1740,12 +2210,15 @@ ${isDemo
       <li>
         ${sourceHtml(source)}
         <div class="muted">
+          ${escapeHtml(sourceKind(source?.url, data.official_domain))}<br>
           Published: ${
             escapeHtml(
               source?.published_at || "Date unavailable"
             )
           }
         </div>
+        ${typeof source?.content === "string" && source.content.trim()
+          ? `<details><summary>Read retrieved excerpt</summary><div class="report-text">${escapeHtml(source.content)}</div></details>` : ""}
       </li>
     `,
     "No sources available."
@@ -1753,10 +2226,12 @@ ${isDemo
 </section>
 
 <section>
-  <h2>Full Report Text</h2>
+  <details>
+  <summary>Full Report Text — generated notes, review required</summary>
   <div class="report-text">${
     escapeHtml(data.report || "Not available.")
   }</div>
+  </details>
 </section>
 
 <footer>
@@ -1823,6 +2298,38 @@ ${isDemo
     // API request
     // ============================================
 
+    downloadEvidenceButton.addEventListener("click", () => {
+      if (!latestReportData) return;
+      const evidence = latestReportData.analysis_format === "evidence_ids_v2"
+        ? {...buildSelectedEvidenceExport(latestReportData), exported_at: new Date().toISOString(), preview: latestReportIsDemo}
+        : {kind: "marketscope-evidence-export", schema_version: 1,
+          exported_at: new Date().toISOString(), preview: latestReportIsDemo, response: latestReportData};
+      const blob = new Blob([JSON.stringify(evidence, null, 2)], {type: "application/json;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const company = String(latestReportData.company_name || "company").replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 60);
+      link.href = url;
+      link.download = `marketscope-${company}${latestReportIsDemo ? "-preview" : ""}-evidence.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    function apiErrorMessage(data) {
+      if (typeof data?.detail === "string") return data.detail;
+      if (Array.isArray(data?.detail)) {
+        const fields = {company_name: "Company name", official_domain: "Company website"};
+        const messages = data.detail.flatMap(item => {
+          const field = Array.isArray(item?.loc) ? fields[item.loc[item.loc.length - 1]] : null;
+          if (!field || typeof item.msg !== "string") return [];
+          return [`${field}: ${item.msg.replace(/^Value error, /, "")}`];
+        });
+        if (messages.length) return [...new Set(messages)].join(" ");
+      }
+      return "Could not complete the analysis. Please try again.";
+    }
+
     async function analyze() {
       const company = input.value.trim();
       const website = websiteInput.value.trim();
@@ -1836,6 +2343,7 @@ ${isDemo
       latestReportData = null;
       latestReportIsDemo = false;
       downloadReportButton.disabled = true;
+      downloadEvidenceButton.disabled = true;
 
       demoLabel.style.display = "none";
       loader.style.display = "block";
@@ -1859,14 +2367,15 @@ ${isDemo
           }
         );
 
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error("The server returned an unreadable response. Please try again.");
+        }
 
         if (!response.ok) {
-          throw new Error(
-            typeof data?.detail === "string"
-              ? data.detail
-              : "Could not complete the analysis."
-          );
+          throw new Error(apiErrorMessage(data));
         }
 
         if (!data || data.status !== "completed") {
@@ -1875,11 +2384,23 @@ ${isDemo
           );
         }
 
+        if (!["complete", "partial", "insufficient_evidence"].includes(data.analysis_status)) {
+          throw new Error("The server returned an unsupported analysis status. Restart the updated backend and try again.");
+        }
+        const hasPrimary = (Array.isArray(data.insight_items) && data.insight_items.some(item =>
+          typeof item?.text === "string" && item.text.trim() && Array.isArray(item.sources) && item.sources.some(source => safeUrl(source?.url)))) ||
+          (typeof data.executive_summary?.text === "string" && data.executive_summary.text.trim() &&
+            Array.isArray(data.executive_summary.sources) && data.executive_summary.sources.some(source => safeUrl(source?.url)));
+        if (data.analysis_status !== "insufficient_evidence" && !hasPrimary) {
+          throw new Error("The analysis response contained no usable company findings. Please try again.");
+        }
+
         render(data);
 
       } catch (error) {
         latestReportData = null;
         downloadReportButton.disabled = true;
+        downloadEvidenceButton.disabled = true;
 
         output.replaceChildren();
 

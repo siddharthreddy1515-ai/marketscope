@@ -1,8 +1,10 @@
 # MarketScope
 
-Multi-agent competitive intelligence system, built with production MLOps practices.
+Evidence-first company research built on LangGraph and FastAPI. Structured V2 reports show selected source passages, citation links and research limits. Raw API prose remains an unverified draft.
 
 Give it a company name and a LangGraph pipeline researches the web, analyzes the competitive landscape, and returns a structured report. It currently targets 20 global tech companies (Tesla, Nvidia, Microsoft, and others).
+
+See [the presentation integration notes](PRESENTATION_INTEGRATION.md) for evidence contracts, compatibility and remaining limitations. Dashboard build: `source-brief-2026-11-19`. Publishing this branch does not update the hosted demo.
 
 **Live demo:** *https://marketscope-4owi.onrender.com*
 
@@ -35,7 +37,7 @@ graph TD
 
 **2. CI cost control.** Judging all 20 companies with a GPT-4o judge on every push cost about $0.45 per run. The PR gate now runs a targeted set of six edge cases ("Danger 6") and checks an aggregate mean score, which cut CI cost by about 85% (about $0.12 per run). Full coverage moved to a separate live smoke test.
 
-**3. Removing a hallucination source.** The report-formatting step was hallucinating financial figures. I removed the LLM from that step and replaced it with plain Python string formatting. This eliminated that failure mode and saved tokens.
+**3. Removing a hallucination source.** The report-formatting step was hallucinating financial figures. I removed the LLM from that step and replaced it with plain Python string formatting. This removes a second generation stage and saves tokens, but cannot correct unsupported analysis prose. The structured V2 dashboard and shared briefs show selected passages instead; independent factual verification and comprehensive coverage remain unresolved.
 
 **4. Reproducible experiment tracking.** The MLflow container runs with `--serve-artifacts`, so clients upload artifacts over HTTP instead of writing to local disk.
 

@@ -38,6 +38,7 @@ def test_completed_workflow_preserves_llm_usage(
         {
             "sources": [sample_source()],
             "report": "# Acme Report",
+            "analysis_status": "complete",
             "research_attempts": 1,
             "llm_usage": {
                 "input_tokens": 1200,
@@ -64,6 +65,7 @@ def test_missing_usage_remains_unknown(
         {
             "sources": [sample_source()],
             "report": "# Acme Report",
+            "analysis_status": "complete",
             "research_attempts": 1,
         },
     )
@@ -85,4 +87,6 @@ def test_failed_research_has_no_llm_usage(
     )
 
     assert result["status"] == "failed"
+    assert result["error_code"] == "RESEARCH_EXHAUSTED"
+    assert result["report"] is None
     assert result["llm_usage"] is None
