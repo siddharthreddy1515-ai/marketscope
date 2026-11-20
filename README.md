@@ -112,6 +112,9 @@ python evidently_monitor.py
 | `TAVILY_API_KEY` | Web search |
 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | Tracing |
 | `MOCK_TAVILY` | `true` for tests, `false` for live search |
+| `ENABLE_LIVE_ANALYSIS` | Server-side switch for `POST /api/v1/analyze`. Defaults to disabled. Only `true` (ignoring case and surrounding whitespace) enables requests. |
+
+For a provider-free deployment check, leave `ENABLE_LIVE_ANALYSIS` unset or set it to `false`. The dashboard and `/health` work without provider credentials, and analysis returns HTTP 503. Enable analysis only when provider access and spending controls are in place. The flag applies to all callers and does not authenticate them.
 
 ## Project structure
 

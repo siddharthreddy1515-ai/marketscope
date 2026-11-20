@@ -33,6 +33,7 @@ def model_payload(sources, status="complete"):
 
 @pytest.mark.parametrize("expected", ["complete", "partial", "insufficient_evidence", "malformed"])
 def test_real_analysis_status_and_api_contract(monkeypatch, expected):
+    monkeypatch.setenv("ENABLE_LIVE_ANALYSIS", "true")
     sources = packet()
     payload = {"unexpected": "malformed"} if expected == "malformed" else model_payload(sources, expected)
     class FakeModel:
