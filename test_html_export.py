@@ -287,7 +287,11 @@ const sourceLink = node => node.tag === 'a' &&
   node.href === 'https://example.com/press' && node.textContent === 'Official source';
 assert.ok(dashboardNodes().some(sourceLink), 'Dashboard citations show source names');
 assert.ok(dashboardNodes().some(node => node.textContent === 'Partial coverage'));
+assert.deepEqual(dashboardNodes().filter(node => node.className === 'metric-label').map(node => node.textContent),
+  ['Key Developments', 'Research Coverage', 'Source Sentiment', 'Competitors Identified']);
 assert.ok(!dashboardNodes().some(node => ['Market Position', 'Threat Level'].includes(node.textContent)));
+assert.ok(dashboardNodes().some(node => node.textContent === 'Executive Snapshot'));
+assert.ok(dashboardNodes().some(node => node.textContent === 'Event dates unavailable'));
 
 const originalSample = context.sample;
 context.sample = {
@@ -313,8 +317,8 @@ for (const text of ['One duplicate URL removed.', 'Only one usable company sourc
 }
 assert.ok(visibleText.some(line => line.includes('Publication date unavailable')));
 assert.ok(!visibleText.some(line => /100%|STRATEGIC FINDING/.test(line)));
-assert.ok(visibleText.includes('1 company source assessed as neutral.'));
-assert.ok(visibleText.includes('1 finding in Funding & Investment.'));
+assert.ok(visibleText.includes('Insufficient data'));
+assert.ok(visibleText.includes('No selected developments to classify.'));
 assert.ok(dashboardNodes().some(sourceLink));
 
 // A single dated announcement can still support a substantive finding.
@@ -351,7 +355,7 @@ context.sample = {
   insight_items: [{category: 'Product & Innovation', text: 'ExampleCo launched a new product.', sources: originalSample.sources}]
 };
 vm.runInContext('render(sample)', context);
-assert.ok(dashboardNodes().some(node => node.textContent === 'From retained findings'));
+assert.ok(dashboardNodes().some(node => node.textContent === 'Legacy analysis note'));
 const fallbackHtml = vm.runInContext('buildReportHtml(sample)', context);
 assert.ok(fallbackHtml.includes('Assembled from retained findings.'));
 assert.ok(fallbackHtml.includes('ExampleCo launched a new product.'));
@@ -359,6 +363,7 @@ assert.equal(context.sample.executive_summary, null, 'Presentation fallback must
 
 context.sample = {
   ...context.sample,
+  sources: [{...originalSample.sources[0], content: 'ExampleCo launched a product. <img src=x onerror=alert(1)>'}],
   insight_items: [{
     event: 'Product launch', category: 'Product & Innovation',
     text: 'ExampleCo launched a new product.', sources: originalSample.sources,
@@ -368,7 +373,7 @@ context.sample = {
 };
 vm.runInContext('render(sample)', context);
 assert.ok(dashboardNodes().some(node => node.tag === 'blockquote' && node.textContent.includes('<img src=x')));
-assert.ok(dashboardNodes().some(node => node.textContent === 'Product launch'));
+assert.ok(dashboardNodes().some(node => node.textContent === 'Product & Innovation'));
 const quotedHtml = vm.runInContext('buildReportHtml(sample)', context);
 assert.ok(quotedHtml.includes('Quoted source excerpts'));
 assert.ok(quotedHtml.includes('&lt;img src=x onerror=alert(1)&gt;'));
@@ -402,6 +407,62 @@ vm.runInContext('render(sourceSample)', context);
 assert.ok(!dashboardNodes().some(node => node.textContent === context.sourceSample.insight_items[0].text));
 assert.ok(!dashboardNodes().some(node => /AI interpretation/.test(node.textContent)));
 assert.ok(dashboardNodes().some(node => node.textContent.includes('Rounds: 15')));
+const evidenceDrawer = dashboardNodes().find(node => node.className === 'evidence-detail');
+assert.ok(evidenceDrawer && !evidenceDrawer.open);
+assert.deepEqual(descendants(evidenceDrawer).filter(node => node.tag === 'blockquote')
+  .map(node => node.textContent), selected.map(item => item.quote));
+assert.ok(descendants(evidenceDrawer).some(node => node.textContent === selected[0].evidence_id));
+
+context.sentimentSample = {
+  ...context.sourceSample,
+  sources: [
+    {url: 'https://example.com/one', content: 'Article one'},
+    {url: 'https://example.org/two', content: 'Article two'},
+    {url: 'https://example.net/three', content: 'Article three'}
+  ],
+  source_sentiments: [
+    {source_id: 'S1', url: 'https://example.com/one', label: 'Positive'},
+    {source_id: 'S2', url: 'https://example.org/two', label: 'Positive'},
+    {source_id: 'S3', url: 'https://example.net/three', label: 'Negative'}
+  ],
+  sentiment_distribution: {positive: 0, neutral: 100, negative: 0, assessed: 100}
+};
+vm.runInContext('render(sentimentSample)', context);
+assert.ok(dashboardNodes().some(node => node.textContent === '2 · 67%'));
+assert.ok(dashboardNodes().some(node => node.textContent === '1 · 33%'));
+assert.ok(!dashboardNodes().some(node => node.textContent === '100 · 100%'));
+const classifications = () => JSON.parse(vm.runInContext('JSON.stringify(sourceSentiment(sentimentSample))', context));
+assert.equal(classifications().assessed, 3);
+context.sentimentSample.sources[2] = {url: 'https://www.example.com/one/?utm_source=copy#top', content: 'A different excerpt'};
+context.sentimentSample.source_sentiments[2] = {source_id: 'S3', url: 'https://www.example.com/one/?utm_source=copy#top', label: 'Negative'};
+assert.equal(classifications().assessed, 1, 'Conflicting labels on an alias are excluded');
+vm.runInContext('render(sentimentSample)', context);
+assert.ok(dashboardNodes().some(node => node.textContent === 'Insufficient data'));
+assert.ok(!dashboardNodes().some(node => node.className === 'sentiment-legend-row'));
+context.sentimentSample.sources[2] = {url: 'https://example.net/three', content: 'Article two'};
+context.sentimentSample.source_sentiments[2] = {source_id: 'S3', url: 'https://example.net/three', label: 'Positive'};
+assert.equal(classifications().assessed, 2, 'An identical excerpt at a different URL is not a third source');
+context.sentimentSample.sources[2].content = 'Article three';
+context.sentimentSample.source_sentiments[2].url = 'https://example.net/unretained';
+assert.equal(classifications().assessed, 2, 'An assessment must match a retained company source');
+
+context.backgroundEvidence = {...context.sourceSample,
+  research_coverage: {status: 'background_only', limitations: ['Only background evidence was retained.']}};
+vm.runInContext('render(backgroundEvidence)', context);
+const developmentCard = dashboardNodes().find(node => node.className === 'brief-metric');
+assert.ok(descendants(developmentCard).some(node => node.textContent === 'Background evidence only'));
+assert.ok(!dashboardNodes().some(node => node.className === 'breakdown-item'));
+assert.ok(dashboardNodes().some(node => node.textContent === 'Available evidence provides company background. Recent developments could not be established.'));
+
+const comparisonSource = {title: 'Comparison source', url: 'https://example.org/compare', source_id: 'C1',
+  evidence_id: 'C1-0000000000000000-0-33', quote: 'Acme and Atlas are both discussed.'};
+context.comparisonSample = {...context.sourceSample, competitors: [
+  {name: 'Atlas', overlap: 'Unsupported positioning', sources: [comparisonSource], evidence: [comparisonSource]},
+  {name: 'Invented competitor', overlap: 'Unsupported threat', sources: [comparisonSource], evidence: [comparisonSource]}
+]};
+vm.runInContext('render(comparisonSample)', context);
+assert.ok(dashboardNodes().some(node => node.className === 'competitor-name' && node.textContent === 'Atlas'));
+assert.ok(!dashboardNodes().some(node => ['Invented competitor', 'Unsupported positioning', 'Unsupported threat'].includes(node.textContent)));
 assert.equal(vm.runInContext('safeUrl("https://user:password@example.com/secret")', context), null);
 context.badComparison = {...context.sourceSample, competitors: [{name: 'Unverified alternative', overlap: 'Unsupported comparison',
   sources: [{title: fundingSource.title, url: fundingSource.url}], evidence: selected}]};
