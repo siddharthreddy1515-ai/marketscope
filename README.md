@@ -1,139 +1,58 @@
 # MarketScope
 
-Evidence-first company research built on LangGraph and FastAPI. Structured V2 reports show selected source passages, citation links and research limits. Raw API prose remains an unverified draft.
+MarketScope researches companies and presents the evidence behind its findings. Enter a company name and, if you know it, the official website to help identify the right company.
 
-Give it a company name and a LangGraph pipeline researches the web, analyzes the competitive landscape, and returns a structured report. It currently targets 20 global tech companies (Tesla, Nvidia, Microsoft, and others).
+[Open the hosted dashboard](https://marketscope-4owi.onrender.com)
 
-See [the presentation integration notes](PRESENTATION_INTEGRATION.md) for evidence contracts, compatibility and remaining limitations. Dashboard build: `source-brief-2026-11-19`. Publishing this branch does not update the hosted demo.
+## What the dashboard shows
 
-**Live demo:** *https://marketscope-4owi.onrender.com*
+- **Core offering** links company and product information to the selected source passage.
+- **Recent developments** counts findings with an established event date in the reporting window. Observations with unconfirmed dates are shown alongside the count. Findings classified as historical appear in a separate section.
+- **Research coverage** shows how many pages were collected and how many were cited. The source library includes publication dates where available and a **Cited only** filter.
+- **Competitive alternatives** shows cited comparisons and labels mentions where product overlap is unconfirmed.
 
-## Highlights
+Open the evidence on a card to read the selected passage and visit the source. Use **Download source brief** for an HTML report or **Download evidence JSON** for the selected passages and their references. Citation links let readers check the claim against the source. Coverage depends on what the searches retrieve, and publication dates can differ from event dates.
 
-- Multi-agent pipeline built on LangGraph and served through FastAPI
-- Deterministic CI: frozen search fixtures, so test failures mean code problems, not news cycles
-- LLM-as-judge evaluation with DeepEval (Faithfulness and Answer Relevancy)
-- Experiment tracking with MLflow and output drift monitoring with Evidently
-- Request tracing with Langfuse
-- Fully containerized with Docker
+## Run locally
 
-## Architecture
+Docker is sufficient to start the dashboard and health endpoint.
 
-```mermaid
-graph TD
-    A["Client"] --> B["FastAPI"]
-    B --> C["LangGraph pipeline"]
-    C --> D["Research node (Tavily)"]
-    D --> E["Analysis node (GPT-4o)"]
-    E --> F["Report node (pure Python)"]
-    C -.-> G["Langfuse tracing"]
-    C -.-> H["MLflow tracking"]
-    H -.-> I["Evidently drift reports"]
+```sh
+docker build -t marketscope .
+docker run --rm -p 127.0.0.1:8000:8000 marketscope
 ```
 
-## Engineering decisions
+Open the [local dashboard](http://127.0.0.1:8000). Live analysis defaults to disabled. In this mode, the dashboard and health endpoint work without API keys.
 
-**1. Deterministic tests.** Early tests hit the live Tavily API. News changes hourly, so CI was flaky and a failure could mean either a code bug or a different search result. I replaced live calls with 20 frozen JSON fixtures in `mocks/`, which separates agent logic from live data.
+For local live research, copy `.env.example` to `.env` and set your own OpenAI and Tavily keys. Stop the first container before starting the live one on the same port.
 
-**2. CI cost control.** Judging all 20 companies with a GPT-4o judge on every push cost about $0.45 per run. The PR gate now runs a targeted set of six edge cases ("Danger 6") and checks an aggregate mean score, which cut CI cost by about 85% (about $0.12 per run). Full coverage moved to a separate live smoke test.
-
-**3. Removing a hallucination source.** The report-formatting step was hallucinating financial figures. I removed the LLM from that step and replaced it with plain Python string formatting. This removes a second generation stage and saves tokens, but cannot correct unsupported analysis prose. The structured V2 dashboard and shared briefs show selected passages instead; independent factual verification and comprehensive coverage remain unresolved.
-
-**4. Reproducible experiment tracking.** The MLflow container runs with `--serve-artifacts`, so clients upload artifacts over HTTP instead of writing to local disk.
-
-## Tech stack
-
-| Area | Tools |
-|---|---|
-| Orchestration and API | LangGraph, LangChain, FastAPI |
-| Models | OpenAI GPT-4o (agent and judge) |
-| Evaluation | DeepEval, Pytest |
-| Observability | Langfuse, MLflow, Evidently |
-| DevOps | Docker, Docker Compose, GitHub Actions |
-
-## Getting started
-
-**Prerequisites:** Python 3.13+, Docker Desktop, OpenAI and Tavily API keys.
-
-```bash
-git clone https://github.com/siddharthreddy1515-ai/marketscope.git
-cd marketscope
-cp .env.example .env    # then add your API keys
-docker compose up --build
+```sh
+docker run --rm -p 127.0.0.1:8000:8000 --env-file .env \
+  -e ENABLE_LIVE_ANALYSIS=true -e MOCK_TAVILY=false marketscope
 ```
 
-| Service | URL |
-|---|---|
-| API | http://localhost:8000/api/v1/analyze |
-| MLflow dashboard | http://localhost:8080 |
+Click **Analyze** to run Tavily searches and GPT-4o analysis. Those calls can incur provider charges. Keep `.env` local. Enabling analysis allows any caller who can reach the endpoint to trigger research.
 
-### Example request
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /` | Dashboard |
+| `GET /health` | Service health |
+| `POST /api/v1/analyze` | Analyze a company using `company_name` and an optional `official_domain`. Returns HTTP 503 when live analysis is disabled. |
 
-```bash
-curl -X POST http://localhost:8000/api/v1/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"company_name": "Tesla"}'
-```
+## How it works
 
-### Run the tests
+1. **Research.** A LangGraph workflow uses Tavily to collect company and competitor sources. When a website is supplied, the workflow uses it to check company relevance.
+2. **Analysis.** GPT-4o selects findings and references to passages from those sources. The backend checks the references against the retrieved text.
+3. **Presentation.** FastAPI serves the dashboard and structured report. The dashboard uses the selected passages to render findings, KPI evidence, and exports. If the model times out after research completes, the collected sources can still be shown.
 
-```bash
-MOCK_TAVILY=true pytest test_agent.py
-```
+The API and dashboard are in [`main.py`](main.py) and [`index.html`](index.html). Research runs in [`workflow.py`](workflow.py), with evidence handling in [`analysis_contract.py`](analysis_contract.py) and routing rules in [`research_policy.py`](research_policy.py).
 
-On Windows PowerShell: `$env:MOCK_TAVILY="true"; pytest test_agent.py`
+## Checks and deployment
 
-## Monitoring
+GitHub Actions runs pytest with saved fixtures and placeholder credentials on pull requests to `main`. CI also builds the Docker image and checks the dashboard, health endpoint, and disabled analysis route with external networking turned off. The live provider evaluation is a separate, manually triggered workflow. [CI workflow](.github/workflows/ci.yml) · [Live smoke workflow](.github/workflows/live-smoke.yml)
 
-**Experiment tracking.** Logs latency (average about 4.4s), token cost, and eval scores to MLflow:
-
-```bash
-MLFLOW_TRACKING_URI=http://localhost:8080 MOCK_TAVILY=true python run_experiment.py
-```
-
-**Drift detection.** Compares current outputs against `baseline_reports.csv` and writes an HTML report:
-
-```bash
-python evidently_monitor.py
-```
-
-## CI/CD
-
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `ci.yml` | Pull requests | Runs the "Danger 6" companies against mocks. Blocks merge if mean Faithfulness or Relevancy drops below 0.85. |
-| `live-smoke.yml` | Every 3 days | Runs all 20 companies against live Tavily to catch external API drift. |
-
-## Environment variables
-
-| Variable | Purpose |
-|---|---|
-| `OPENAI_API_KEY` | LLM calls |
-| `TAVILY_API_KEY` | Web search |
-| `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` | Tracing |
-| `MOCK_TAVILY` | `true` for tests, `false` for live search |
-| `ENABLE_LIVE_ANALYSIS` | Server-side switch for `POST /api/v1/analyze`. Defaults to disabled. Only `true` (ignoring case and surrounding whitespace) enables requests. |
-
-For a provider-free deployment check, leave `ENABLE_LIVE_ANALYSIS` unset or set it to `false`. The dashboard and `/health` work without provider credentials, and analysis returns HTTP 503. Enable analysis only when provider access and spending controls are in place. The flag applies to all callers and does not authenticate them.
-
-## Project structure
-
-```text
-marketscope/
-├── .github/workflows/     CI gate and live smoke test
-├── mocks/                 20 frozen Tavily responses
-├── baseline_reports.csv   Reference outputs for drift monitoring
-├── companies.py           The 20 target companies
-├── main.py                FastAPI app
-├── workflow.py            LangGraph pipeline
-├── test_agent.py          DeepEval test suite
-├── run_experiment.py      MLflow tracking script
-├── evidently_monitor.py   Drift report generator
-├── Dockerfile             API container
-├── Dockerfile.mlflow      MLflow server container
-└── docker-compose.yml     Full stack
-```
+The hosted service uses the root [`Dockerfile`](Dockerfile). Verify `/health` and load the dashboard after deployment. Both checks can run without starting an analysis.
 
 ## Author
 
-Siddharth · `[LinkedIn](https://www.linkedin.com/in/siddharth-donuru-816413290) | [GitHub](https://github.com/siddharthreddy1515-ai)`
+Siddharth · [LinkedIn](https://www.linkedin.com/in/siddharth-donuru-816413290) · [GitHub](https://github.com/siddharthreddy1515-ai)
