@@ -9,635 +9,252 @@
 
   <style>
     :root {
-      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
       color-scheme: dark;
-      --bg: #0b1425;
-      --panel: #17243b;
-      --border: #293d5b;
-      --text: #e9f3ff;
-      --muted: #9eafc7;
-      --sky: #49b8ff;
-      --green: #56d7b0;
-      --gold: #f3c46b;
-      --red: #e47b86;
+      --bg: #0b1426;
+      --panel: #17253e;
+      --border: #2a3d5d;
+      --text: #e9f2ff;
+      --muted: #a7bad3;
+      --sky: #61cbff;
+      --green: #58d5ae;
+      --gold: #f2c66c;
+      --red: #f08b9b;
+      --violet: #b5a4ff;
+      --surface: linear-gradient(145deg, #1b2b48, #15223a 77%);
     }
 
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
-      background: radial-gradient(
-        ellipse 55% 300px at 48% -120px,
-        #1b3963 0%, transparent 100%
-      ), var(--bg);
       color: var(--text);
-    }
-
-    button, input { font: inherit; }
-    button { cursor: pointer; }
-
-    .topbar {
-      background: rgba(12, 23, 42, .92);
-      border-bottom: 1px solid #243653;
-    }
-
-    .topbar-inner {
-      max-width: 1340px;
-      margin: auto;
-      min-height: 74px;
-      padding: 13px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 22px;
-    }
-
-    .branding {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-    }
-
-    .brand-logo {
-      width: 41px;
-      height: 41px;
-      border-radius: 12px;
-      background: linear-gradient(140deg, #84ddff, #399eff 72%);
-      display: grid;
-      place-items: center;
-      color: #10243c;
-      font-size: 22px;
-      font-weight: 900;
-    }
-
-    .brand-name {
-      color: var(--sky);
-      font-size: 19px;
-      font-weight: 760;
-    }
-
-    .brand-sub {
-      margin-top: 2px;
-      font-size: 11px;
-      color: #a1b6cf;
-    }
-
-    .workflow-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .workflow-badges span {
-      padding: 7px 10px;
-      font-size: 11px;
-      color: #afc1d8;
-      background: #14243b;
-      border: 1px solid #2a405e;
-      border-radius: 99px;
-    }
-
-    .workflow-badges span:first-child::before {
-      content: "●";
-      color: var(--green);
-      margin-right: 5px;
-    }
-
-    .shell {
-      max-width: 1340px;
-      margin: auto;
-      padding: 20px 30px 90px;
-    }
-
-    .search {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .search input {
-      min-width: 0;
-      background: #15233a;
-      border: 1px solid #2d4260;
-      color: var(--text);
-      padding: 13px 16px;
-      border-radius: 9px;
-      outline: none;
+      background: radial-gradient(ellipse 100% 370px at 88% -175px, #315787 0%, transparent 100%), var(--bg);
       font-size: 14px;
     }
-
-    #companyInput { flex: 2 1 240px; }
-    #websiteInput { flex: 1 1 230px; }
-
-    .search input:focus {
-      border-color: var(--sky);
-      box-shadow: 0 0 0 3px #4ebaff22;
+    input, button { font: inherit; }
+    button, summary { cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; }
+    .topbar { border-bottom: 1px solid #223754; background: #0f1b31b0; }
+    .topbar-inner, .shell { max-width: 1390px; margin: auto; padding-inline: 24px; }
+    .topbar-inner, .branding, .workflow-badges { display: flex; align-items: center; }
+    .topbar-inner { justify-content: space-between; gap: 16px; min-height: 72px; }
+    .branding { gap: 11px; }
+    .brand-logo {
+      display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(145deg, #9ce8fd, #43a6f6 60%, #2478d7);
+      box-shadow: 0 3px 14px #359cff42, inset 0 1px 1px #fff9;
+      color: #0e2947; font-size: 23px; font-weight: 850;
     }
-
-    .search input::placeholder { color: #879db9; }
-
+    .brand-name { color: var(--sky); font-size: 21px; font-weight: 760; letter-spacing: -.03em; }
+    .brand-sub { margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .workflow-badges { gap: 7px; }
+    .workflow-badges span {
+      padding: 5px 9px; border-radius: 99px; border: 1px solid #2b405f;
+      background: #162641; color: #b9cce3; font-size: 11px;
+    }
+    .workflow-badges span:first-child::before { content: "●"; color: var(--green); margin-right: 5px; }
+    .shell { padding-top: 17px; padding-bottom: 48px; }
+    .search { display: flex; gap: 9px; margin: 0 0 14px; }
+    .search input {
+      min-width: 0; min-height: 42px; padding: 9px 13px;
+      border: 1px solid #2c4264; border-radius: 9px;
+      background: #15243e; color: var(--text);
+    }
+    .search input::placeholder, .library-controls input::placeholder { color: #a0b5d0; }
+    #companyInput { flex: 1.7 1 180px; }
+    #websiteInput { flex: 1 1 160px; }
     .search button {
-      padding: 0 24px;
-      min-height: 45px;
-      border: 0;
-      border-radius: 9px;
-      font-weight: 750;
-      background: #42b8f9;
-      color: #07172b;
+      min-height: 42px; padding-inline: 23px; border: 1px solid #8be1ff;
+      border-radius: 9px; background: linear-gradient(145deg, #80e3fc, #3ca9f1);
+      box-shadow: 0 1px 14px #35abf341, inset 0 1px 1px #fff9;
+      color: #081d34; font-weight: 760;
     }
-
-    .search button:hover { background: #73ccff; }
-    .search button:disabled {
-      opacity: .6;
-      cursor: default;
-    }
-
-    /* HTML export button */
-
-    .export-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-      margin: 0 0 19px;
-    }
-
+    .search button:hover:not(:disabled) { background: #8addff; }
+    .search button:disabled, .export-actions button:disabled { opacity: .55; cursor: default; }
+    .export-actions { display: flex; flex-wrap: wrap; gap: 7px; justify-content: flex-end; margin-bottom: 10px; }
     .export-actions button {
-      padding: 10px 16px;
-      border: 1px solid #426182;
-      border-radius: 9px;
-      background: #172d46;
-      color: #cbe9ff;
-      font-size: 13px;
-      font-weight: 650;
+      min-height: 33px; padding: 5px 11px; border: 1px solid #385477; border-radius: 7px;
+      background: #162b46; color: #c5e8ff; font-size: 12px; font-weight: 650;
     }
-
-    .export-actions button:hover:not(:disabled) {
-      background: #264a6a;
-      border-color: #68bfff;
+    .export-actions button:hover:not(:disabled) { background: #21436a; border-color: var(--sky); }
+    .build-marker { display: block; color: var(--muted); font-size: 10px; margin-top: 18px; }
+    #loader, .demo-label, .error-box {
+      border: 1px solid #625030; border-radius: 10px; padding: 10px 13px;
+      color: #ffe2a7; background: #302b25; margin: 0 0 12px;
     }
-
-    .export-actions button:disabled {
-      opacity: .45;
-      cursor: not-allowed;
+    #loader, .demo-label { display: none; }
+    .error-box { color: #ffced5; border-color: #684153; background: #302539; }
+    .brief-intro { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; margin: 13px 0 9px; }
+    .brief-intro h1 { font-size: clamp(23px, 3vw, 30px); margin: 0; letter-spacing: -.028em; overflow-wrap: anywhere; }
+    .company-domain { color: #a7d6f9; font-size: 12px; overflow-wrap: anywhere; }
+    .brief-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 13px; }
+    .brief-metric {
+      --glow: #4386cb6b;
+      min-width: 0; min-height: 104px; border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px;
+      background: radial-gradient(ellipse 76px 63px at right 1px top 0, var(--glow), transparent 90%), var(--surface);
+      box-shadow: 0 4px 16px #0309122b, inset 0 1px #a4caff0a;
     }
-
-    #loader {
-      display: none;
-      padding: 0 2px 13px;
-      color: #a8d9fc;
-      font-size: 12px;
+    .brief-metric:nth-child(2) { --glow: #4d77b86a; }
+    .brief-metric:nth-child(3) { --glow: #37799170; }
+    .brief-metric:nth-child(4) { --glow: #586dba6b; }
+    .metric-label, .metric-note { display: block; color: var(--muted); }
+    .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .metric-value { display: block; margin: 4px 0; font-size: clamp(18px, 2.2vw, 27px); line-height: 1.15; overflow-wrap: anywhere; }
+    .metric-value[data-tone="caution"] { color: var(--gold); }
+    .metric-value[data-tone="positive"] { color: var(--green); }
+    .metric-value[data-tone="negative"] { color: var(--red); }
+    .metric-note { font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+    .brief-status {
+      display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 13px;
+      padding: 7px 11px; border: 1px solid #564b38; border-radius: 8px;
+      background: #252938; color: #f4dba7; font-size: 12px; line-height: 1.45;
     }
-
-    #output, .demo-label { display: none; }
-
-    .demo-label {
-      margin-bottom: 17px;
-      padding: 11px 15px;
-      background: #142c46;
-      border: 1px solid #37668d;
-      border-radius: 9px;
-      color: #bfdef9;
-      font-size: 12px;
-    }
-
-    .research-coverage {
-      margin-bottom: 18px;
-      padding: 14px 18px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 13px;
-    }
-
-    .research-coverage.limited { border-left: 3px solid #dfad59; }
-    .research-coverage h2 { font-size: 16px; margin: 0 0 6px; }
-    .research-coverage p { font-size: 13px; margin: 4px 0; }
-    .research-coverage ul { font-size: 13px; margin: 8px 0 0; padding-left: 18px; }
-
-    /* Dashboard panels */
-
-    .dashboard {
-      display: grid;
-      grid-template-columns: minmax(0, 1.9fr) minmax(300px, .87fr);
-      gap: 17px;
-      align-items: start;
-    }
-
-    .main-column, .aside-column {
-      min-width: 0;
-      display: grid;
-      gap: 17px;
-    }
-
+    .brief-status p { margin: 0; }
+    .dashboard { display: grid; grid-template-columns: minmax(0, 2.35fr) minmax(282px, 1fr); gap: 13px; align-items: start; }
+    .main-column, .aside-column { display: grid; gap: 12px; min-width: 0; align-content: start; }
     .panel {
-      overflow: hidden;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 12px;
+      background: var(--surface); box-shadow: 0 4px 18px #030a1628, inset 0 1px #b3ceff0a;
     }
-
     .panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 18px 20px;
-      border-bottom: 1px solid #293b54;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 48px;
+      padding: 10px 13px; border-bottom: 1px solid #2b3f5d; background: #36568014;
     }
-
-    .panel-head h2 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 750;
+    .panel-head h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 750; }
+    .panel-icon, .insight-icon, .competitor-avatar {
+      display: inline-grid; place-items: center; flex: none; border-radius: 6px;
+      background: #2a486c; color: #a0d8fa; font-weight: 750;
     }
-
-    .panel-icon {
-      display: inline-grid;
-      place-items: center;
-      width: 22px;
-      height: 22px;
-      margin-right: 8px;
-      background: #28486a;
-      border-radius: 6px;
-      color: #8fd2ff;
-      font-size: 12px;
-    }
-
+    .panel-icon { width: 24px; height: 24px; font-size: 13px; }
     .panel-tag {
-      color: #7fe5c4;
-      background: #19443e;
-      border: 1px solid #28675b;
-      padding: 5px 9px;
-      border-radius: 99px;
-      font-size: 10px;
+      flex: none; padding: 3px 7px; border: 1px solid #326a62; border-radius: 99px;
+      background: #173f3e; color: #92ebcc; font-size: 10px;
     }
-
-    .panel-content { padding: 19px 20px; }
-
-    .empty-state {
-      padding: 20px;
-      color: #95a9c3;
-      font-size: 12px;
-      line-height: 1.65;
+    .panel-content, .breakdown-body, .competitor-body { padding: 12px 13px; }
+    .empty-state, .brief-note, .coverage {
+      color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere;
     }
-
-    /* Strategic insights */
-
-    .insights { padding: 0 20px; }
-
-    .insight {
-      display: grid;
-      grid-template-columns: 33px minmax(0, 1fr);
-      gap: 12px;
-      padding: 19px 0 21px;
-      border-bottom: 1px solid #2b3e59;
+    .empty-state { margin: 0; padding: 12px 13px; }
+    .panel-content > :first-child, .breakdown-body > :first-child, .competitor-body > :first-child { margin-top: 0; }
+    .panel-content > :last-child, .breakdown-body > :last-child, .competitor-body > :last-child { margin-bottom: 0; }
+    .insights { padding: 0 13px; }
+    .insight { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; padding: 13px 0; }
+    .insight + .insight, .competitor-entry + .competitor-entry, .library-source + .library-source { border-top: 1px solid #2b3f5d; }
+    .insight-icon { width: 32px; height: 32px; font-size: 15px; }
+    [data-category="funding"] { --accent: #83e4c5; --tint: #25504e; }
+    [data-category="product"] { --accent: #a4d8ff; --tint: #24496d; }
+    [data-category="partnership"] { --accent: #c5b7ff; --tint: #44366d; }
+    [data-category="expansion"] { --accent: #f6d58d; --tint: #514432; }
+    [data-category="talent"] { --accent: #ffaebb; --tint: #534053; }
+    .insight-icon, .category-chip { color: var(--accent, #a8c7ef); background: var(--tint, #273d60); }
+    .insight-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 9px; margin-bottom: 4px; }
+    .insight-title, .competitor-name { color: var(--text); font-size: 14px; line-height: 1.35; font-weight: 750; margin: 0; overflow-wrap: anywhere; }
+    .category-chip { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 650; }
+    .source-preview {
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+      margin: 0; color: #cbd9ec; line-height: 1.48; font-size: 13px; overflow-wrap: anywhere; white-space: pre-line;
     }
-
-    .insight:last-child { border-bottom: 0; }
-
-    .insight-icon {
-      display: grid;
-      place-items: center;
-      width: 33px;
-      height: 33px;
-      background: #263e5d;
-      border-radius: 9px;
-      color: #95cfff;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .insight-title {
-      margin: 0 0 7px;
-      color: #89c8ff;
-      font-size: 12px;
-      font-weight: 720;
-    }
-
-    .category-chip {
-      display: inline-block;
-      margin-bottom: 8px;
-      padding: 3px 6px;
-      background: #18324d;
-      border: 1px solid #365779;
-      border-radius: 6px;
-      color: #9fd7ff;
-      font-size: 10px;
-    }
-
-    .insight-text {
-      margin: 0;
-      color: #dbe7f6;
-      font-size: 13px;
-      line-height: 1.72;
-      overflow-wrap: anywhere;
-    }
-
-    /* Citations */
-
-    .source-row {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 11px;
-    }
-
-    .source-label {
-      color: #829cb9;
-      font-size: 10px;
-    }
-
+    .insight-content:has(.evidence-detail[open]) > .source-preview { display: none; }
+    .source-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    .source-label { color: var(--muted); font-size: 10px; margin-right: 2px; }
     .source-chip {
-      color: #aedfff;
-      background: #142e45;
-      border: 1px solid #355c7e;
-      padding: 5px 9px;
-      border-radius: 7px;
-      font-size: 10px;
-      text-decoration: none;
+      display: inline-block; min-width: 0; max-width: min(100%, 350px); overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; color: #c6e8ff; background: #152843;
+      border: 1px solid #385170; padding: 3px 7px; border-radius: 5px; font-size: 11px; text-decoration: none;
     }
-
-    .source-chip:hover {
-      color: white;
-      background: #235270;
-    }
-
-    /* Executive summary */
-
-    .snapshot-label {
-      margin-bottom: 10px;
-      color: #85c8fa;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .snapshot-text {
-      margin: 0;
-      color: #dbe6f4;
-      font-size: 12px;
-      line-height: 1.75;
-    }
-
-    /* Sentiment */
-
-    .sentiment-body {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 20px;
-    }
-
-    .empty-donut {
-      position: relative;
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-      width: 98px;
-      height: 98px;
-      border-radius: 50%;
-      background: conic-gradient(#36506e 0deg 360deg);
-    }
-
-    .empty-donut::before {
-      content: "";
-      position: absolute;
-      inset: 11px;
-      border-radius: 50%;
-      background: var(--panel);
-    }
-
-    .empty-donut span {
-      position: relative;
-      font-size: 22px;
-      font-weight: 750;
-    }
-
-    .sentiment-legend {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .sentiment-legend strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 12px;
-    }
-
-    .sentiment-legend-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 8px;
-      font-size: 11px;
-    }
-
-    .sentiment-legend-label {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      color: #b1c2d8;
-    }
-
-    .sentiment-swatch {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-    }
-
-    .sentiment-coverage {
-      margin: 0 20px 18px;
-      color: #91a6c1;
-      font-size: 10px;
-      line-height: 1.6;
-    }
-
-    /* Signal breakdown */
-
-    .breakdown-body { padding: 16px 20px 18px; }
-
-    .breakdown-note {
-      margin: 0 0 13px;
-      color: #93a8c2;
-      font-size: 11px;
-      line-height: 1.6;
-    }
-
-    .breakdown-item {
-      padding: 10px 0;
-      border-top: 1px solid #273b56;
-    }
-
-    .breakdown-item-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 7px;
-      font-size: 11px;
-    }
-
-    .breakdown-track {
-      width: 100%;
-      height: 5px;
-      overflow: hidden;
-      background: #2a3e5c;
-      border-radius: 99px;
-    }
-
-    .breakdown-fill {
-      height: 100%;
-      background: #4abaff;
-      border-radius: 99px;
-    }
-
-    /* Competitors */
-
-    .competitor-body { padding: 18px 20px; }
-
-    .competitor-entry {
-      padding: 15px 0;
-      border-bottom: 1px solid #2b3e59;
-    }
-
-    .competitor-entry:first-child { padding-top: 0; }
-    .competitor-entry:last-child { border-bottom: 0; }
-
-    .competitor-name {
-      margin: 0 0 7px;
-      color: #dff2ff;
-      font-size: 13px;
-    }
-
-    .competitor-overlap {
-      margin: 0;
-      color: #a9bfd9;
-      font-size: 11px;
-      line-height: 1.65;
-    }
-
-    /* Timeline */
-
-    .timeline-label {
-      margin: 0;
-      padding: 14px 20px 0;
-      color: #90a7c3;
-      font-size: 11px;
-      line-height: 1.6;
-    }
-
-    .timeline {
-      list-style: none;
-      margin: 0;
-      padding: 17px 20px 14px 24px;
-    }
-
-    .timeline li {
-      position: relative;
-      margin-left: 5px;
-      padding: 0 0 18px 18px;
-      border-left: 1px solid #406587;
-    }
-
-    .timeline li:last-child {
-      border-left-color: transparent;
-    }
-
-    .timeline li::before {
-      content: "";
-      position: absolute;
-      left: -4.5px;
-      top: 3px;
-      width: 8px;
-      height: 8px;
-      background: #41bdfa;
-      border-radius: 50%;
-    }
-
-    .timeline-date {
-      margin-bottom: 5px;
-      color: #83cdfc;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .timeline-link {
-      color: #d2e3f4;
-      font-size: 11px;
-      line-height: 1.5;
-      text-decoration: none;
+    .source-chip:hover, .timeline-link:hover { text-decoration: underline; color: #e0f7ff; }
+    .evidence-actions { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 9px; margin-top: 6px; }
+    .evidence-actions > .source-row { margin-top: 0; min-width: 0; }
+    .evidence-detail, .interpretation, .quoted-evidence, .publication-detail { min-width: 0; margin-top: 7px; }
+    .evidence-actions > .evidence-detail { margin: 0; }
+    .evidence-actions > .evidence-detail[open] { flex-basis: 100%; }
+    details > summary { color: #a5d9fc; font-size: 12px; line-height: 1.5; padding-block: 3px; }
+    .source-fact, .quoted-evidence blockquote {
+      margin: 9px 0; padding: 7px 10px; border-left: 2px solid var(--sky);
+      background: #0f1f35; color: #d7e4f5; font-size: 13px; line-height: 1.57; white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
-
-    .timeline-link:hover {
-      color: #78cbff;
-      text-decoration: underline;
+    .evidence-id { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+    .timing-note { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .snapshot-text { margin: 0; color: #d6e4f6; line-height: 1.55; font-size: 13px; }
+    .snapshot-label { margin-bottom: 6px; color: var(--sky); font-size: 10px; text-transform: uppercase; font-weight: 700; }
+    .sentiment-body { display: flex; align-items: center; gap: 12px; padding: 12px 13px; }
+    .sentiment-ring {
+      position: relative; flex: none; display: grid; place-items: center;
+      width: 78px; height: 78px; border-radius: 50%; background: #2d4364;
     }
+    .sentiment-ring::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: #172640; }
+    .ring-label { position: relative; text-align: center; }
+    .ring-label strong, .ring-label small { display: block; }
+    .ring-label strong { font-size: 18px; }
+    .ring-label small { font-size: 10px; color: var(--muted); }
+    .sentiment-legend { min-width: 0; flex: 1; }
+    .sentiment-legend strong { font-size: 13px; }
+    .sentiment-legend p { margin: 3px 0 0; }
+    .sentiment-legend-row, .breakdown-item-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .sentiment-legend-row { margin: 4px 0; color: #d5e3f5; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .sentiment-legend-label { display: inline-flex; align-items: center; gap: 5px; }
+    .sentiment-swatch { width: 7px; height: 7px; border-radius: 2px; }
+    .sentiment-coverage { margin: 0; padding: 0 13px 11px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .breakdown-note { color: var(--muted); margin: 0 0 8px; font-size: 11px; line-height: 1.45; }
+    .breakdown-item + .breakdown-item { margin-top: 8px; }
+    .breakdown-item-head { margin-bottom: 4px; color: #d5e3f5; font-size: 11px; }
+    .breakdown-track { height: 5px; min-width: 0; overflow: hidden; border-radius: 99px; background: #0e1c31; }
+    .breakdown-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #3fb3e7, var(--accent, #87cfff)); }
+    .competitor-entry { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; padding: 8px 0; }
+    .competitor-entry:first-child { padding-top: 0; }
+    .competitor-entry:last-child { padding-bottom: 0; }
+    .competitor-avatar { width: 24px; height: 24px; font-size: 10px; }
+    .competitor-content { min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 3px 9px; }
+    .competitor-content > .evidence-detail { margin: 0; }
+    .competitor-content > .evidence-detail[open] { flex-basis: 100%; }
+    .competitor-entry:nth-child(3n+2) .competitor-avatar { background: #453b6b; color: #c9b8ff; }
+    .competitor-entry:nth-child(3n) .competitor-avatar { background: #21504d; color: #97e8d1; }
+    .timeline-empty, .publication-detail { padding: 0 13px; }
+    .timeline-empty { margin: 11px 0 0; color: var(--muted); line-height: 1.5; font-size: 12px; }
+    .timeline-empty strong { color: var(--text); display: block; margin-bottom: 3px; }
+    .publication-detail { margin: 7px 0 11px; }
+    .timeline { list-style: none; margin: 7px 0 0; padding: 0; }
+    .timeline li { position: relative; margin-left: 4px; padding: 0 0 9px 10px; border-left: 1px solid #416688; }
+    .timeline li::before { content: ""; position: absolute; background: var(--sky); width: 7px; height: 7px; border-radius: 50%; left: -4px; top: 4px; }
+    .timeline-date { color: #d5edff; font-size: 11px; }
+    .timeline-link { display: block; color: #aedaff; font-size: 11px; line-height: 1.38; overflow-wrap: anywhere; text-decoration: none; }
+    .context-observation { padding: 8px 0; }
+    .context-observation + .context-observation { border-top: 1px solid #2b3f5d; }
+    .context-observation .brief-note { margin: 3px 0; }
+    .diagnostics { padding: 0 12px 10px; }
+    .diagnostics > summary { padding-block: 9px 4px; }
+    .research-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 8px 0 0; }
+    .research-detail-grid h3 { margin: 4px 0; font-size: 12px; }
+    .research-detail-grid ul { padding-left: 16px; }
+    .library-controls { padding: 10px 13px 0; }
+    .library-controls input { width: 100%; min-height: 37px; padding: 6px 8px; border: 1px solid #344d70; border-radius: 7px; background: #101d32; color: var(--text); }
+    .library-count { font-size: 11px; color: var(--muted); }
+    .library-source { padding: 9px 13px; }
+    .library-source .coverage { margin: 5px 0; }
+    .library-source pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 12px; }
 
-    .coverage {
-      margin-top: 12px;
-      color: #8da4be;
-      font-size: 11px;
-      line-height: 1.6;
+    @media (max-width: 880px) {
+      .dashboard { grid-template-columns: minmax(0, 1fr); }
+      .aside-column { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
     }
-
-    .error-box {
-      padding: 16px;
-      background: #33222d;
-      border: 1px solid #98576b;
-      border-radius: 10px;
-      color: #ffd1d9;
-    }
-
-    .analysis-notice {
-      margin: 0 0 14px;
-      padding: 10px 14px;
-      border-left: 3px solid #dfad59;
-      background: #2c2831;
-      color: #ffe0a8;
-    }
-
-    @media (max-width: 790px) {
-      .dashboard { grid-template-columns: 1fr; }
-      .aside-column {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 560px) {
-      .topbar-inner { padding: 14px 17px; }
+    @media (max-width: 640px) {
+      .topbar-inner, .shell { padding-inline: 13px; }
+      .topbar-inner { min-height: 59px; }
+      .shell { padding-top: 11px; }
       .workflow-badges { display: none; }
-      .shell { padding: 16px 15px 50px; }
-      .search { flex-direction: column; }
-      .search button { min-height: 44px; }
-      .aside-column { grid-template-columns: 1fr; }
+      .brief-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .brief-metric { min-height: 94px; padding: 9px 10px; }
+      .metric-label { font-size: 10px; }
+      .aside-column, .research-detail-grid { grid-template-columns: minmax(0, 1fr); }
+      .search { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+      #companyInput { grid-column: 1 / -1; }
+      .search button { padding-inline: 12px; }
+      .export-actions { justify-content: flex-start; }
+      .panel-head { padding-inline: 10px; }
+      .source-chip, details > summary { min-height: 24px; }
     }
-
-    .brief-intro { margin: 12px 0 22px; }
-    .brief-eyebrow { color: var(--sky); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 700; }
-    .brief-intro h1 { font-size: clamp(27px, 4vw, 40px); margin: 7px 0; letter-spacing: -.035em; }
-    .brief-intro p { color: var(--muted); max-width: 780px; line-height: 1.6; margin: 6px 0; }
-    .brief-metrics { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
-    .brief-metric { border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; background: #122139; flex: 1 1 160px; }
-    .brief-metric strong { display: block; font-size: 25px; color: var(--text); margin-bottom: 3px; }
-    .brief-metric span { color: var(--muted); font-size: 12px; }
-    .source-fact { border-left: 3px solid var(--sky); padding-left: 14px; margin: 15px 0; line-height: 1.7; white-space: pre-wrap; }
-    .fact-label { color: var(--green); font-size: 11px; font-weight: 700; margin-top: 14px; }
-    .interpretation { margin: 16px 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
-    .interpretation summary, .diagnostics > summary { cursor: pointer; color: var(--muted); padding: 8px 0; }
-    .brief-questions { padding: 0 20px 16px 38px; color: #c4d3e7; font-size: 13px; line-height: 1.65; }
-    .brief-questions li { margin-bottom: 12px; }
-    .library-controls { padding: 16px 20px; }
-    .library-controls input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px; }
-    .library-source { padding: 17px 20px; border-top: 1px solid var(--border); }
-    .library-source a { color: #b4ddff; line-height: 1.5; font-size: 14px; text-decoration: none; }
-    .library-source .coverage { margin: 8px 0; }
-    .library-source pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; color: #c4d3e7; line-height: 1.65; font-size: 13px; }
-    .diagnostics .panel { margin-top: 15px; }
-    .library-count { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
-    .brief-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
   </style>
 </head>
 
@@ -668,7 +285,7 @@
       <input
         id="companyInput"
         type="text"
-        placeholder="Search company (e.g. Linear)"
+        placeholder="Company name (e.g. Linear)"
         aria-label="Company name"
         maxlength="50"
         autocomplete="off"
@@ -678,7 +295,7 @@
       <input
         id="websiteInput"
         type="text"
-        placeholder="Official website recommended (e.g. linear.app)"
+        placeholder="Official website (optional)"
         aria-label="Official company website (optional)"
         autocomplete="off"
       >
@@ -701,8 +318,6 @@
       </button>
     </div>
 
-    <p class="brief-note">Dashboard build: source-brief-2026-11-19 · Source passages lead; research coverage may be limited.</p>
-
     <div id="demoLabel" class="demo-label">
       Preview mode — fictional ExampleCo sample data.
       No Tavily or GPT-4o request was made.
@@ -713,6 +328,7 @@
     </div>
 
     <main id="output" aria-live="polite"></main>
+    <footer class="build-marker">Dashboard build: source-brief-2026-11-19</footer>
 
   </div>
 
@@ -828,21 +444,6 @@
       }
 
       return count;
-    }
-
-    function appendEvidence(parent, evidence) {
-      const quotes = (Array.isArray(evidence) ? evidence : []).filter(item =>
-        typeof item?.quote === "string" && item.quote.trim() && safeUrl(item?.url)
-      );
-      if (!quotes.length) return;
-      const details = add(parent, "details", "quoted-evidence");
-      add(details, "summary", "", "Quoted source excerpts");
-      add(details, "p", "coverage", "Check whether these excerpts support the finding. Quote matching does not establish independent verification.");
-      for (const item of quotes) {
-        add(details, "blockquote", "", item.quote);
-        const link = safeLink(item);
-        if (link) details.appendChild(link);
-      }
     }
 
     function dateInfo(value) {
@@ -1057,24 +658,6 @@
         questions: categories.map(category => questionMap[category])};
     }
 
-    function renderBriefOverview(parent, data, brief) {
-      const intro = add(parent, "header", "brief-intro");
-      add(intro, "div", "brief-eyebrow", "MarketScope / Company brief");
-      add(intro, "h1", "", data.company_name || "Company");
-      add(intro, "p", "", "Read the source observations, understand the gaps, and decide what deserves a closer look.");
-      if (data.analysis_format === "evidence_ids_v2") add(intro, "p", "brief-note", "Source-evidence view: generated interpretations are excluded from this display and shared briefs. Selected passages do not establish independent verification or complete coverage.");
-      if (dateInfo(data.generated_at)) add(intro, "p", "brief-note", `Report generated ${new Date(data.generated_at).toLocaleString()} · This is not an event date or a guarantee of current coverage.`);
-      if (data.analysis_window?.start && data.analysis_window?.end) add(intro, "p", "brief-note", `Primary overview window: ${data.analysis_window.start} through ${data.analysis_window.end}. Unknown event timing stays uncertain.`);
-      if (!data.official_domain) add(intro, "p", "analysis-notice", "Name-only research: company identity may be ambiguous. Supply the official website to help separate companies with similar names.");
-      const metrics = add(intro, "div", "brief-metrics");
-      for (const [value, label] of [[brief.cards.length, "Selected observations"],
-        [brief.selectedSourceCount, "Sources behind observations"], [brief.sourceCount, "Company sources retained"]]) {
-        const metric = add(metrics, "div", "brief-metric");
-        add(metric, "strong", "", value);
-        add(metric, "span", "", label);
-      }
-    }
-
     function renderSourceLibrary(parent, brief) {
       const library = panel("Source library", "▥", "All retained company sources");
       const controls = add(library, "div", "library-controls");
@@ -1161,25 +744,6 @@
       add(details, "p", "brief-note", "Generated wording may add details the selected excerpts do not establish. It is not independently verified.");
     }
 
-    function renderContext(parent, data, brief) {
-      const warnings = Array.isArray(data.context_warnings) ? data.context_warnings : [];
-      if (!brief.contextCards.length && !warnings.length) return;
-      const section = panel("Historical and background context", "◷", "Separate from primary observations");
-      const body = add(section, "div", "panel-content");
-      add(body, "p", "brief-note", "These items are not counted as recent developments. Unknown event timing remains uncertain.");
-      for (const warning of warnings) add(body, "p", "brief-note", warning);
-      for (const card of brief.contextCards) {
-        const article = add(body, "article", "context-observation");
-        add(article, "h3", "insight-title", data.analysis_format === "evidence_ids_v2" ? "Selected background source passage" : card.title);
-        add(article, "p", "fact-label", card.label);
-        add(article, "blockquote", "source-fact", card.text);
-        appendSourceLinks(add(article, "div", "source-row"), card.sources);
-        add(article, "p", "brief-note", card.note);
-        if (data.analysis_format !== "evidence_ids_v2") appendInterpretation(article, card.interpretation);
-      }
-      parent.appendChild(section);
-    }
-
     function researchAttemptText(attempt) {
       const lanes = {first: "Initial search", business: "Broader news search", official: "Official announcements"};
       const outcomes = {ok: "completed", failed: "failed", invalid_response: "unreadable response"};
@@ -1187,639 +751,361 @@
         `${attempt.new_sources ?? "Unknown"} new company sources`;
     }
 
+    const categoryStyles = {
+      "Product & Innovation": ["product", "✦"],
+      "Funding & Investment": ["funding", "↗"],
+      "M&A / Partnerships": ["partnership", "⇄"],
+      "Market Expansion": ["expansion", "◎"],
+      "Hiring & Talent": ["talent", "+"],
+      "Other": ["other", "·"]
+    };
+
+    function sentimentSourceKey(value) {
+      const safe = safeUrl(value);
+      if (!safe) return null;
+      const url = new URL(safe);
+      for (const key of [...url.searchParams.keys()]) {
+        if (/^(utm_|gclid$|fbclid$)/i.test(key)) url.searchParams.delete(key);
+      }
+      url.searchParams.sort();
+      return url.host.replace(/^www\./i, "") + url.pathname.replace(/\/+$/, "") + url.search;
+    }
+
+    function sourceSentiment(data) {
+      const sources = Array.isArray(data.sources) ? data.sources : [];
+      const keys = sources.map(source => sentimentSourceKey(source?.url));
+      const parents = keys.map((_, index) => index);
+      const firstByUrl = new Map();
+      const firstByBody = new Map();
+      const groupFor = index => {
+        while (parents[index] !== index) index = parents[index];
+        return index;
+      };
+      function groupDuplicate(index, value, seen) {
+        if (!value) return;
+        if (seen.has(value)) parents[groupFor(index)] = groupFor(seen.get(value));
+        else seen.set(value, index);
+      }
+      keys.forEach((key, index) => {
+        if (!key) return;
+        const content = sources[index]?.content;
+        const body = typeof content === "string" ? content.trim().replace(/\s+/g, " ") : "";
+        groupDuplicate(index, key, firstByUrl);
+        groupDuplicate(index, body, firstByBody);
+      });
+      const total = new Set(keys.flatMap((key, index) => key ? [groupFor(index)] : [])).size;
+      const labels = new Map();
+      const counts = {positive: 0, neutral: 0, negative: 0};
+      for (const assessment of Array.isArray(data.source_sentiments) ? data.source_sentiments : []) {
+        const id = /^S([1-9]\d*)$/.exec(assessment?.source_id || "");
+        const index = id ? Number(id[1]) - 1 : -1;
+        const label = typeof assessment?.label === "string" ? assessment.label.trim().toLowerCase() : "";
+        if (!keys[index] || keys[index] !== sentimentSourceKey(assessment.url) || !Object.hasOwn(counts, label)) continue;
+        const group = groupFor(index);
+        if (!labels.has(group)) labels.set(group, label);
+        else if (labels.get(group) !== label) labels.set(group, null);
+      }
+      for (const label of labels.values()) if (label) counts[label] += 1;
+      const assessed = Object.values(counts).reduce((sum, count) => sum + count, 0);
+      const max = Math.max(...Object.values(counts));
+      const leaders = Object.keys(counts).filter(key => counts[key] === max);
+      return {counts, assessed, total, ready: assessed >= 3, dominant: leaders.length === 1 ? leaders[0] : null};
+    }
+
+    function comparisonEntries(data) {
+      const records = Array.isArray(data.competitors) ? data.competitors : [];
+      return records.filter(record => record && typeof record === "object").map(record => {
+        const quotes = competitorQuotes(record, data);
+        const name = typeof record.name === "string" ? record.name.trim().replace(/\s+/g, " ") : "";
+        const escapedName = name.replace(/[.*+?^$(){}|[\]\\]/g, "\\$&");
+        const matcher = name ? new RegExp("(^|[^\\p{L}\\p{N}])" + escapedName + "(?=$|[^\\p{L}\\p{N}])", "iu") : null;
+        const named = matcher && quotes.some(item => matcher.test(item.quote.replace(/\s+/g, " ")));
+        return {name: named ? name : null, quotes};
+      }).filter(entry => entry.quotes.length);
+    }
+
+    function titleCase(value) {
+      return value[0].toUpperCase() + value.slice(1);
+    }
+
+    function renderKpis(parent, data, observations, background, coverage, sentiment, comparisons) {
+      const distinctComparisons = new Set(comparisons.flatMap(item => item.name ? [item.name.toLowerCase()] : [])).size;
+      const accepted = data.source_stats?.accepted ?? (Array.isArray(data.sources) ? data.sources.length : null);
+      const coverageLabel = data.research_coverage?.status === "background_only" ? "Background" :
+        coverage.limited ? "Limited" : data.research_coverage?.status === "mixed" ? "Mixed" :
+          Number.isInteger(accepted) ? "Available" : "Unavailable";
+      const metrics = [
+        ["Key Developments", observations.length || "—", observations.length ? "Selected observations · timing unverified" : background.length ? "Background evidence only" : "None established", ""],
+        ["Research Coverage", coverageLabel, coverage.counts.split(" · ")[1] || "", coverage.limited ? "caution" : ""],
+        ["Source Sentiment", sentiment.ready ? (sentiment.dominant ? titleCase(sentiment.dominant) : "Mixed") : "Insufficient",
+          sentiment.total ? sentiment.assessed + " of " + sentiment.total + " sources assessed" : "No usable assessments", sentiment.ready ? sentiment.dominant : ""],
+        ["Competitors Identified", distinctComparisons || "—", distinctComparisons ?
+          (distinctComparisons === 1 ? "1 name in selected comparison evidence" : "Names in selected comparison evidence") :
+          comparisons.length ? "Comparison sources available" : "None established", ""]
+      ];
+      const grid = add(parent, "div", "brief-metrics");
+      for (const [label, value, note, tone] of metrics) {
+        const card = add(grid, "article", "brief-metric");
+        add(card, "span", "metric-label", label);
+        const metric = add(card, "strong", "metric-value", value);
+        if (tone) metric.setAttribute("data-tone", tone);
+        add(card, "span", "metric-note", note);
+      }
+    }
+
+    function renderSentiment(parent, sentiment) {
+      const section = panel("Sentiment", "◉");
+      const body = add(section, "div", "sentiment-body");
+      const ring = add(body, "div", "sentiment-ring");
+      ring.setAttribute("aria-hidden", "true");
+      const ringLabel = add(ring, "span", "ring-label");
+      const legend = add(body, "div", "sentiment-legend");
+      const {assessed, total, counts, dominant, ready} = sentiment;
+      if (ready) {
+        const positiveEnd = 100 * counts.positive / assessed;
+        const neutralEnd = positiveEnd + 100 * counts.neutral / assessed;
+        ring.style.background = "conic-gradient(var(--green) 0% " + positiveEnd + "%, var(--gold) " +
+          positiveEnd + "% " + neutralEnd + "%, var(--red) " + neutralEnd + "% 100%)";
+        add(ringLabel, "strong", "", dominant ? Math.round(100 * counts[dominant] / assessed) + "%" : String(assessed));
+        add(ringLabel, "small", "", dominant ? titleCase(dominant) : "assessed");
+        for (const [label, color] of [["positive", "green"], ["neutral", "gold"], ["negative", "red"]]) {
+          const row = add(legend, "div", "sentiment-legend-row");
+          const name = add(row, "span", "sentiment-legend-label");
+          add(name, "i", "sentiment-swatch").style.background = "var(--" + color + ")";
+          add(name, "span", "", titleCase(label));
+          add(row, "span", "", counts[label] + " · " + Math.round(100 * counts[label] / assessed) + "%");
+        }
+        add(section, "p", "sentiment-coverage", assessed + " of " + total + " sources assessed. Shows source portrayal.");
+      } else {
+        add(ringLabel, "strong", "", "—");
+        add(legend, "strong", "", "Insufficient data");
+        add(legend, "p", "brief-note", assessed ? assessed + " of " + total + " sources assessed. At least 3 distinct sources needed." :
+          "At least 3 distinct, assessed sources are needed.");
+      }
+      parent.appendChild(section);
+    }
+
+    function addPassages(parent, quotes, label = "Full evidence", sources = []) {
+      const details = add(parent, "details", "evidence-detail");
+      add(details, "summary", "", label);
+      if (sources.length) appendSourceLinks(add(details, "div", "source-row"), sources);
+      for (const evidence of quotes) {
+        add(details, "blockquote", "source-fact", evidence.quote);
+        if (evidence.evidence_id) add(details, "code", "evidence-id", evidence.evidence_id);
+      }
+      return details;
+    }
+
+    function renderObservation(parent, item, data, isContext = false) {
+      const category = CATEGORIES.includes(item.category) ? item.category : null;
+      const [style, icon] = categoryStyles[category] || ["other", "▤"];
+      const appearance = findingPresentation(item, data);
+      const card = add(parent, "article", isContext ? "insight context-observation" : "insight");
+      card.setAttribute("data-category", style);
+      const symbol = add(card, "div", "insight-icon", icon);
+      symbol.setAttribute("aria-hidden", "true");
+      const content = add(card, "div", "insight-content");
+      const heading = add(content, "div", "insight-heading");
+      add(heading, "h3", "insight-title", category || (isContext ? "Background source" : "Company observation"));
+      if (isContext) add(heading, "span", "category-chip", item.temporal_status === "historical" ? "Historical context" : "Background");
+      else add(heading, "span", "category-chip", "Timing uncertain");
+      if (appearance.quotes.length) {
+        add(content, "p", "source-preview", isContext ? appearance.quotes.map(item => item.quote).join("\n") : appearance.quotes[0].quote);
+        const meta = add(content, "div", "evidence-actions");
+        appendSourceLinks(add(meta, "div", "source-row"), appearance.sources);
+        const details = addPassages(meta, appearance.quotes);
+        if (item.temporal_note) add(details, "p", "timing-note", item.temporal_note);
+      } else {
+        add(content, "p", "brief-note", "Selected passage unavailable.");
+        if (data.analysis_format !== "evidence_ids_v2" && appearance.text) {
+          appendSourceLinks(add(content, "div", "source-row"), appearance.sources);
+          appendInterpretation(content, appearance.text);
+        }
+      }
+    }
+
+    function renderSnapshot(parent, data, observations, background) {
+      const section = panel("Executive Snapshot", "▣");
+      const content = add(section, "div", "panel-content");
+      if (observations.length) {
+        const categories = [...new Set(observations.map(item => item.category).filter(category => CATEGORIES.includes(category)))];
+        const topic = categories.length ? "The selected passages cover " + categories.map(one => one.toLowerCase()).join(", ") + ". " : "";
+        add(content, "p", "snapshot-text", topic + "The report does not establish when these observations occurred.");
+      } else if (background.length) {
+        add(content, "p", "snapshot-text", "Available evidence provides company background. Recent developments could not be established.");
+      } else {
+        add(content, "p", "snapshot-text", "The selected evidence is insufficient for a company overview.");
+      }
+      if (data.analysis_status === "partial") add(content, "p", "brief-note", "Partial analysis. Some findings could not be retained.");
+      parent.appendChild(section);
+    }
+
+    function renderSignals(parent, insights) {
+      const section = panel("Signal Breakdown", "▥");
+      if (!insights.length) {
+        add(section, "p", "empty-state", "No selected developments to classify.");
+      } else {
+        const body = add(section, "div", "breakdown-body");
+        add(body, "p", "breakdown-note", "Categories among selected observations");
+        const counts = new Map();
+        for (const insight of insights) {
+          const category = CATEGORIES.includes(insight.category) ? insight.category : "Unclassified";
+          counts.set(category, (counts.get(category) || 0) + 1);
+        }
+        for (const [category, count] of [...counts].sort((a, b) => b[1] - a[1])) {
+          const item = add(body, "div", "breakdown-item");
+          item.setAttribute("data-category", (categoryStyles[category] || ["other"])[0]);
+          const head = add(item, "div", "breakdown-item-head");
+          add(head, "span", "", category);
+          add(head, "strong", "", count);
+          const track = add(item, "div", "breakdown-track");
+          track.setAttribute("aria-hidden", "true");
+          add(track, "div", "breakdown-fill").style.width = 100 * count / insights.length + "%";
+        }
+      }
+      parent.appendChild(section);
+    }
+
+    function renderCompetitors(parent, data, comparisons) {
+      const section = panel("Competitor Evidence", "⇄");
+      const body = add(section, "div", "competitor-body");
+      if (!comparisons.length) add(body, "p", "brief-note", "No cited comparison evidence available.");
+      for (const entry of comparisons) {
+        const row = add(body, "article", "competitor-entry");
+        const avatar = add(row, "span", "competitor-avatar", entry.name ? entry.name.slice(0, 2).toUpperCase() : "↗");
+        avatar.setAttribute("aria-hidden", "true");
+        const content = add(row, "div", "competitor-content");
+        add(content, "h3", "competitor-name", entry.name || "Comparison source");
+        const sources = [...new Map(entry.quotes.map(quote => [quote.url, quote])).values()];
+        addPassages(content, entry.quotes, "Evidence", sources);
+      }
+      for (const warning of Array.isArray(data.competitor_research_warnings) ? data.competitor_research_warnings : []) {
+        add(body, "p", "brief-note", warning);
+      }
+      parent.appendChild(section);
+    }
+
+    function renderTimeline(parent, data, observations) {
+      const section = panel("Timeline", "◷");
+      const empty = add(section, "div", "timeline-empty");
+      add(empty, "strong", "", "Event dates unavailable");
+      const citedUrls = new Set(observations.flatMap(item => checkedCompanyQuotes(item, data)
+        .map(quote => safeUrl(quote.url))));
+      const entries = (Array.isArray(data.sources) ? data.sources : [])
+        .map(source => ({source, publication: dateInfo(source?.published_at)}))
+        .filter(item => item.publication && citedUrls.has(safeUrl(item.source.url)))
+        .sort((a, b) => b.publication.date - a.publication.date)
+        .slice(0, 6);
+      const detail = add(section, "details", "publication-detail");
+      add(detail, "summary", "", "Cited publication dates");
+      if (!entries.length) add(detail, "p", "brief-note", "No publication dates are available for cited sources.");
+      else {
+        const list = add(detail, "ol", "timeline");
+        for (const {source, publication} of entries) {
+          const row = add(list, "li");
+          add(row, "div", "timeline-date", publication.label);
+          const link = safeLink(source, source.title || "Read source", "timeline-link");
+          if (link) row.appendChild(link);
+        }
+      }
+      parent.appendChild(section);
+    }
+
+    function renderResearchDetails(parent, data, brief, coverage) {
+      const panelNode = add(parent, "details", "panel diagnostics");
+      add(panelNode, "summary", "", "Research details and source library");
+      const content = add(panelNode, "div", "research-detail-grid");
+      const info = add(content, "div");
+      add(info, "h3", "", "Coverage and timing");
+      for (const line of [coverage.title, coverage.counts, coverage.caution, coverage.evidenceNote, coverage.dateNote, ...coverage.warnings,
+        ...(Array.isArray(data.context_warnings) ? data.context_warnings : [])].filter(Boolean)) add(info, "p", "brief-note", line);
+      if (data.analysis_window?.start && data.analysis_window?.end) {
+        add(info, "p", "brief-note", "Analysis window: " + data.analysis_window.start + " through " + data.analysis_window.end + ".");
+      }
+      if (dateInfo(data.generated_at)) add(info, "p", "brief-note", "Report generated " + new Date(data.generated_at).toLocaleString() + ".");
+      if (Array.isArray(data.research_history) && data.research_history.length) {
+        add(info, "h3", "", "Searches performed");
+        const attempts = add(info, "ul", "brief-note");
+        for (const attempt of data.research_history) add(attempts, "li", "", researchAttemptText(attempt));
+      }
+      const checks = add(content, "div");
+      add(checks, "h3", "", "Research gaps");
+      const gaps = add(checks, "ul", "brief-note");
+      for (const gap of brief.gaps) add(gaps, "li", "", gap);
+      if (brief.questions.length) {
+        add(checks, "h3", "", "Questions to validate");
+        const questions = add(checks, "ul", "brief-note");
+        for (const question of brief.questions) add(questions, "li", "", question);
+      }
+      renderSourceLibrary(panelNode, brief);
+    }
+
     function render(data, isDemo = false) {
       output.replaceChildren();
-      if (typeof data.offline_notice === "string" && data.offline_notice.trim()) add(output, "p", "analysis-notice", data.offline_notice);
-
-      for (const notice of analysisNotices(data)) {
-        add(output, "p", "analysis-notice", notice);
-      }
-
-      const insights = companyObservations(data);
-
-      const sources = Array.isArray(data.sources)
-        ? data.sources
-        : [];
-
-      const cited = new Map();
       const brief = buildCompanyBrief(data);
-      renderBriefOverview(output, data, brief);
-      if (data.analysis_format && data.analysis_format !== "evidence_ids_v2") {
-        add(output, "p", "brief-note", "Legacy analysis format: evidence-ID assembly and automatic historical-action separation were not applied to this response.");
-      }
-
       const coverage = researchCoverage(data);
-      const coveragePanel = add(output, "section", coverage.limited
-        ? "research-coverage limited" : "research-coverage");
-      add(coveragePanel, "h2", "", coverage.title);
-      add(coveragePanel, "p", "", coverage.counts);
-      if (coverage.limited && coverage.caution) add(coveragePanel, "p", "", coverage.caution);
-      const coverageDetails = add(coveragePanel, "details");
-      add(coverageDetails, "summary", "", "Research details and limitations");
-      for (const line of [coverage.evidenceNote, coverage.dateNote, coverage.limited ? "" : coverage.caution].filter(Boolean)) {
-        add(coverageDetails, "p", "", line);
+      const sentiment = sourceSentiment(data);
+      const comparisons = comparisonEntries(data);
+      const findings = companyObservations(data);
+      const verified = findings.filter(item => checkedCompanyQuotes(item, data).length);
+      const context = (Array.isArray(data.context_items) ? data.context_items : []).filter(item => checkedCompanyQuotes(item, data).length);
+      const backgroundOnly = data.research_coverage?.status === "background_only";
+      const observations = verified.filter(item => !backgroundOnly && item.temporal_status !== "historical");
+      const background = [...context, ...verified.filter(item => backgroundOnly || item.temporal_status === "historical")];
+      const company = data.company_name || "Company";
+      const intro = add(output, "header", "brief-intro");
+      add(intro, "h1", "", company);
+      if (typeof data.official_domain === "string" && data.official_domain.trim()) {
+        add(intro, "span", "company-domain", data.official_domain);
       }
-      if (coverage.warnings.length) {
-        const warnings = add(coverageDetails, "ul");
-        for (const warning of coverage.warnings) {
-          add(warnings, "li", "", warning);
-        }
-      }
-      if (Array.isArray(data.research_history) && data.research_history.length) {
-        const history = add(coverageDetails, "details");
-        add(history, "summary", "", "Searches performed");
-        const attempts = add(history, "ul");
-        for (const attempt of data.research_history) {
-          add(attempts, "li", "", researchAttemptText(attempt));
-        }
-      }
+      renderKpis(output, data, observations, background, coverage, sentiment, comparisons);
 
-
-      // ----------------------------------------
-      // Dashboard layout
-      // ----------------------------------------
+      const notices = [...analysisNotices(data)];
+      if (typeof data.offline_notice === "string" && data.offline_notice.trim()) notices.unshift(data.offline_notice.trim());
+      if (data.analysis_status === "partial") notices.unshift("Partial analysis");
+      if (!data.official_domain) notices.push("Company website not supplied. Identity may be ambiguous.");
+      if (coverage.limited) notices.push(coverage.title, coverage.caution);
+      if (notices.length) {
+        const status = add(output, "div", "brief-status");
+        for (const notice of new Set(notices.filter(Boolean))) add(status, "p", "", notice);
+      }
 
       const dashboard = add(output, "div", "dashboard");
       const left = add(dashboard, "div", "main-column");
       const right = add(dashboard, "aside", "aside-column");
-      const gapsPanel = panel("Research gaps", "◌");
-      const gapList = add(gapsPanel, "ul", "brief-questions");
-      for (const gap of brief.gaps) add(gapList, "li", "", gap);
-      right.appendChild(gapsPanel);
-      const questionsPanel = panel("Questions to validate", "?");
-      const questions = add(questionsPanel, "ul", "brief-questions");
-      for (const question of brief.questions.length ? brief.questions : ["Which current development matters to your decision, and what evidence would confirm it?"]) add(questions, "li", "", question);
-      right.appendChild(questionsPanel);
-      const diagnostics = el("details", "diagnostics");
-      add(diagnostics, "summary", "", "Source diagnostics · sentiment, categories and dates");
-
-
-      // ----------------------------------------
-      // Strategic insights
-      // ----------------------------------------
-
-      const insightsPanel = panel(
-        `${data.company_name || "Company"} — ${data.research_coverage?.status === "background_only" ? "Background report" : "Selected observations"}`,
-        "▤",
-        "Source-linked"
-      );
-
-      const insightList = add(
-        insightsPanel,
-        "div",
-        "insights"
-      );
-
-      insights.forEach((insight, index) => {
-        const presentation = findingPresentation(insight, data);
-        const item = add(
-          insightList,
-          "article",
-          "insight"
-        );
-
-        add(
-          item,
-          "div",
-          "insight-icon",
-          String(index + 1).padStart(2, "0")
-        );
-
-        const body = add(item, "div");
-
-        add(
-          body,
-          "div",
-          "insight-title",
-          presentation.title
-        );
-
-        if (data.analysis_format !== "evidence_ids_v2") add(
-          body,
-          "div",
-          "category-chip",
-          CATEGORIES.includes(insight.category)
-            ? insight.category
-            : "Other"
-        );
-
-        add(body, "div", "fact-label", presentation.label);
-        add(
-          body,
-          presentation.quotes.length ? "blockquote" : "p",
-          presentation.quotes.length ? "source-fact" : "insight-text",
-          presentation.text
-        );
-
-        appendSourceLinks(
-          add(body, "div", "source-row"),
-          presentation.sources,
-          source => cited.set(source.url, source)
-        );
-        if (data.analysis_format !== "evidence_ids_v2") appendEvidence(body, insight.evidence);
-        if (insight.temporal_note) add(body, "p", "brief-note", insight.temporal_note);
-        if (presentation.quotes.length && data.analysis_format !== "evidence_ids_v2") appendInterpretation(body, insight.text || "No interpretation supplied.");
-      });
-
-      if (!insights.length) {
-        add(
-          insightList,
-          "p",
-          "empty-state",
-          "No source-backed strategic insights were identified."
-        );
-      }
-
-      left.appendChild(insightsPanel);
-
-
-      // ----------------------------------------
-      // Executive snapshot
-      // ----------------------------------------
-
-      const summaryPanel = panel(
-        "Executive Snapshot",
-        "▣"
-      );
-
-      const summaryBody = add(
-        summaryPanel,
-        "div",
-        "panel-content"
-      );
-
-      const summary = summaryForDisplay(data);
-
-      const summarySources = Array.isArray(summary?.sources)
-        ? summary.sources
-        : [];
-
-      if (
-        typeof summary?.text === "string" &&
-        summary.text.trim() &&
-        summarySources.some(s => safeUrl(s?.url))
-      ) {
-        if (!summary.fromQuotes) add(summaryBody, "p", "brief-note", "Quote support unavailable for this overview. Generated wording requires review.");
-        add(
-          summaryBody,
-          "div",
-          "snapshot-label",
-          summary.fromQuotes ? "From source excerpts" : summary.fromFindings ? "From retained findings" : "Overview"
-        );
-
-        add(
-          summaryBody,
-          "p",
-          "snapshot-text",
-          summary.text
-        );
-
-        appendSourceLinks(
-          add(summaryBody, "div", "source-row"),
-          summarySources,
-          source => cited.set(source.url, source)
-        );
+      const insights = panel(company + (backgroundOnly ? " · Background" : " · Insights Report"), "▤",
+        (observations.length || backgroundOnly && background.length) ? "Source-linked" : "");
+      const list = add(insights, "div", "insights");
+      const displayed = backgroundOnly ? background : observations;
+      if (displayed.length) {
+        for (const item of displayed) renderObservation(list, item, data, backgroundOnly);
       } else {
-        add(
-          summaryBody,
-          "p",
-          "snapshot-text",
-          "No source-backed executive summary is available."
-        );
+        add(list, "p", "empty-state", "No source-supported developments available.");
       }
-
-      if (data.analysis_format !== "evidence_ids_v2" && !summary?.fromQuotes && (summary || !brief.contextCards.length)) left.appendChild(summaryPanel);
-      renderContext(left, data, brief);
-      renderSourceLibrary(left, brief);
-
-
-      // ----------------------------------------
-      // Source sentiment
-      // ----------------------------------------
-
-      const sentimentPanel = panel("Sentiment", "◉");
-
-      const sentimentBody = add(
-        sentimentPanel,
-        "div",
-        "sentiment-body"
-      );
-
-      const donut = add(
-        sentimentBody,
-        "div",
-        "empty-donut"
-      );
-
-      const legend = add(
-        sentimentBody,
-        "div",
-        "sentiment-legend"
-      );
-
-      const d = data.sentiment_distribution;
-
-      const fields = [
-        "positive",
-        "neutral",
-        "negative",
-        "assessed",
-        "unassessed",
-        "total_sources"
-      ];
-
-      const valid = (
-        d &&
-        fields.every(
-          key => Number.isInteger(d[key]) && d[key] >= 0
-        ) &&
-        d.assessed > 0 &&
-        d.assessed === (
-          d.positive + d.neutral + d.negative
-        ) &&
-        d.total_sources === (
-          d.assessed + d.unassessed
-        )
-      );
-
-      if (valid && d.assessed === 1) {
-        donut.style.display = "none";
-        const label = d.positive ? "positive" : d.neutral ? "neutral" : "negative";
-        add(legend, "p", "", `1 company source assessed as ${label}.`);
-        add(legend, "p", "", `${d.unassessed} unassessed.`);
-      } else if (valid) {
-        const positivePct = (
-          100 * d.positive / d.assessed
-        );
-
-        const neutralPct = (
-          100 * d.neutral / d.assessed
-        );
-
-        donut.style.background = `
-          conic-gradient(
-            #56d7b0 0% ${positivePct}%,
-            #f3c46b ${positivePct}% ${positivePct + neutralPct}%,
-            #e47b86 ${positivePct + neutralPct}% 100%
-          )
-        `;
-
-        add(
-          donut,
-          "span",
-          "",
-          `${d.assessed}/${d.total_sources}`
-        );
-
-        add(
-          legend,
-          "strong",
-          "",
-          "Retrieved source coverage"
-        );
-
-        const groups = [
-          ["Positive", "positive", "#56d7b0"],
-          ["Neutral", "neutral", "#f3c46b"],
-          ["Negative", "negative", "#e47b86"]
-        ];
-
-        for (const [label, key, color] of groups) {
-          const row = add(
-            legend,
-            "div",
-            "sentiment-legend-row"
-          );
-
-          const name = add(
-            row,
-            "span",
-            "sentiment-legend-label"
-          );
-
-          const swatch = add(
-            name,
-            "span",
-            "sentiment-swatch"
-          );
-
-          swatch.style.background = color;
-
-          add(name, "span", "", label);
-
-          add(
-            row,
-            "span",
-            "",
-            `${d[key]} · ${
-              Math.round(100 * d[key] / d.assessed)
-            }%`
-          );
-        }
-
-        add(
-          sentimentPanel,
-          "p",
-          "sentiment-coverage",
-          `${d.assessed} of ${d.total_sources} retrieved sources assessed. ` +
-          `${d.unassessed} unassessed. ` +
-          "Percentages describe assessed sources only."
-        );
-      } else {
-        add(donut, "span", "", "—");
-        add(legend, "strong", "", "Not assessed");
-
-        add(
-          legend,
-          "p",
-          "",
-          "No usable source-level sentiment distribution is available."
-        );
-      }
-
-      diagnostics.appendChild(sentimentPanel);
-
-
-      // ----------------------------------------
-      // Signal breakdown
-      // ----------------------------------------
-
-      const breakdownPanel = panel(
-        "Signal Breakdown",
-        "▥"
-      );
-
-      const breakdownBody = add(
-        breakdownPanel,
-        "div",
-        "breakdown-body"
-      );
-
-      if (!insights.length) {
-        add(
-          breakdownBody,
-          "p",
-          "breakdown-note",
-          "No source-backed insights available to classify."
-        );
-      } else if (insights.length === 1) {
-        const category = CATEGORIES.includes(insights[0].category)
-          ? insights[0].category : "Other";
-        add(breakdownBody, "p", "breakdown-note", `1 finding in ${category}.`);
-      } else {
-        add(
-          breakdownBody,
-          "p",
-          "breakdown-note",
-          "Share of findings in this report, not company-wide activity."
-        );
-
-        const counts = Object.fromEntries(
-          CATEGORIES.map(category => [category, 0])
-        );
-
-        for (const insight of insights) {
-          const category = CATEGORIES.includes(
-            insight.category
-          )
-            ? insight.category
-            : "Other";
-
-          counts[category] += 1;
-        }
-
-        for (const category of CATEGORIES) {
-          const count = counts[category];
-          const percent = Math.round(
-            100 * count / insights.length
-          );
-
-          const row = add(
-            breakdownBody,
-            "div",
-            "breakdown-item"
-          );
-
-          const heading = add(
-            row,
-            "div",
-            "breakdown-item-head"
-          );
-
-          add(heading, "span", "", category);
-          add(
-            heading,
-            "span",
-            "",
-            `${count} · ${percent}%`
-          );
-
-          const track = add(
-            row,
-            "div",
-            "breakdown-track"
-          );
-
-          add(
-            track,
-            "div",
-            "breakdown-fill"
-          ).style.width = `${percent}%`;
+      if (data.analysis_format !== "evidence_ids_v2") {
+        for (const item of findings.filter(item => !checkedCompanyQuotes(item, data).length)) {
+          const note = add(list, "details", "interpretation");
+          add(note, "summary", "", "Legacy analysis note");
+          if (typeof item.event === "string") add(note, "h3", "", item.event);
+          renderObservation(note, item, data);
         }
       }
-
-      diagnostics.appendChild(breakdownPanel);
-
-
-      // ----------------------------------------
-      // Competitor intelligence
-      // ----------------------------------------
-
-      const competitorsPanel = panel(
-        data.analysis_format === "evidence_ids_v2" ? "Comparison source excerpts" : "Relevant Competitors",
-        "⇄"
-      );
-
-      const competitorBody = add(
-        competitorsPanel,
-        "div",
-        "competitor-body"
-      );
-
-      let displayed = 0;
-
-      for (
-        const record of Array.isArray(data.competitors)
-          ? data.competitors
-          : []
-      ) {
-        if (
-          typeof record?.name !== "string" ||
-          !record.name.trim() ||
-          typeof record?.overlap !== "string" ||
-          !record.overlap.trim()
-        ) {
-          continue;
-        }
-
-        const hasValidSource = (
-          Array.isArray(record.sources) &&
-          record.sources.some(
-            source => safeUrl(source?.url)
-          )
-        );
-
-        if (!hasValidSource) {
-          continue;
-        }
-
-        const entry = add(
-          competitorBody,
-          "article",
-          "competitor-entry"
-        );
-
-        add(
-          entry,
-          "h3",
-          "competitor-name",
-          data.analysis_format === "evidence_ids_v2" ? "Selected comparison source passage" : record.name
-        );
-
-        add(
-          entry,
-          "p",
-          "competitor-overlap",
-          competitorQuotes(record, data).length ? "Comparison source excerpt" : "Selected comparison evidence unavailable"
-        );
-        const quotes = competitorQuotes(record, data);
-        if (quotes.length) {
-          for (const quote of quotes) add(entry, "blockquote", "source-fact", quote.quote);
-          if (data.analysis_format !== "evidence_ids_v2") appendInterpretation(entry, record.overlap);
-        } else {
-          add(entry, "p", "competitor-overlap", data.analysis_format === "evidence_ids_v2"
-            ? "No comparison claim is presented without a selected excerpt." : record.overlap);
-        }
-
-        appendSourceLinks(
-          add(entry, "div", "source-row"),
-          record.sources
-        );
-        if (data.analysis_format !== "evidence_ids_v2") appendEvidence(entry, record.evidence);
-
-        displayed += 1;
+      left.appendChild(insights);
+      renderSnapshot(left, data, observations, background);
+      if (!backgroundOnly && background.length) {
+        const history = panel("Historical and background context", "◷");
+        const details = add(history, "div", "insights");
+        for (const item of background) renderObservation(details, item, data, true);
+        left.appendChild(history);
       }
-
-      if (!displayed) {
-        add(
-          competitorBody,
-          "p",
-          "competitor-overlap",
-          "No evidence-backed competitors were identified."
-        );
-      }
-      for (const warning of Array.isArray(data.competitor_research_warnings) ? data.competitor_research_warnings : []) {
-        add(competitorBody, "p", "competitor-overlap", warning);
-      }
-
-      right.appendChild(competitorsPanel);
-
-
-      // ----------------------------------------
-      // Publication timeline
-      // ----------------------------------------
-
-      const timelinePanel = panel("Timeline", "◷");
-
-      add(
-        timelinePanel,
-        "p",
-        "timeline-label",
-        "Publication dates of cited sources, not necessarily company event dates."
-      );
-
-      const dates = new Map(
-        sources
-          .filter(
-            source => typeof source?.url === "string"
-          )
-          .map(
-            source => [source.url, source.published_at]
-          )
-      );
-
-      const entries = [...cited.values()]
-        .map(source => {
-          const info = dateInfo(
-            dates.get(source.url)
-          );
-
-          return info
-            ? { source, ...info }
-            : null;
-        })
-        .filter(Boolean)
-        .sort((a, b) => b.date - a.date)
-        .slice(0, 6);
-
-      if (entries.length) {
-        const timeline = add(
-          timelinePanel,
-          "ol",
-          "timeline"
-        );
-
-        for (const item of entries) {
-          const li = add(timeline, "li");
-
-          add(
-            li,
-            "div",
-            "timeline-date",
-            item.label
-          );
-
-          const link = safeLink(
-            item.source,
-            item.source.title || "Read source",
-            "timeline-link"
-          );
-
-          if (link) {
-            li.appendChild(link);
-          }
-        }
-      } else {
-        add(
-          timelinePanel,
-          "p",
-          "empty-state",
-          "No publication dates are available for cited sources."
-        );
-      }
-
-      diagnostics.appendChild(timelinePanel);
-      right.appendChild(diagnostics);
-
-
-      // ----------------------------------------
-      // Coverage limitation and export state
-      // ----------------------------------------
-
-      add(
-        output,
-        "p",
-        "coverage",
-        "Insights reflect retrieved evidence, not a comprehensive record. Open citations to verify facts and dates."
-      );
+      renderResearchDetails(left, data, brief, coverage);
+      renderSentiment(right, sentiment);
+      renderSignals(right, observations);
+      renderCompetitors(right, data, comparisons);
+      renderTimeline(right, data, [...observations, ...background]);
 
       output.style.display = "block";
-
-      demoLabel.style.display = isDemo
-        ? "block"
-        : "none";
-
-      // Only completed, rendered reports can be exported.
+      demoLabel.style.display = isDemo ? "block" : "none";
       latestReportData = data;
       latestReportIsDemo = Boolean(isDemo);
       downloadReportButton.disabled = false;
