@@ -1,30 +1,42 @@
+
 name: MarketScope CI
 
 on:
   pull_request:
-    branches: [ "main" ]
-  workflow_dispatch: # Manual trigger
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
-  evaluate:
+  tests:
     runs-on: ubuntu-latest
+
+    env:
+      RUN_LIVE_EVAL: "0"
+      MOCK_TAVILY: "true"
+
+      # Placeholder credentials for client initialization.
+      # No real API keys are supplied to mocked tests.
+      OPENAI_API_KEY: "ci-placeholder"
+      TAVILY_API_KEY: "ci-placeholder"
+      LANGFUSE_PUBLIC_KEY: "ci-placeholder"
+      LANGFUSE_SECRET_KEY: "ci-placeholder"
+      LANGFUSE_HOST: "http://127.0.0.1:9"
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: "3.13"
-        cache: 'pip'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run DeepEval Tests
-      env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }} # <--- ADD THIS BACK
-        LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
-        LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
-        LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
-        MOCK_TAVILY: "true"
-      run: |
-        deepeval test run test_agent.py
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run mocked pipeline tests
+        run: |
+          python -m pytest -q -rs

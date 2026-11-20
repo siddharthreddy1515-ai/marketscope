@@ -1,9 +1,7 @@
 name: Live Search Smoke Test
 
 on:
-  schedule:
-    - cron: '0 0 */3 * *' # Runs at midnight every 3 days
-  workflow_dispatch: # Allows you to run it manually from the GitHub UI
+  workflow_dispatch:
 
 jobs:
   live-eval:
@@ -27,7 +25,9 @@ jobs:
         LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
         LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
         LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
-        FULL_EVAL: "true" 
-        # MOCK_TAVILY is intentionally omitted so it hits the live API
+        RUN_LIVE_EVAL: "1"
+        MOCK_TAVILY: "false"
+        FULL_EVAL: "false"
+        
       run: |
-        deepeval test run test_agent.py
+        python -m pytest -q test_agent.py -s

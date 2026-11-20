@@ -10,6 +10,12 @@ from workflow import run_workflow
 
 load_dotenv()
 
+# Live evaluation is disabled unless explicitly requested.
+pytestmark = pytest.mark.skipif(
+    os.getenv("RUN_LIVE_EVAL") != "1",
+    reason="Live evaluation disabled. Set RUN_LIVE_EVAL=1 to enable.",
+)
+
 # Only run all 20 if FULL_EVAL is true. Otherwise, run the "Danger 6".
 if os.getenv("FULL_EVAL") == "true":
     COMPANIES = ALL_COMPANIES

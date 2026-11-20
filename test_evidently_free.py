@@ -1,10 +1,7 @@
-# test_evidently_free.py  (costs $0, no LLM calls)
+"""Standalone drift smoke check. Dependencies are needed only when run."""
+
 import sys
 import json
-import numpy as np
-import pandas as pd
-from evidently import Report
-from evidently.presets import DataDriftPreset
 
 
 def find_count_share(obj):
@@ -32,6 +29,9 @@ def read_drift_share(result: dict):
 
 
 def run_test(name, ref_df, cur_df, expect_drift):
+    from evidently import Report
+    from evidently.presets import DataDriftPreset
+
     print(f"\n--- {name} ---")
     my_eval = Report([DataDriftPreset()]).run(current_data=cur_df, reference_data=ref_df)
     my_eval.save_html(f"test_{name}.html")
@@ -55,6 +55,9 @@ def run_test(name, ref_df, cur_df, expect_drift):
 
 
 def main():
+    import numpy as np
+    import pandas as pd
+
     rng = np.random.default_rng(42)
     ref = pd.DataFrame({
         "char_length": rng.normal(1000, 50, 40),
