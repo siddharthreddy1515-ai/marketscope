@@ -165,6 +165,33 @@ def test_research_counts_only_relevant_sources(
     # Company identity must influence retrieval.
     assert "linear.app" in calls[0][1]["query"]
 
-    # Existing date policy remains active.
-    assert "start_date" in calls[0][1]
+    # The first search can find evergreen facts. Dated news is still available
+    # through the existing bounded enrichment path.
+    assert calls[0][1]["topic"] == "general"
+    assert "start_date" not in calls[0][1]
+    assert calls[1][1]["topic"] == "news"
     assert "start_date" in calls[1][1]
+
+
+def test_general_search_retains_official_company_basics(monkeypatch):
+    monkeypatch.setenv("MOCK_TAVILY", "false")
+
+    class FakeSearch:
+        async def ainvoke(self, request):
+            assert request == {
+                "query": "Acme acme.example company products services",
+                "topic": "general",
+            }
+            return {"results": [
+                {"title": "Acme", "url": "https://acme.example/about",
+                 "content": "Acme makes electric motorcycles for city riders."},
+                {"title": "Other Acme", "url": "https://example.com/other",
+                 "content": "Acme makes industrial washing machines."},
+            ]}
+
+    monkeypatch.setattr(workflow, "search_tool", FakeSearch())
+    result = asyncio.run(workflow.research_node({
+        "company_name": "Acme",
+        "official_domain": "acme.example",
+    }))
+    assert [source["url"] for source in result["sources"]] == ["https://acme.example/about"]

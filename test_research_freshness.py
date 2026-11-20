@@ -104,10 +104,12 @@ def test_incomplete_research_broadens_date_window(
 
     today = date.today()
 
-    assert calls[0][1]["start_date"] == (
-        today - timedelta(days=90)
-    ).isoformat()
+    assert calls[0][1] == {
+        "query": "Acme company products services",
+        "topic": "general",
+    }
 
+    assert calls[1][1]["topic"] == "news"
     assert calls[1][1]["start_date"] == (
         today - timedelta(days=365)
     ).isoformat()

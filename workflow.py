@@ -167,6 +167,8 @@ def classify_company_evidence(
     item: SourceRecord,
     company_name: str,
     official_domain: str | None = None,
+    *,
+    company_basics: bool = False,
 ) -> str:
     """
     Returns relevant, irrelevant or uncertain.
@@ -274,7 +276,8 @@ def classify_company_evidence(
         if (
             name_found
             and (
-                has_business_context
+                company_basics
+                or has_business_context
                 or has_event_context
             )
         ):
@@ -422,7 +425,6 @@ llm_analysis = ChatOpenAI(
 
 search_tool = TavilySearch(
     max_results=5,
-    topic="news",
 )
 
 expanded_search_tool = TavilySearch(
@@ -514,17 +516,18 @@ async def research_node(state: AgentState):
             if is_enrichment
             else search_tool
         )
+        if attempt == 1:
+            identity = f"{company} {official_domain}" if official_domain else company
+            request = {"query": f"{identity} company products services", "topic": "general"}
+        else:
+            request = {
+                "query": build_query(company, official_domain=official_domain),
+                "topic": "news",
+                "start_date": company_news_start_date(attempt),
+            }
 
         try:
-            results = await tool.ainvoke({
-                "query": build_query(
-                    company,
-                    official_domain=official_domain,
-                ),
-                "start_date": company_news_start_date(
-                    attempt
-                ),
-            })
+            results = await tool.ainvoke(request)
 
         except Exception as exc:
             print(f"Search failed: {exc}")
@@ -669,6 +672,7 @@ async def research_node(state: AgentState):
                     candidate,
                     company_name=company,
                     official_domain=official_domain,
+                    company_basics=attempt == 1,
                 )
             )
 
@@ -1216,6 +1220,40 @@ def funding_caveat(text: str, cited_sources: list[SourceRecord]) -> str | None:
     return None
 
 
+def company_overview_from_sources(company_name, sources, registry):
+    """Use one explicit company description when the model leaves it out."""
+    name = " ".join(company_name.split())
+    if not name:
+        return None
+    full_name = re.escape(name)
+    brand = name.split()[0]
+    business = (
+        r"(?:is an? (?:[\w-]+ ){0,6}(?:manufacturer|maker|provider|company)\b"
+        r"|makes|manufactures|designs|develops|sells|provides|offers|builds|produces|operates)"
+    )
+    for item in registry.values():
+        if not item["source_id"].startswith("S"):
+            continue
+        source = sources[int(item["source_id"][1:]) - 1]
+        title = source.get("title", "")
+        identities = full_name
+        if len(brand) >= 4 and re.match(rf"{full_name}\b", title, re.I):
+            identities = f"(?:{full_name}|{re.escape(brand)})"
+        about = re.compile(
+            rf"^(?:Description:\s*)?(?:{identities})\s+{business}\b"
+            rf"|^The (?:{identities})\s+[^.!?]{{1,90}}\s+(?:is|are) the company['’]s (?:main|core) product",
+            re.I,
+        )
+        for sentence in re.split(r"(?<=[.!?])\s+|\[\.\.\.\]\s+", item["quote"]):
+            statement = sentence.strip()
+            if 25 <= len(statement) <= 250 and about.match(statement):
+                return {
+                    "event": "Company overview", "text": statement, "category": "Other",
+                    "evidence": [item], "sources": [{"title": item["title"], "url": item["url"]}],
+                }
+    return None
+
+
 async def analysis_node(state: AgentState):
     print("--- ANALYSING RESULTS ---")
 
@@ -1414,6 +1452,8 @@ Copy evidence_ids exactly from the labelled CONTENT spans. The schema example us
 Company findings and context use S evidence IDs; competitor overlaps use C evidence IDs. Source titles and dates are context, not body evidence.
 Do not compose quotation strings, source URLs, a candidate catalog, or a separate summary. Selecting an ID is not proof that its text supports your interpretation.
 Primary observations concern meaningful developments. Explicitly historical or routine background belongs in context_items, at most two items using the same text/event/category/evidence_ids fields.
+Use context_items to give a useful company brief even when there are no developments. Label the basic company description "Company overview" and explain what the company does, a named product or service, or who it serves. Select short body passages that state those facts clearly. Do not treat a company or product description as a launch.
+Suggest competitors only if the sources show that their products or services are plausible substitutes for the target's offerings. Sharing an industry is insufficient. If you cannot identify the target's offering, return no competitors.
 The primary overview window is {analysis_window['start']} through {analysis_window['end']}, inclusive. Distinguish event dates from publication dates, financial periods and future effective dates.
 Do not assume an event is recent when timing is unknown. Keep wording cautious; do not invent a day. Planned future succession can be a current announcement when evidence supports that distinction.
 If only background context is supported, set status insufficient_evidence and insights [], with context_items if useful. Never force three primary insights.
@@ -1542,6 +1582,14 @@ If only background context is supported, set status insufficient_evidence and in
     by_url = {source["url"]: source for source in state["sources"]}
     context_items = structured.get("context_items", []) if structured is not None else []
     context_warnings = structured.get("context_warnings", []) if structured is not None else []
+    if analysis_status == "malformed" and finish_reason in (None, "stop") and context_items and rejected:
+        analysis_status = "partial"
+        analysis_warnings.append("Some generated findings were excluded. Source-linked company context is available.")
+    if (analysis_status != "malformed" and structured is not None and structured.get("schema_version") == 2
+            and not any(item.get("event", "").casefold() == "company overview" for item in context_items)):
+        overview = company_overview_from_sources(state["company_name"], state["sources"], evidence_registry)
+        if overview is not None and len(context_items) < 3:
+            context_items.insert(0, overview)
     if context_items and analysis_status == "insufficient_evidence":
         analysis_warnings.append("No primary developments were established; historical/background context is retained separately.")
     for item in [*mapped, *context_items, *([summary] if summary else [])]:

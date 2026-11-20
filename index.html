@@ -178,6 +178,13 @@
     .evidence-id { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
     .timing-note { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
     .snapshot-text { margin: 0; color: #d6e4f6; line-height: 1.55; font-size: 13px; }
+    .snapshot-evidence { margin-top: 8px; }
+    .source-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .source-note { min-width: 0; border: 1px solid #2b3f5d; border-radius: 8px; padding: 9px 10px; }
+    .source-note h3 { margin: 0 0 5px; font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+    .source-note .brief-note { margin: 0 0 5px; }
+    .more-source-notes { margin-top: 9px; }
+    @media (max-width: 600px) { .source-notes { grid-template-columns: minmax(0, 1fr); } }
     .snapshot-label { margin-bottom: 6px; color: var(--sky); font-size: 10px; text-transform: uppercase; font-weight: 700; }
     .sentiment-body { display: flex; align-items: center; gap: 12px; padding: 12px 13px; }
     .sentiment-ring {
@@ -924,10 +931,56 @@
       }
     }
 
-    function renderSnapshot(parent, data, observations, background) {
+    function sourceNoteText(source) {
+      if (typeof source.content !== "string") return "";
+      const lines = source.content.split(/\r?\n|\[\.\.\.\]/).map(line => line.trim()).filter(Boolean);
+      const excerpt = lines.find(line => line.length >= 80 && !/^[#|]/.test(line)) || lines[0] || "";
+      return excerpt.length > 350 ? excerpt.slice(0, 350).replace(/\s+\S*$/, "").trimEnd() + "…" : excerpt;
+    }
+
+    const featuredSourceLimit = 6;
+
+    function renderSourceNotes(parent, sources) {
+      if (!sources.length) return;
+      const section = panel("Source notes", "▥", sources.length + (sources.length === 1 ? " source" : " sources"));
+      const body = add(section, "div", "panel-content");
+      add(body, "p", "brief-note", "Excerpts from retrieved pages. Use the links for context.");
+      function rows(container, items) {
+        const grid = add(container, "div", "source-notes");
+        for (const source of items) {
+          const card = add(grid, "article", "source-note");
+          const title = add(card, "h3");
+          const link = safeLink(source, source.title || "Read source", "timeline-link");
+          if (link) title.appendChild(link);
+          const published = dateInfo(source.published_at);
+          add(card, "p", "brief-note", new URL(safeUrl(source.url)).hostname + (published ? " · Published " + published.label : ""));
+          add(card, "p", "source-preview", sourceNoteText(source) || "Open the source to read more.");
+        }
+      }
+      rows(body, sources.slice(0, featuredSourceLimit));
+      if (sources.length > featuredSourceLimit) {
+        const more = add(body, "details", "more-source-notes");
+        add(more, "summary", "", "Show " + (sources.length - featuredSourceLimit) + " more sources");
+        rows(more, sources.slice(featuredSourceLimit));
+      }
+      parent.appendChild(section);
+    }
+
+    function renderSnapshot(parent, data, observations, background, overview, leadSource) {
       const section = panel("Executive Snapshot", "▣");
       const content = add(section, "div", "panel-content");
-      if (observations.length) {
+      if (overview) {
+        const quotes = checkedCompanyQuotes(overview, data);
+        const exactStatement = typeof overview.text === "string" &&
+          quotes.some(quote => quote.quote.includes(overview.text.trim()));
+        const statement = exactStatement ? overview.text.trim() : quotes[0].quote;
+        add(content, "p", "snapshot-text", statement);
+        appendSourceLinks(add(content, "div", "source-row snapshot-evidence"), quotes);
+      } else if (leadSource) {
+        add(content, "p", "snapshot-label", "From the sources");
+        add(content, "p", "snapshot-text source-preview", sourceNoteText(leadSource));
+        appendSourceLinks(add(content, "div", "source-row snapshot-evidence"), [leadSource]);
+      } else if (observations.length) {
         const categories = [...new Set(observations.map(item => item.category).filter(category => CATEGORIES.includes(category)))];
         const topic = categories.length ? "The selected passages cover " + categories.map(one => one.toLowerCase()).join(", ") + ". " : "";
         add(content, "p", "snapshot-text", topic + "The report does not establish when these observations occurred.");
@@ -979,26 +1032,36 @@
         const sources = [...new Map(entry.quotes.map(quote => [quote.url, quote])).values()];
         addPassages(content, entry.quotes, "Evidence", sources);
       }
+      const comparisonSources = (Array.isArray(data.comparison_sources) ? data.comparison_sources : [])
+        .filter(source => safeUrl(source?.url));
+      if (comparisonSources.length) {
+        const reading = add(body, "details", "more-source-notes");
+        reading.open = !comparisons.length;
+        add(reading, "summary", "", "Comparison reading");
+        const list = add(reading, "ul", "brief-note");
+        for (const source of comparisonSources) {
+          const link = safeLink(source, source.title || "Read comparison source", "timeline-link");
+          if (link) add(list, "li").appendChild(link);
+        }
+      }
       for (const warning of Array.isArray(data.competitor_research_warnings) ? data.competitor_research_warnings : []) {
         add(body, "p", "brief-note", warning);
       }
       parent.appendChild(section);
     }
 
-    function renderTimeline(parent, data, observations) {
+    function renderTimeline(parent, data) {
       const section = panel("Timeline", "◷");
       const empty = add(section, "div", "timeline-empty");
       add(empty, "strong", "", "Event dates unavailable");
-      const citedUrls = new Set(observations.flatMap(item => checkedCompanyQuotes(item, data)
-        .map(quote => safeUrl(quote.url))));
       const entries = (Array.isArray(data.sources) ? data.sources : [])
         .map(source => ({source, publication: dateInfo(source?.published_at)}))
-        .filter(item => item.publication && citedUrls.has(safeUrl(item.source.url)))
+        .filter(item => item.publication && safeUrl(item.source.url))
         .sort((a, b) => b.publication.date - a.publication.date)
         .slice(0, 6);
       const detail = add(section, "details", "publication-detail");
-      add(detail, "summary", "", "Cited publication dates");
-      if (!entries.length) add(detail, "p", "brief-note", "No publication dates are available for cited sources.");
+      add(detail, "summary", "", "Source publication dates");
+      if (!entries.length) add(detail, "p", "brief-note", "No publication dates are available for the collected sources.");
       else {
         const list = add(detail, "ol", "timeline");
         for (const {source, publication} of entries) {
@@ -1040,7 +1103,7 @@
       renderSourceLibrary(panelNode, brief);
     }
 
-    function render(data, isDemo = false) {
+    function render(data, isDemo = false, researchOnly = false) {
       output.replaceChildren();
       const brief = buildCompanyBrief(data);
       const coverage = researchCoverage(data);
@@ -1061,6 +1124,7 @@
       renderKpis(output, data, observations, background, coverage, sentiment, comparisons);
 
       const notices = [...analysisNotices(data)];
+      if (researchOnly) notices.unshift("Analysis unavailable. The collected sources are shown below.");
       if (typeof data.offline_notice === "string" && data.offline_notice.trim()) notices.unshift(data.offline_notice.trim());
       if (data.analysis_status === "partial") notices.unshift("Partial analysis");
       if (!data.official_domain) notices.push("Company website not supplied. Identity may be ambiguous.");
@@ -1073,6 +1137,18 @@
       const dashboard = add(output, "div", "dashboard");
       const left = add(dashboard, "div", "main-column");
       const right = add(dashboard, "aside", "aside-column");
+      const overview = background.find(item => typeof item.event === "string" && item.event.toLowerCase() === "company overview");
+      // Keep every source readily visible in a sparse report. With more choices,
+      // prioritize pages behind shown evidence, then readable company pages.
+      const sourceNotes = brief.library.length > featuredSourceLimit
+        ? [...brief.library].sort((first, second) =>
+          Number(second.used || second.usedAsContext) - Number(first.used || first.usedAsContext) ||
+          Number(Boolean(sourceNoteText(second))) - Number(Boolean(sourceNoteText(first))) ||
+          Number(second.kind === "Company source") - Number(first.kind === "Company source"))
+        : brief.library;
+      const readableSources = sourceNotes.filter(sourceNoteText);
+      const leadSource = readableSources.find(source => source.kind === "Company source") || readableSources[0];
+      renderSnapshot(left, data, observations, background, overview, leadSource);
       const insights = panel(company + (backgroundOnly ? " · Background" : " · Insights Report"), "▤",
         (observations.length || backgroundOnly && background.length) ? "Source-linked" : "");
       const list = add(insights, "div", "insights");
@@ -1090,26 +1166,29 @@
           renderObservation(note, item, data);
         }
       }
-      left.appendChild(insights);
-      renderSnapshot(left, data, observations, background);
-      if (!backgroundOnly && background.length) {
+      const leadWithFindings = displayed.length && !coverage.limited;
+      if (leadWithFindings) left.appendChild(insights);
+      renderSourceNotes(left, sourceNotes);
+      if (!leadWithFindings) left.appendChild(insights);
+      const additionalContext = background.filter(item => item !== overview);
+      if (!backgroundOnly && additionalContext.length) {
         const history = panel("Historical and background context", "◷");
         const details = add(history, "div", "insights");
-        for (const item of background) renderObservation(details, item, data, true);
+        for (const item of additionalContext) renderObservation(details, item, data, true);
         left.appendChild(history);
       }
       renderResearchDetails(left, data, brief, coverage);
       renderSentiment(right, sentiment);
       renderSignals(right, observations);
       renderCompetitors(right, data, comparisons);
-      renderTimeline(right, data, [...observations, ...background]);
+      renderTimeline(right, data);
 
       output.style.display = "block";
       demoLabel.style.display = isDemo ? "block" : "none";
-      latestReportData = data;
+      latestReportData = researchOnly ? null : data;
       latestReportIsDemo = Boolean(isDemo);
-      downloadReportButton.disabled = false;
-      downloadEvidenceButton.disabled = false;
+      downloadReportButton.disabled = researchOnly;
+      downloadEvidenceButton.disabled = researchOnly;
     }
 
 
@@ -1661,6 +1740,11 @@ ${brief.contextCards.length || (Array.isArray(data.context_warnings) && data.con
         }
 
         if (!response.ok) {
+          if (response.status === 502 && Array.isArray(data?.research?.sources) &&
+              data.research.sources.some(source => safeUrl(source?.url))) {
+            render(data.research, false, true);
+            return;
+          }
           throw new Error(apiErrorMessage(data));
         }
 
@@ -1677,7 +1761,8 @@ ${brief.contextCards.length || (Array.isArray(data.context_warnings) && data.con
           typeof item?.text === "string" && item.text.trim() && Array.isArray(item.sources) && item.sources.some(source => safeUrl(source?.url)))) ||
           (typeof data.executive_summary?.text === "string" && data.executive_summary.text.trim() &&
             Array.isArray(data.executive_summary.sources) && data.executive_summary.sources.some(source => safeUrl(source?.url)));
-        if (data.analysis_status !== "insufficient_evidence" && !hasPrimary) {
+        const hasSources = Array.isArray(data.sources) && data.sources.some(source => safeUrl(source?.url));
+        if (data.analysis_status !== "insufficient_evidence" && !hasPrimary && !hasSources) {
           throw new Error("The analysis response contained no usable company findings. Please try again.");
         }
 
