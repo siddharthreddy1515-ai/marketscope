@@ -3,6 +3,7 @@ import asyncio
 from types import SimpleNamespace
 
 from langchain_core.callbacks import BaseCallbackHandler
+import pytest
 
 import workflow
 
@@ -131,3 +132,54 @@ def test_preserve_sources_if_enrichment_fails(monkeypatch):
     assert result["status"] == "completed"
     assert len(result["sources"]) == 2
     assert calls == [5, 10]
+
+
+def test_background_pages_do_not_stop_search_early(monkeypatch):
+    first = [
+        {"title": "Terms of Service | Acme", "url": "https://example.com/terms",
+         "content": "Acme offers restaurant delivery services."},
+        {"title": "Acme company profile", "url": "https://directory.example/acme",
+         "content": "Acme provides delivery services."},
+        {"title": "Acme Products", "url": "https://example.com/products",
+         "content": "Acme customers can order meals from local restaurants."},
+    ]
+    change = source("a new delivery service", "https://example.com/announcements/new-service")
+    calls = setup_fake_services(monkeypatch, [{"results": first}, {"results": [change]}])
+
+    result = asyncio.run(workflow.run_workflow("Acme"))
+
+    assert calls == [5, 10]
+    assert [item["url"] for item in result["sources"]] == [item["url"] for item in [*first, change]]
+    assert result["research_coverage"]["development_sources"] == 1
+
+
+@pytest.mark.parametrize("follow_up_succeeds", [True, False])
+def test_preview_dominated_news_uses_one_focused_search(monkeypatch, follow_up_succeeds):
+    profile = source("ordering services", "https://acme.example/about")
+    full = {"title": "Acme and Green Grocer launch Dallas drone deliveries",
+            "url": "https://news.example/acme-grocery",
+            "content": "Acme and Green Grocer launched drone deliveries in Dallas for grocery orders."}
+    repeat = {**full, "url": "https://www.google.com/url?q=duplicate-preview"}
+    lead = {"title": "Acme tests return delivery with Kite Pharmacy",
+            "url": "https://www.google.com/url?q=pharmacy-preview",
+            "content": "Kite Pharmacy is testing a return delivery service through Acme"}
+    article = {**lead, "url": "https://retail.example/pharmacy",
+               "content": "Kite Pharmacy is testing a return delivery service through Acme in Denver."}
+    last = {"results": [article]} if follow_up_succeeds else RuntimeError("Search failed")
+    calls = setup_fake_services(monkeypatch, [{"results": [profile]}, {"results": [full, repeat, lead]}, last])
+    requests = []
+    expanded = workflow.expanded_search_tool.ainvoke
+
+    async def capture(request):
+        requests.append(request)
+        return await expanded(request)
+
+    monkeypatch.setattr(workflow.expanded_search_tool, "ainvoke", capture)
+    result = asyncio.run(workflow.run_workflow("Acme"))
+    assert calls == [5, 10, 10]
+    assert "Kite Pharmacy" in requests[-1]["query"]
+    assert "Green Grocer" not in requests[-1]["query"]
+    assert requests[-1]["start_date"] == requests[0]["start_date"]
+    assert requests[-1]["exclude_domains"] == ["google.com", "tavily.com"]
+    expected = [profile, full, repeat, lead, *([article] if follow_up_succeeds else [])]
+    assert [s["url"] for s in result["sources"]] == [s["url"] for s in expected]

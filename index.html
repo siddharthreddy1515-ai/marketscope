@@ -95,15 +95,21 @@
       background: radial-gradient(ellipse 76px 63px at right 1px top 0, var(--glow), transparent 90%), var(--surface);
       box-shadow: 0 4px 16px #0309122b, inset 0 1px #a4caff0a;
     }
+    .brief-metric:hover { border-color: var(--sky); }
+    .metric-jump { display: block; color: var(--text); text-decoration: none; }
+    .metric-jump:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+    .metric-proof { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin-top: 6px; }
+    .metric-proof > .evidence-detail { margin: 0; }
+    .metric-proof > .evidence-detail[open] { flex-basis: 100%; max-height: 240px; overflow: auto; }
+    .metric-proof-group h4 { margin: 7px 0 3px; font-size: 11px; color: var(--muted); }
+    .metric-library { display: block; margin-top: 5px; color: var(--sky); font-size: 11px; text-decoration: underline; }
     .brief-metric:nth-child(2) { --glow: #4d77b86a; }
     .brief-metric:nth-child(3) { --glow: #37799170; }
     .brief-metric:nth-child(4) { --glow: #586dba6b; }
     .metric-label, .metric-note { display: block; color: var(--muted); }
     .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
     .metric-value { display: block; margin: 4px 0; font-size: clamp(18px, 2.2vw, 27px); line-height: 1.15; overflow-wrap: anywhere; }
-    .metric-value[data-tone="caution"] { color: var(--gold); }
-    .metric-value[data-tone="positive"] { color: var(--green); }
-    .metric-value[data-tone="negative"] { color: var(--red); }
+    .brief-metric:first-child .metric-value { text-wrap: pretty; }
     .metric-note { font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
     .brief-status {
       display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 13px;
@@ -179,6 +185,7 @@
     .timing-note { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
     .snapshot-text { margin: 0; color: #d6e4f6; line-height: 1.55; font-size: 13px; }
     .snapshot-evidence { margin-top: 8px; }
+    .snapshot-offering { margin-top: 11px; padding-top: 10px; border-top: 1px solid #2b3f5d; }
     .source-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
     .source-note { min-width: 0; border: 1px solid #2b3f5d; border-radius: 8px; padding: 9px 10px; }
     .source-note h3 { margin: 0 0 5px; font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
@@ -216,6 +223,8 @@
     .competitor-content { min-width: 0; display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 3px 9px; }
     .competitor-content > .evidence-detail { margin: 0; }
     .competitor-content > .evidence-detail[open] { flex-basis: 100%; }
+    .competitor-preview { flex-basis: 100%; }
+    .competitor-preview .source-preview { -webkit-line-clamp: 2; font-size: 12px; }
     .competitor-entry:nth-child(3n+2) .competitor-avatar { background: #453b6b; color: #c9b8ff; }
     .competitor-entry:nth-child(3n) .competitor-avatar { background: #21504d; color: #97e8d1; }
     .timeline-empty, .publication-detail { padding: 0 13px; }
@@ -236,7 +245,9 @@
     .research-detail-grid h3 { margin: 4px 0; font-size: 12px; }
     .research-detail-grid ul { padding-left: 16px; }
     .library-controls { padding: 10px 13px 0; }
-    .library-controls input { width: 100%; min-height: 37px; padding: 6px 8px; border: 1px solid #344d70; border-radius: 7px; background: #101d32; color: var(--text); }
+    .library-controls input[type="search"] { width: 100%; min-height: 37px; padding: 6px 8px; border: 1px solid #344d70; border-radius: 7px; background: #101d32; color: var(--text); }
+    .library-cited-toggle { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 12px; color: var(--text); }
+    .library-cited-toggle input { accent-color: var(--sky); }
     .library-count { font-size: 11px; color: var(--muted); }
     .library-source { padding: 9px 13px; }
     .library-source .coverage { margin: 5px 0; }
@@ -572,12 +583,17 @@
       return {text: findings.map(item => item.text).join(" "), sources: [...sources.values()], fromFindings: true};
     }
 
-    function sourceKind(url, officialDomain) {
+    function sourceKind(url, officialDomain, company = "") {
       if (!officialDomain) return "Source type unknown";
       try {
         const domain = new URL(`https://${officialDomain}`).hostname.toLowerCase().replace(/^www\./, "");
         const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-        return host === domain || host.endsWith(`.${domain}`) ? "Company source" : "External source";
+        if (host === domain || host.endsWith("." + domain)) return "Company source";
+        const regional = /^[a-z]{2}\.(([a-z0-9-]+)\.com)$/.exec(domain);
+        if (regional && regional[2] === company.toLowerCase().replace(/[^a-z0-9]/g, "")
+            && (host === regional[1] || host.endsWith("." + regional[1]))) return "Corporate site";
+        if (host === "tavily.com" && new URL(url).pathname.startsWith("/knowledge/company/")) return "Directory profile";
+        return "External source";
       } catch { return "Source type unknown"; }
     }
 
@@ -639,7 +655,7 @@
       const contextUrls = new Set(contextCards.flatMap(card => card.sources.map(s => s.url)));
       const library = [...records.values()].map(source => ({...source, used: selectedUrls.has(source.url),
         usedAsContext: contextUrls.has(source.url),
-        kind: sourceKind(source.url, data.official_domain)}));
+        kind: sourceKind(source.url, data.official_domain, data.company_name)}));
       const additionalSources = library.filter(source => !source.used && !source.usedAsContext);
       const gaps = [];
       if (!cards.length) gaps.push("No source-bound company excerpts are available for the selected findings. Treat generated notes as unverified.");
@@ -673,12 +689,17 @@
       query.type = "search";
       query.placeholder = "Filter sources by title, website or excerpt";
       query.setAttribute("aria-label", "Filter company sources");
+      const citedLabel = add(controls, "label", "library-cited-toggle");
+      const citedOnly = add(citedLabel, "input");
+      citedOnly.type = "checkbox";
+      add(citedLabel, "span", "", "Cited only");
       const count = add(controls, "p", "library-count");
       const list = add(library, "div");
       const update = () => {
         list.replaceChildren();
         const term = String(query.value || "").toLowerCase().trim();
-        const sources = brief.library.filter(source => `${source.title} ${source.url} ${source.content || ""}`.toLowerCase().includes(term));
+        const sources = brief.library.filter(source => (!citedOnly.checked || source.used || source.usedAsContext)
+          && `${source.title} ${source.url} ${source.content || ""}`.toLowerCase().includes(term));
         count.textContent = `${sources.length} of ${brief.sourceCount} retained sources · excerpts may be incomplete`;
         for (const source of sources) {
           const row = add(list, "article", "library-source");
@@ -695,6 +716,7 @@
         if (!sources.length) add(list, "p", "empty-state", "No sources match this filter.");
       };
       query.addEventListener("input", update);
+      citedOnly.addEventListener("change", update);
       update();
       parent.appendChild(library);
     }
@@ -712,22 +734,22 @@
     }
 
     function companyObservations(data) {
-      const records = [], byExcerpt = new Map();
+      const records = [], byClaim = new Map();
       const normalize = text => text.replace(/\s+/g, " ").trim();
       for (const item of Array.isArray(data.insight_items) ? data.insight_items : []) {
         const quotes = checkedCompanyQuotes(item, data);
-        const key = [...new Set(quotes.map(q => normalize(q.quote)))].sort().join("\u0000");
-        const previous = quotes.length ? byExcerpt.get(key) : null;
+        const claim = typeof item.text === "string" ? normalize(item.text) : "";
+        const key = claim && quotes.length
+          ? JSON.stringify([claim, ...new Set(quotes.map(q => normalize(q.quote)).sort())]) : null;
+        const previous = key ? byClaim.get(key) : null;
         if (previous) {
           for (const quote of quotes) if (!previous.evidence.some(q => q.url === quote.url && normalize(q.quote) === normalize(quote.quote))) previous.evidence.push(quote);
-          if (!previous.interpretations.includes(item.text)) previous.interpretations.push(item.text);
-          previous.text = previous.interpretations.filter(Boolean).join("\n\n");
           continue;
         }
         const record = {...item, evidence: quotes.length ? quotes : item.evidence,
           interpretations: [item.text]};
         records.push(record);
-        if (quotes.length) byExcerpt.set(key, record);
+        if (key) byClaim.set(key, record);
       }
       return records;
     }
@@ -820,14 +842,42 @@
     }
 
     function comparisonEntries(data) {
+      const escapePattern = value => value.replace(/[.*+?^$(){}|[\]\\]/g, "\\$&");
+      const nameMatcher = name => new RegExp("(^|[^\\p{L}\\p{N}])" + escapePattern(name) + "(?=$|[^\\p{L}\\p{N}])", "iu");
+      const target = (data.company_name || "").trim();
+      const subject = escapePattern(target);
+      const relationship = "(?:competes (?:directly )?with|is (?:an? |the )?(?:direct )?(?:competitor (?:of|to)|alternative to|substitute for))";
+      const possessive = "\\s+is\\s+" + subject + "['’]s\\s+(?:[\\w-]+\\s+){0,2}(?:competitor|alternative)\\b";
+      const competitionList = target && new RegExp("\\b" + subject + "\\s+faces competition from\\s+(.+)", "iu");
       const records = Array.isArray(data.competitors) ? data.competitors : [];
       return records.filter(record => record && typeof record === "object").map(record => {
         const quotes = competitorQuotes(record, data);
-        const name = typeof record.name === "string" ? record.name.trim().replace(/\s+/g, " ") : "";
-        const escapedName = name.replace(/[.*+?^$(){}|[\]\\]/g, "\\$&");
-        const matcher = name ? new RegExp("(^|[^\\p{L}\\p{N}])" + escapedName + "(?=$|[^\\p{L}\\p{N}])", "iu") : null;
-        const named = matcher && quotes.some(item => matcher.test(item.quote.replace(/\s+/g, " ")));
-        return {name: named ? name : null, quotes};
+        const passages = quotes.map(item => item.quote.replace(/\s+/g, " "));
+        let name = typeof record.name === "string" ? record.name.trim().replace(/\s+/g, " ") : "";
+        let matcher = name && nameMatcher(name);
+        let matchingPassages = matcher ? passages.filter(text => matcher.test(text)) : [];
+        const qualified = /^(.*?)\s+\(([^()]+)\)$/.exec(name);
+        if (!matchingPassages.length && qualified && qualified[1].length >= 3) {
+          const base = nameMatcher(qualified[1]), qualifier = nameMatcher(qualified[2]);
+          matchingPassages = passages.filter(text => base.test(text) && qualifier.test(text));
+          if (matchingPassages.length) {
+            name = qualified[1];
+            matcher = base;
+          }
+        }
+        const lines = matchingPassages.flatMap(text =>
+          text.split(/(?<=[.!?])\s+|\s*\[\.\.\.\]\s*/).filter(line => matcher.test(line)));
+        const escapedName = escapePattern(name);
+        const direct = new RegExp("\\b(?:" + escapedName + possessive + "|" + escapedName + "\\s+" + relationship + "\\s+" + subject
+          + "\\b|" + subject + "\\s+" + relationship + "\\s+" + escapedName + "\\b)", "i");
+        const supportedLine = target && lines.find(line => {
+          if (/\b(?:not|never|former|formerly|no longer|previously|might|could)\b/i.test(line)) return false;
+          if (direct.test(line)) return true;
+          const list = competitionList.exec(line)?.[1];
+          return list?.replace(/[.!?]$/, "").split(/,\s*(?:and\s+)?|\s+and\s+/i)
+            .some(entry => entry.trim().toLowerCase() === name.toLowerCase());
+        });
+        return {name: lines.length ? name : null, quotes, preview: supportedLine || lines[0] || "", supported: Boolean(supportedLine)};
       }).filter(entry => entry.quotes.length);
     }
 
@@ -835,28 +885,176 @@
       return value[0].toUpperCase() + value.slice(1);
     }
 
-    function renderKpis(parent, data, observations, background, coverage, sentiment, comparisons) {
-      const distinctComparisons = new Set(comparisons.flatMap(item => item.name ? [item.name.toLowerCase()] : [])).size;
-      const accepted = data.source_stats?.accepted ?? (Array.isArray(data.sources) ? data.sources.length : null);
-      const coverageLabel = data.research_coverage?.status === "background_only" ? "Background" :
-        coverage.limited ? "Limited" : data.research_coverage?.status === "mixed" ? "Mixed" :
-          Number.isInteger(accepted) ? "Available" : "Unavailable";
+    function leadSentence(item, quotes, company, preferNamed = false) {
+      const words = new Set((item.text || "").toLowerCase().match(/\b[\w-]{4,}\b/g) || []);
+      const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en", {granularity: "sentence"}) : null;
+      const segments = quotes.flatMap(q => q.quote.split(/\[\.\.\.\]|\n+/).flatMap(part => {
+        const body = part.replace(/^.{0,160}\/(?:PRNewswire|Business Wire)\/\s*--\s*/i, "");
+        return segmenter ? Array.from(segmenter.segment(body), s => s.segment.trim()) : [body.trim()];
+      })).filter(s => s.length >= 18 && s.length <= 420 && !/^(?:learn more|to learn more|visit|https?:|[#|])/i.test(s));
+      function score(sentence) {
+        const lower = sentence.toLowerCase();
+        const overlap = new Set(lower.match(/\b[\w-]{4,}\b/g) || []);
+        return [...overlap].filter(word => words.has(word)).length
+          + (company && lower.includes(company.toLowerCase()) ? 3 : 0)
+          + (/\b(?:today announced|has launched|introduced|opened|acquired)\b/i.test(sentence) ? 5 : 0);
+      }
+      segments.sort((a, b) => score(b) - score(a));
+      const named = preferNamed && company && segments.find(sentence => sentence.toLowerCase().startsWith(company.toLowerCase() + " "));
+      return named || segments[0] || "";
+    }
+
+    // A wire dateline must introduce the target's same-day action in the selected passage.
+    function recentAnnouncement(item, data) {
+      const window = data.analysis_window;
+      if (!window?.start || !window.end || !data.company_name) return null;
+      const quotes = checkedCompanyQuotes(item, data);
+      const headline = leadSentence(item, quotes, data.company_name);
+      if (!headline || !headline.toLowerCase().includes(data.company_name.toLowerCase())) return null;
+      let parts;
+      let wireQuote;
+      // An explicit date and company action in the very same source sentence.
+      const direct = /^On ([A-Za-z]+)\.? (\d{1,2}), (20\d\d),\s+(.+)/.exec(headline);
+      if (direct && direct[4].toLowerCase().startsWith(data.company_name.toLowerCase() + " ")
+          && /^(?:has )?(?:announced|opened|launched|released|acquired|appointed|introduced)\b/i.test(
+            direct[4].slice(data.company_name.length).trimStart())) parts = direct;
+      // A location and date can follow a launch in an otherwise simple action sentence.
+      if (!parts && headline.toLowerCase().startsWith(data.company_name.toLowerCase() + " ")
+          && item.text?.trim().startsWith(headline)) {
+        const action = headline.slice(data.company_name.length).trimStart();
+        const launch = /^(?:launched|opened|introduced) (.+) in \p{Lu}[\p{L}.'’-]*(?:[ ,]+\p{Lu}[\p{L}.'’-]*)* on ([A-Za-z]+)\.? (\d{1,2}), (20\d\d)\.$/u.exec(action);
+        if (launch && !/\b(?:when|before|after|until|because|since|with|scheduled|planned|expected|announced|launched|opened|introduced)\b/i.test(launch[1])) {
+          parts = [launch[0], ...launch.slice(2)];
+        }
+      }
+      if (!parts && /\btoday announced\b/i.test(headline)) {
+        for (const q of quotes) {
+          for (const chunk of q.quote.split(/\[\.\.\.\]|\n/)) {
+            const match = chunk.match(/^\s*[\p{L}., &-]{2,100}\b([A-Z][a-z]{2,8})\.? (\d{1,2}), (20\d\d)\s*(?:\/[^/\n]{1,35}\/)?\s*(?:--|—|:)\s*(.+)/u);
+            if (match && match[4].startsWith(headline)) {
+              if (parts && parts.slice(1, 4).join(" ") !== match.slice(1, 4).join(" ")) return null;
+              parts = match;
+              wireQuote = q;
+            }
+          }
+        }
+      }
+      if (parts) {
+        const months = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+        const token = parts[1].toLowerCase();
+        const month = months.findIndex(m => m === token || m.slice(0,3) === token || m === "september" && token === "sept");
+        if (month < 0) return null;
+        const date = new Date(Date.UTC(+parts[3], month, +parts[2]));
+        const day = date.toISOString().slice(0,10);
+        if (date.getUTCDate() === +parts[2] && day >= window.start && day <= window.end) {
+          return {day, key: day + "|" + headline.toLowerCase().replace(/\s+/g, " "), sentence: headline,
+            evidence: wireQuote ? [wireQuote] : quotes.filter(q => q.quote.includes(headline))};
+        }
+      }
+      return null;
+    }
+
+    function selectedProductList(item, quotes) {
+      if (item.event?.toLowerCase() !== "products and services") return "";
+      for (const {quote} of quotes) {
+        const field = quote.split(/\r?\n|\[\.\.\.\]/).map(line => line.trim())
+          .find(line => /^(?:Products|Products and services):\s+\S/i.test(line));
+        if (field) return field.slice(field.indexOf(":") + 1).trim();
+      }
+      return "";
+    }
+
+    function offeringLabel(item, quotes, data) {
+      if (!item) return "";
+      const products = selectedProductList(item, quotes);
+      if (products) {
+        const first = products.split(/,\s+/)[0];
+        if (first.length <= 70) return first;
+      }
+      const sentence = quotes.some(q => q.quote.includes(item.text)) ? item.text : leadSentence(item, quotes, data.company_name);
+      if (!sentence) return "";
+      if (item.event.toLowerCase() === "products and services" && data.company_name) {
+        const start = sentence.toLowerCase().indexOf(data.company_name.toLowerCase() + " ");
+        if (start >= 0) {
+          const suffix = sentence.slice(start + data.company_name.length).match(/^ [A-Z][\w-]+/);
+          if (suffix) return sentence.slice(start, start + data.company_name.length + suffix[0].length);
+        }
+      }
+      const subject = sentence.match(/^The (.{3,60}?) (?:is|are) the company's core product/i);
+      return subject?.[1] || (sentence.length <= 70 ? sentence : sentence.slice(0, 67).replace(/\s+\S*$/, "") + "…");
+    }
+
+    function renderKpis(parent, data, observations, background, library, coverage, comparisons) {
+      const alternativeNames = [...new Set(comparisons.filter(c => c.supported).map(c => c.name))];
+      const mentionCount = new Set(comparisons.filter(c => c.name).map(c => c.name.toLowerCase())).size;
+      const datedItems = observations.filter(item => item.announcement);
+      const dated = new Set(datedItems.map(x => x.announcement.key));
+      const days = new Set(datedItems.map(x => x.announcement.day));
+      const ambiguousCount = days.size < dated.size;
+      const undatedItems = observations.filter(item => !item.announcement);
+      const undatedCount = undatedItems.length;
+      const datedNote = ambiguousCount ? "Same-day reports may cover one change"
+        : dated.size ? "Dated in the report window" : "";
+      const undatedNote = undatedCount === 1 ? "1 observation with an unconfirmed date"
+        : undatedCount > 1 ? `${undatedCount} observations with unconfirmed dates` : "";
+      const developmentNote = [datedNote, undatedNote].filter(Boolean).join(" · ")
+        || (background.length ? "Background evidence only" : "None established");
+      const citedPages = library.filter(page => page.used || page.usedAsContext).length;
+      const coverageNote = library.length
+        ? `${citedPages} cited in findings or context${coverage.limited ? " · Limited coverage" : ""}`
+        : "No company pages collected";
+      const offeringItem = background.find(item => item.event?.toLowerCase() === "products and services")
+        || background.find(item => item.event?.toLowerCase() === "company overview");
+      const offeringQuotes = offeringItem ? checkedCompanyQuotes(offeringItem, data) : [];
+      const offering = offeringLabel(offeringItem, offeringQuotes, data);
+      const offeringEvidence = offering ? offeringQuotes.filter(q => q.quote.includes(offering.replace(/…$/, ""))) : [];
+      const undatedEvidence = undatedItems.flatMap(item => item.evidence);
+      const developmentEvidence = datedItems.length ? datedItems.flatMap(item => item.announcement.evidence)
+        : undatedEvidence;
+      const comparisonEvidence = comparisons.filter(entry => entry.name && (!alternativeNames.length || entry.supported))
+        .flatMap(entry => entry.quotes.filter(q => q.quote.replace(/\s+/g, " ").includes(entry.preview)));
       const metrics = [
-        ["Key Developments", observations.length || "—", observations.length ? "Selected observations · timing unverified" : background.length ? "Background evidence only" : "None established", ""],
-        ["Research Coverage", coverageLabel, coverage.counts.split(" · ")[1] || "", coverage.limited ? "caution" : ""],
-        ["Source Sentiment", sentiment.ready ? (sentiment.dominant ? titleCase(sentiment.dominant) : "Mixed") : "Insufficient",
-          sentiment.total ? sentiment.assessed + " of " + sentiment.total + " sources assessed" : "No usable assessments", sentiment.ready ? sentiment.dominant : ""],
-        ["Competitors Identified", distinctComparisons || "—", distinctComparisons ?
-          (distinctComparisons === 1 ? "1 name in selected comparison evidence" : "Names in selected comparison evidence") :
-          comparisons.length ? "Comparison sources available" : "None established", ""]
+        ["Core offering", offering || "See snapshot", offering ? "From the selected evidence" : "Product detail unavailable",
+          "company-snapshot", offeringEvidence],
+        ["Recent developments", ambiguousCount ? "Multiple reports" : dated.size || "—", developmentNote, "company-findings", developmentEvidence],
+        ["Research coverage", library.length + (library.length === 1 ? " page" : " pages"),
+          coverageNote, "company-research"],
+        ["Competitive alternatives", alternativeNames[0] || (mentionCount ? `${mentionCount} mentioned` : "—"),
+          alternativeNames.length > 1 ? alternativeNames.slice(1).join(" · ") : alternativeNames.length
+            ? "Comparison evidence below" : mentionCount ? "Product overlap unconfirmed" : "See comparison reading",
+          "company-comparisons", comparisonEvidence]
       ];
       const grid = add(parent, "div", "brief-metrics");
-      for (const [label, value, note, tone] of metrics) {
+      for (const [label, value, note, section, evidence] of metrics) {
         const card = add(grid, "article", "brief-metric");
-        add(card, "span", "metric-label", label);
-        const metric = add(card, "strong", "metric-value", value);
-        if (tone) metric.setAttribute("data-tone", tone);
-        add(card, "span", "metric-note", note);
+        const jump = add(card, "a", "metric-jump");
+        jump.href = "#" + section;
+        add(jump, "span", "metric-label", label);
+        const metric = add(jump, "strong", "metric-value", value);
+        if (label === "Core offering" && String(value).length > 18) metric.style.fontSize = "16px";
+        add(jump, "span", "metric-note", note);
+        if (section === "company-research" && library.length) {
+          add(jump, "span", "metric-library", "View source library");
+          jump.addEventListener("click", () => { document.getElementById(section).open = true; });
+        }
+        if (evidence?.length) {
+          const row = add(card, "div", "metric-proof");
+          const primary = evidence[0];
+          const link = safeLink(primary, new URL(primary.url).hostname.replace(/^www\./, ""));
+          if (link) row.appendChild(link);
+          const details = add(row, "details", "evidence-detail");
+          add(details, "summary", "", "Evidence");
+          const groups = section === "company-findings" && datedItems.length && undatedEvidence.length
+            ? [["Dated developments", evidence], ["Observations with unconfirmed dates", undatedEvidence]]
+            : [[null, evidence]];
+          for (const [heading, entries] of groups) {
+            const group = heading ? add(details, "div", "metric-proof-group") : details;
+            if (heading) add(group, "h4", "", heading);
+            const sources = [...new Map(entries.map(q => [q.url, q])).values()];
+            const passages = [...new Map(entries.map(q => [q.evidence_id || JSON.stringify([q.url, q.quote]), q])).values()];
+            appendPassages(group, passages, sources);
+          }
+        }
       }
     }
 
@@ -892,14 +1090,18 @@
       parent.appendChild(section);
     }
 
+    function appendPassages(parent, quotes, sources) {
+      if (sources.length) appendSourceLinks(add(parent, "div", "source-row"), sources);
+      for (const evidence of quotes) {
+        add(parent, "blockquote", "source-fact", evidence.quote);
+        if (evidence.evidence_id) add(parent, "code", "evidence-id", evidence.evidence_id);
+      }
+    }
+
     function addPassages(parent, quotes, label = "Full evidence", sources = []) {
       const details = add(parent, "details", "evidence-detail");
       add(details, "summary", "", label);
-      if (sources.length) appendSourceLinks(add(details, "div", "source-row"), sources);
-      for (const evidence of quotes) {
-        add(details, "blockquote", "source-fact", evidence.quote);
-        if (evidence.evidence_id) add(details, "code", "evidence-id", evidence.evidence_id);
-      }
+      appendPassages(details, quotes, sources);
       return details;
     }
 
@@ -913,15 +1115,27 @@
       symbol.setAttribute("aria-hidden", "true");
       const content = add(card, "div", "insight-content");
       const heading = add(content, "div", "insight-heading");
-      add(heading, "h3", "insight-title", category || (isContext ? "Background source" : "Company observation"));
+      const headline = item.announcement?.sentence || leadSentence(item, appearance.quotes, data.company_name);
+      add(heading, "h3", "insight-title", headline || category || "Company observation");
+      if (headline && category) add(content, "span", "category-chip", category);
       if (isContext) add(heading, "span", "category-chip", item.temporal_status === "historical" ? "Historical context" : "Background");
-      else add(heading, "span", "category-chip", "Timing uncertain");
+      else if (item.announcement) add(heading, "span", "category-chip", item.announcement.day);
+      else {
+        add(heading, "span", "category-chip", "Event date unconfirmed");
+        const dates = new Set(appearance.quotes.map(({source_id}) =>
+          dateInfo(data.sources?.[Number(source_id.slice(1)) - 1]?.published_at)?.label));
+        if (dates.size === 1 && !dates.has(undefined)) {
+          add(heading, "span", "category-chip", "Source published " + [...dates][0]);
+        }
+      }
       if (appearance.quotes.length) {
-        add(content, "p", "source-preview", isContext ? appearance.quotes.map(item => item.quote).join("\n") : appearance.quotes[0].quote);
+        const excerpt = isContext ? appearance.quotes.map(item => item.quote).join("\n")
+          : sourceNoteText({content: appearance.quotes[0].quote}) || appearance.quotes[0].quote;
+        if (!headline) add(content, "p", "source-preview", excerpt);
         const meta = add(content, "div", "evidence-actions");
         appendSourceLinks(add(meta, "div", "source-row"), appearance.sources);
         const details = addPassages(meta, appearance.quotes);
-        if (item.temporal_note) add(details, "p", "timing-note", item.temporal_note);
+        if (item.temporal_note && !item.announcement) add(details, "p", "timing-note", item.temporal_note);
       } else {
         add(content, "p", "brief-note", "Selected passage unavailable.");
         if (data.analysis_format !== "evidence_ids_v2" && appearance.text) {
@@ -933,7 +1147,8 @@
 
     function sourceNoteText(source) {
       if (typeof source.content !== "string") return "";
-      const lines = source.content.split(/\r?\n|\[\.\.\.\]/).map(line => line.trim()).filter(Boolean);
+      const lines = source.content.split(/\r?\n|\[\.\.\.\]/).map(line => line.trim())
+        .filter(line => line && (line.match(/[a-z][A-Z]/g) || []).length < 5);
       const excerpt = lines.find(line => line.length >= 80 && !/^[#|]/.test(line)) || lines[0] || "";
       return excerpt.length > 350 ? excerpt.slice(0, 350).replace(/\s+\S*$/, "").trimEnd() + "…" : excerpt;
     }
@@ -966,16 +1181,24 @@
       parent.appendChild(section);
     }
 
-    function renderSnapshot(parent, data, observations, background, overview, leadSource) {
+    function renderSnapshotFact(parent, data, item) {
+      const quotes = checkedCompanyQuotes(item, data);
+      const statement = typeof item.text === "string" ? item.text.trim() : "";
+      const exact = statement && statement.length <= 320 && quotes.some(quote => quote.quote.includes(statement));
+      const products = selectedProductList(item, quotes);
+      const preview = products || (exact ? statement : leadSentence({...item, text: statement}, quotes, data.company_name, true))
+        || sourceNoteText({content: quotes[0].quote}) || quotes[0].quote;
+      add(parent, "p", "snapshot-text", preview);
+      appendSourceLinks(add(parent, "div", "source-row snapshot-evidence"), quotes);
+      if (quotes.length > 1 || preview !== quotes[0].quote) addPassages(parent, quotes);
+    }
+
+    function renderSnapshot(parent, data, observations, background, overview, offering, leadSource) {
       const section = panel("Executive Snapshot", "▣");
+      section.id = "company-snapshot";
       const content = add(section, "div", "panel-content");
       if (overview) {
-        const quotes = checkedCompanyQuotes(overview, data);
-        const exactStatement = typeof overview.text === "string" &&
-          quotes.some(quote => quote.quote.includes(overview.text.trim()));
-        const statement = exactStatement ? overview.text.trim() : quotes[0].quote;
-        add(content, "p", "snapshot-text", statement);
-        appendSourceLinks(add(content, "div", "source-row snapshot-evidence"), quotes);
+        renderSnapshotFact(content, data, overview);
       } else if (leadSource) {
         add(content, "p", "snapshot-label", "From the sources");
         add(content, "p", "snapshot-text source-preview", sourceNoteText(leadSource));
@@ -988,6 +1211,11 @@
         add(content, "p", "snapshot-text", "Available evidence provides company background. Recent developments could not be established.");
       } else {
         add(content, "p", "snapshot-text", "The selected evidence is insufficient for a company overview.");
+      }
+      if (offering) {
+        const products = add(content, "div", "snapshot-offering");
+        add(products, "h3", "snapshot-label", "Products and services");
+        renderSnapshotFact(products, data, offering);
       }
       if (data.analysis_status === "partial") add(content, "p", "brief-note", "Partial analysis. Some findings could not be retained.");
       parent.appendChild(section);
@@ -1021,16 +1249,26 @@
 
     function renderCompetitors(parent, data, comparisons) {
       const section = panel("Competitor Evidence", "⇄");
+      section.id = "company-comparisons";
       const body = add(section, "div", "competitor-body");
       if (!comparisons.length) add(body, "p", "brief-note", "No cited comparison evidence available.");
+      const mentions = comparisons.some(entry => !entry.supported) ? add(body, "details", "more-source-notes") : null;
+      if (mentions) {
+        mentions.open = !comparisons.some(entry => entry.supported);
+        add(mentions, "summary", "", "Comparison mentions · overlap unconfirmed");
+      }
       for (const entry of comparisons) {
-        const row = add(body, "article", "competitor-entry");
+        const row = add(entry.supported ? body : mentions, "article", "competitor-entry");
         const avatar = add(row, "span", "competitor-avatar", entry.name ? entry.name.slice(0, 2).toUpperCase() : "↗");
         avatar.setAttribute("aria-hidden", "true");
         const content = add(row, "div", "competitor-content");
         add(content, "h3", "competitor-name", entry.name || "Comparison source");
         const sources = [...new Map(entry.quotes.map(quote => [quote.url, quote])).values()];
         addPassages(content, entry.quotes, "Evidence", sources);
+        if (entry.preview) {
+          const preview = add(content, "div", "competitor-preview");
+          add(preview, "p", "source-preview", "Source excerpt · " + entry.preview);
+        }
       }
       const comparisonSources = (Array.isArray(data.comparison_sources) ? data.comparison_sources : [])
         .filter(source => safeUrl(source?.url));
@@ -1050,16 +1288,26 @@
       parent.appendChild(section);
     }
 
-    function renderTimeline(parent, data) {
+    function renderTimeline(parent, data, observations) {
       const section = panel("Timeline", "◷");
       const empty = add(section, "div", "timeline-empty");
-      add(empty, "strong", "", "Event dates unavailable");
+      const dated = new Map(observations.filter(item => item.announcement).map(item => [item.announcement.key, item]));
+      if (!dated.size) add(empty, "strong", "", "Event dates unavailable");
+      else {
+        const list = add(empty, "ol", "timeline");
+        for (const item of [...dated.values()].sort((a,b) => b.announcement.day.localeCompare(a.announcement.day))) {
+          const row = add(list, "li");
+          add(row, "div", "timeline-date", item.announcement.day);
+          appendSourceLinks(row, item.announcement.evidence);
+        }
+      }
       const entries = (Array.isArray(data.sources) ? data.sources : [])
         .map(source => ({source, publication: dateInfo(source?.published_at)}))
         .filter(item => item.publication && safeUrl(item.source.url))
         .sort((a, b) => b.publication.date - a.publication.date)
         .slice(0, 6);
       const detail = add(section, "details", "publication-detail");
+      detail.open = entries.length > 0;
       add(detail, "summary", "", "Source publication dates");
       if (!entries.length) add(detail, "p", "brief-note", "No publication dates are available for the collected sources.");
       else {
@@ -1076,6 +1324,7 @@
 
     function renderResearchDetails(parent, data, brief, coverage) {
       const panelNode = add(parent, "details", "panel diagnostics");
+      panelNode.id = "company-research";
       add(panelNode, "summary", "", "Research details and source library");
       const content = add(panelNode, "div", "research-detail-grid");
       const info = add(content, "div");
@@ -1113,7 +1362,8 @@
       const verified = findings.filter(item => checkedCompanyQuotes(item, data).length);
       const context = (Array.isArray(data.context_items) ? data.context_items : []).filter(item => checkedCompanyQuotes(item, data).length);
       const backgroundOnly = data.research_coverage?.status === "background_only";
-      const observations = verified.filter(item => !backgroundOnly && item.temporal_status !== "historical");
+      const observations = verified.filter(item => !backgroundOnly && item.temporal_status !== "historical")
+        .map(item => ({...item, announcement: recentAnnouncement(item, data)}));
       const background = [...context, ...verified.filter(item => backgroundOnly || item.temporal_status === "historical")];
       const company = data.company_name || "Company";
       const intro = add(output, "header", "brief-intro");
@@ -1121,7 +1371,7 @@
       if (typeof data.official_domain === "string" && data.official_domain.trim()) {
         add(intro, "span", "company-domain", data.official_domain);
       }
-      renderKpis(output, data, observations, background, coverage, sentiment, comparisons);
+      renderKpis(output, data, observations, background, brief.library, coverage, comparisons);
 
       const notices = [...analysisNotices(data)];
       if (researchOnly) notices.unshift("Analysis unavailable. The collected sources are shown below.");
@@ -1138,6 +1388,7 @@
       const left = add(dashboard, "div", "main-column");
       const right = add(dashboard, "aside", "aside-column");
       const overview = background.find(item => typeof item.event === "string" && item.event.toLowerCase() === "company overview");
+      const offering = background.find(item => typeof item.event === "string" && item.event.toLowerCase() === "products and services");
       // Keep every source readily visible in a sparse report. With more choices,
       // prioritize pages behind shown evidence, then readable company pages.
       const sourceNotes = brief.library.length > featuredSourceLimit
@@ -1148,11 +1399,13 @@
         : brief.library;
       const readableSources = sourceNotes.filter(sourceNoteText);
       const leadSource = readableSources.find(source => source.kind === "Company source") || readableSources[0];
-      renderSnapshot(left, data, observations, background, overview, leadSource);
-      const insights = panel(company + (backgroundOnly ? " · Background" : " · Insights Report"), "▤",
+      renderSnapshot(left, data, observations, background, overview, offering, leadSource);
+      const dated = observations.filter(x => x.announcement);
+      const insights = panel(company + (backgroundOnly ? " · Background" : dated.length ? " · Recent developments" : observations.length ? " · Company observations" : " · Insights Report"), "▤",
         (observations.length || backgroundOnly && background.length) ? "Source-linked" : "");
+      insights.id = "company-findings";
       const list = add(insights, "div", "insights");
-      const displayed = backgroundOnly ? background : observations;
+      const displayed = backgroundOnly ? background : dated.length ? dated : observations;
       if (displayed.length) {
         for (const item of displayed) renderObservation(list, item, data, backgroundOnly);
       } else {
@@ -1166,11 +1419,16 @@
           renderObservation(note, item, data);
         }
       }
-      const leadWithFindings = displayed.length && !coverage.limited;
-      if (leadWithFindings) left.appendChild(insights);
-      renderSourceNotes(left, sourceNotes);
-      if (!leadWithFindings) left.appendChild(insights);
-      const additionalContext = background.filter(item => item !== overview);
+      if (!observations.length) renderSourceNotes(left, sourceNotes);
+      left.appendChild(insights);
+      if (dated.length && dated.length < observations.length) {
+        const facts = panel("Other company observations", "▤");
+        const rows = add(facts, "div", "insights");
+        for (const item of observations.filter(x => !x.announcement)) renderObservation(rows, item, data);
+        left.appendChild(facts);
+      }
+      if (observations.length) renderSourceNotes(left, sourceNotes);
+      const additionalContext = background.filter(item => item !== overview && item !== offering);
       if (!backgroundOnly && additionalContext.length) {
         const history = panel("Historical and background context", "◷");
         const details = add(history, "div", "insights");
@@ -1181,7 +1439,7 @@
       renderSentiment(right, sentiment);
       renderSignals(right, observations);
       renderCompetitors(right, data, comparisons);
-      renderTimeline(right, data);
+      renderTimeline(right, data, observations);
 
       output.style.display = "block";
       demoLabel.style.display = isDemo ? "block" : "none";
@@ -1575,7 +1833,7 @@ ${brief.contextCards.length || (Array.isArray(data.context_warnings) && data.con
       <li>
         ${sourceHtml(source)}
         <div class="muted">
-          ${escapeHtml(sourceKind(source?.url, data.official_domain))}<br>
+          ${escapeHtml(sourceKind(source?.url, data.official_domain, data.company_name))}<br>
           Published: ${
             escapeHtml(
               source?.published_at || "Date unavailable"
@@ -1682,6 +1940,14 @@ ${brief.contextCards.length || (Array.isArray(data.context_warnings) && data.con
     });
 
     function apiErrorMessage(data) {
+      if (data?.search_issue) {
+        const issue = data.search_issue;
+        if (/^provider_http_(401|403|432|433)$/.test(issue)) return "Search provider access or allowance prevented research. Check the service configuration.";
+        if (issue === "provider_http_429") return "The search provider is rate-limiting requests. Try again later.";
+        if (issue === "empty_results") return "The searches returned no pages for this company.";
+        if (issue === "no_accepted_sources") return "Pages were returned, but none could be used for this company.";
+        return "Company search was unavailable. Try again later.";
+      }
       if (typeof data?.detail === "string") return data.detail;
       if (Array.isArray(data?.detail)) {
         const fields = {company_name: "Company name", official_domain: "Company website"};
@@ -1740,7 +2006,7 @@ ${brief.contextCards.length || (Array.isArray(data.context_warnings) && data.con
         }
 
         if (!response.ok) {
-          if (response.status === 502 && Array.isArray(data?.research?.sources) &&
+          if ([502, 504].includes(response.status) && Array.isArray(data?.research?.sources) &&
               data.research.sources.some(source => safeUrl(source?.url))) {
             render(data.research, false, true);
             return;

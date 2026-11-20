@@ -82,10 +82,12 @@ def test_competitor_research_uses_one_search_and_filters_sources(
         fake,
     )
 
-    result = run_node(initial_state())
+    result = run_node({**initial_state(), "official_domain": "in.acme.example"})
 
     # Exactly one search call.
     assert len(fake.calls) == 1
+    assert "in.acme.example" in fake.calls[0]["query"]
+    assert "include_domains" not in fake.calls[0]
 
     competitor_sources = result["competitor_sources"]
 

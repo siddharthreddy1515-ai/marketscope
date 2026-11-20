@@ -2,6 +2,27 @@
 import workflow
 
 
+def test_domain_brand_in_headline_and_full_company_as_actor_in_body():
+    article = source("EV maker Aster plans a new factory", "https://journal.example/ev",
+                     "Aster Mobility plans to build a new factory in the south.")
+    assert workflow.classify_company_evidence(article, "Aster Mobility", "aster.example") == "relevant"
+    for title, body, website in [
+        ("Aster Metals plans a factory", article["content"], "aster.example"),
+        (article["title"], "The rival of Aster Mobility, Bolt Motors, plans to build a factory.", "aster.example"),
+        (article["title"], article["content"], "other.example"),
+    ]:
+        assert workflow.classify_company_evidence(dict(article, title=title, content=body),
+                                                  "Aster Mobility", website) != "relevant"
+
+
+def test_regional_catalog_and_multiword_company_reporting():
+    catalog = source("Aster products", "https://www.aster.com/products", "Aster sells folding bicycles.")
+    assert workflow.classify_company_evidence(catalog, "Aster", "in.aster.com", company_basics=True) == "relevant"
+    factory = source("Silver Forge opens first plant", "https://journal.test/business", "Silver Forge manufactures parts.")
+    assert workflow.classify_company_evidence(factory, "Silver Forge", "silverforge.com") == "relevant"
+    assert workflow.classify_company_evidence(factory, "Silver Forge", "unrelated.test") != "relevant"
+
+
 def source(title, url, content):
     return {
         "title": title,
