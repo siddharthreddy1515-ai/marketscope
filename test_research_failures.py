@@ -6,6 +6,25 @@ import pytest
 import workflow
 
 
+@pytest.mark.parametrize("code", [401, 403, 429, 432, 433])
+def test_provider_refusal_stops_search_but_keeps_prior_research(monkeypatch, code):
+    monkeypatch.setenv("MOCK_TAVILY", "false")
+
+    class Refused:
+        async def ainvoke(self, args):
+            return {"error": Exception(f"Error {code}: private provider detail")}
+
+    monkeypatch.setattr(workflow, "search_tool", Refused())
+    state = {"company_name": "Aster", "sources": []}
+    result = asyncio.run(workflow.research_node(state))
+    assert result["search_issue"] == f"provider_http_{code}"
+    assert "private provider detail" not in str(result)
+    assert workflow.check_research(result) == "fail"
+    state.update(result, sources=[{"title": "Aster", "content": "Aster makes bicycles.", "url": "https://aster.test"}])
+    assert workflow.check_research(state) == "continue"
+    assert asyncio.run(workflow.competitor_research_node(state))["competitor_research_attempts"] == 0
+
+
 @pytest.mark.parametrize(
     "payload",
     [

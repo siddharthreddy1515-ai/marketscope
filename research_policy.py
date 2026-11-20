@@ -7,6 +7,13 @@ from urllib.parse import urlsplit
 PROFILE_TITLE = re.compile(
     r"\b(?:company profile|company overview|IPO timeline)\b|^how many people use\b", re.I,
 )
+REFERENCE_TITLE = re.compile(
+    r"^(?:terms of (?:service|use)|terms and conditions|privacy policy)(?:\s*[|:–-]|\s*$)", re.I,
+)
+REFERENCE_PATH = re.compile(
+    r"/(?:terms(?:[-_]of[-_](?:service|use)|[-_]and[-_]conditions)?|privacy(?:[-_]policy)?|legal|cookies)"
+    r"(?:/|\.(?:html?|aspx?)$|$)", re.I,
+)
 RESTATEMENT = re.compile(r"\b(?:restat\w*|revis\w*|correct\w*)\b", re.I)
 BACKGROUND_TITLE = re.compile(
     r"\b(?:growth playbook|GTM playbooks?|product launch strategies|"
@@ -19,6 +26,31 @@ def is_profile(source, company_name):
         source["title"].strip().casefold() == company_name.strip().casefold()
         and bool(re.search(r"(?m)^\s*(?:-\s*)?Website:", source["content"][:1200]))
     )
+
+
+def is_reference_page(source, company_name):
+    """Identify static reference pages that are useful as background."""
+    page = urlsplit(source["url"])
+    return bool(
+        is_profile(source, company_name)
+        or REFERENCE_TITLE.search(source["title"].strip())
+        or REFERENCE_PATH.search(page.path)
+        or (page.hostname == "tavily.com" and page.path.startswith("/knowledge/company/"))
+    )
+
+
+def has_official_detail(sources, company_name, domain):
+    for source in sources:
+        page = urlsplit(source["url"])
+        host = page.hostname or ""
+        if host != domain and not host.endswith("." + domain):
+            continue
+        path = page.path.strip("/").lower()
+        if (path and not re.match(r"^(?:help|support|login|sign-in|contact)(?:/|$)", path)
+                and source_evidence_role(source, company_name) != "development_candidate"
+                and not is_reference_page(source, company_name)):
+            return True
+    return False
 
 
 def earnings_period(source):
@@ -48,7 +80,7 @@ def source_evidence_role(source, company_name):
     title = source.get("title", "")
     content = source.get("content", "")
     path = urlsplit(source.get("url", "")).path
-    if "/templates/" in path or path.endswith("/changelog/timeline") or is_profile(source, company_name):
+    if "/templates/" in path or path.endswith("/changelog/timeline") or is_reference_page(source, company_name):
         return "background"
     actor_action = re.compile(
         rf"(?<!\w){re.escape(company_name)}(?:['’]s)?\s+"
@@ -65,6 +97,60 @@ def source_evidence_role(source, company_name):
     ):
         return "development_candidate"
     return "uncertain"
+
+
+def is_short_search_preview(source):
+    page = urlsplit(source["url"])
+    return (page.hostname in ("google.com", "www.google.com") and page.path == "/url"
+            and len(source["content"].strip()) <= 200)
+
+
+def distinct_preview_title(news_sources, company_name):
+    """Find a lead worth a follow-up when previews dominate a successful news batch."""
+    previews = [source for source in news_sources if is_short_search_preview(source)]
+    if len(previews) < 2 or 2 * len(previews) <= len(news_sources):
+        return None
+
+    ignored = set(re.findall(r"\w+", company_name.casefold()))
+
+    def topics(title):
+        return {word for word in re.findall(r"\w+", title.casefold()) if len(word) >= 4} - ignored
+
+    document_topics = [topics(source["title"]) for source in news_sources if not is_short_search_preview(source)]
+    name = re.compile(r"(?<!\w)" + re.escape(company_name) + r"(?!\w)", re.I)
+    for preview in previews:
+        title, body = preview["title"], preview["content"]
+        if not name.search(title) or not name.search(body):
+            continue
+        terms = topics(title)
+        if len(terms) < 3 or any(
+            len(terms & other) >= max(3, min(len(terms), len(other)) / 2)
+            for other in document_topics
+        ):
+            continue
+        # Bound the lead and keep provider-specific query syntax out of its title.
+        return " ".join(re.findall(r"[\w.-]+", title[:160])[:22])
+    return None
+
+
+def ranked_company_sources(sources, company_name):
+    """Choose the order of model inputs while retaining their original source IDs."""
+    role_order = {"development_candidate": 0, "uncertain": 1, "background": 2}
+
+    def priority(pair):
+        _, source = pair
+        return (is_short_search_preview(source), role_order[source_evidence_role(source, company_name)])
+
+    ranked = sorted(enumerate(sources, start=1), key=priority)
+    seen = set()
+    selected = []
+    for index, source in ranked:
+        body = " ".join(source["content"].split())
+        if body and body in seen:
+            continue
+        seen.add(body)
+        selected.append((index, source))
+    return selected
 
 
 def assess_research_evidence(sources, company_name):

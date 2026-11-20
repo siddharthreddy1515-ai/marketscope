@@ -311,15 +311,18 @@ async def analyze_endpoint(
     # --------------------------------------------------
 
     analysis_status = result.get("analysis_status")
-    if result.get("error_code") == "ANALYSIS_MALFORMED" or (
+    provider_timeout = result.get("error_code") == "ANALYSIS_TIMEOUT"
+    if provider_timeout or result.get("error_code") == "ANALYSIS_MALFORMED" or (
         result.get("status") == "completed"
         and analysis_status not in ("complete", "partial", "insufficient_evidence")
     ):
-        logging.warning("Malformed analysis response for %s", request.company_name)
-        detail = "The analysis response could not be read. Please try again."
+        detail = ("The analysis provider timed out." if provider_timeout
+                  else "The analysis response could not be read. Please try again.")
+        status_code = 504 if provider_timeout else 502
+        logging.warning("%s Company: %s", detail, request.company_name)
         sources = result.get("sources") or []
         if sources:
-            return JSONResponse(status_code=502, content={
+            return JSONResponse(status_code=status_code, content={
                 "detail": detail,
                 "research": {
                     "company_name": request.company_name,
@@ -327,6 +330,7 @@ async def analyze_endpoint(
                     "research_attempts": result.get("research_attempts", 0),
                     "research_coverage": result.get("research_coverage"),
                     "research_warnings": result.get("research_warnings", []),
+                    **({"analysis_warnings": [detail], "analysis_window": result.get("analysis_window")} if provider_timeout else {}),
                     "sources": [SourceResponse.model_validate(source).model_dump() for source in sources],
                     "comparison_sources": [
                         SourceResponse.model_validate(source).model_dump()
@@ -335,7 +339,7 @@ async def analyze_endpoint(
                 },
             })
         raise HTTPException(
-            status_code=502,
+            status_code=status_code,
             detail=detail,
         )
 
@@ -350,6 +354,12 @@ async def analyze_endpoint(
             "Research could not produce a report for %s",
             request.company_name,
         )
+        issue = result.get("search_issue")
+        if issue and result.get("error_code") == "RESEARCH_EXHAUSTED":
+            return JSONResponse(status_code=502, content={
+                "detail": "Company research did not return usable sources.",
+                "search_issue": issue,
+            })
 
         raise HTTPException(
             status_code=502,

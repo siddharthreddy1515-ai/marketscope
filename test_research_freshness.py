@@ -1,27 +1,17 @@
 
 import asyncio
-from datetime import date, timedelta
+from datetime import date
 
 import workflow
 
 
 def test_company_research_date_policy():
-    today = date(2026, 11, 12)
-
-    assert workflow.company_news_start_date(
-        1, today=today
-    ) == "2026-08-14"
-
-    assert workflow.company_news_start_date(
-        2, today=today
-    ) == "2025-11-12"
-
-    assert workflow.company_news_start_date(
-        3, today=today
-    ) == "2025-11-12"
+    assert workflow.default_analysis_window(date(2026, 11, 12)) == {
+        "start": "2026-08-14", "end": "2026-11-12",
+    }
 
 
-def test_incomplete_research_broadens_date_window(
+def test_first_news_search_uses_recent_window_after_profile_search(
     monkeypatch,
 ):
     monkeypatch.setenv("MOCK_TAVILY", "false")
@@ -66,6 +56,7 @@ def test_incomplete_research_broadens_date_window(
 
     initial_state = {
         "company_name": "Acme",
+        "analysis_window": {"start": "2026-08-14", "end": "2026-11-12"},
         "sources": [],
         "research_attempts": 0,
         "retry_count": 0,
@@ -102,17 +93,13 @@ def test_incomplete_research_broadens_date_window(
     assert calls[0][0] == "initial"
     assert calls[1][0] == "expanded"
 
-    today = date.today()
-
     assert calls[0][1] == {
         "query": "Acme company products services",
         "topic": "general",
     }
 
     assert calls[1][1]["topic"] == "news"
-    assert calls[1][1]["start_date"] == (
-        today - timedelta(days=365)
-    ).isoformat()
+    assert calls[1][1]["start_date"] == initial_state["analysis_window"]["start"]
 
     # Earlier evidence must be preserved.
     assert len(second["sources"]) == 2

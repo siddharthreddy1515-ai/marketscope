@@ -47,7 +47,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-const page = fs.readFileSync(process.argv[1], 'utf8');
+const [pagePath, analysisStatus, errorKind] = process.argv.slice(2);
+const page = fs.readFileSync(pagePath, 'utf8');
 
 const script = page.match(
   /<script>([\s\S]*?)<\/script>/i
@@ -59,9 +60,10 @@ const nodes = {};
 const downloads = [];
 const blobs = [];
 let fetchCalls = 0;
-const retainedResearch = process.argv[3] === 'malformed_with_sources';
-const malformedAnalysis = retainedResearch || process.argv[3] === 'malformed';
-const errorMessage = malformedAnalysis
+const timedOut = errorKind === 'timed_out_with_sources';
+const retainedResearch = errorKind === 'malformed_with_sources' || timedOut;
+const malformedAnalysis = errorKind === 'malformed_with_sources' || errorKind === 'malformed';
+const errorMessage = timedOut ? 'The analysis provider timed out.' : malformedAnalysis
   ? 'The analysis response could not be read. Please try again.'
   : 'Simulated error';
 
@@ -151,10 +153,11 @@ const context = vm.createContext({
 
     return {
       ok: false,
-      status: malformedAnalysis ? 502 : 500,
+      status: timedOut ? 504 : malformedAnalysis ? 502 : 500,
       json: async () => ({
         detail: errorMessage,
         ...(retainedResearch ? {research: {
+          ...(timedOut ? {analysis_warnings: [errorMessage]} : {}),
           company_name: 'Tesla', sources: [{
             title: 'Saved company page', url: 'https://example.com/collected',
             content: 'Retrieved company description remains available.', published_at: '2026-11-04',
@@ -296,12 +299,99 @@ const sourceLink = node => node.tag === 'a' &&
 assert.ok(dashboardNodes().some(sourceLink), 'Dashboard citations show source names');
 assert.ok(dashboardNodes().some(node => node.textContent === 'Partial coverage'));
 assert.deepEqual(dashboardNodes().filter(node => node.className === 'metric-label').map(node => node.textContent),
-  ['Key Developments', 'Research Coverage', 'Source Sentiment', 'Competitors Identified']);
+  ['Core offering', 'Recent developments', 'Research coverage', 'Competitive alternatives']);
+const metricLinks = dashboardNodes().filter(node => node.className === 'metric-jump');
+assert.deepEqual(metricLinks.map(node => node.href), ['#company-snapshot', '#company-findings', '#company-research', '#company-comparisons']);
+for (const card of metricLinks) {
+  assert.equal(card.tag, 'a');
+  assert.equal(dashboardNodes().filter(node => '#' + node.id === card.href).length, 1);
+}
+const libraryTarget = dashboardNodes().find(node => node.id === 'company-research');
+nodes['company-research'] = libraryTarget;
+metricLinks[2].handlers.click();
+assert.equal(libraryTarget.open, true);
+assert.ok(descendants(metricLinks[2]).some(node => node.textContent === 'View source library'));
 assert.ok(!dashboardNodes().some(node => ['Market Position', 'Threat Level'].includes(node.textContent)));
 assert.ok(dashboardNodes().some(node => node.textContent === 'Executive Snapshot'));
 assert.ok(dashboardNodes().some(node => node.textContent === 'Event dates unavailable'));
 
 const originalSample = context.sample;
+const datedSentence = 'On October 2, 2026, ExampleCo opened a new distribution center.';
+const makeDated = (quote) => {
+  const source = {source_id: 'S1', title: 'News', url: 'https://example.com/news', content: quote};
+  return {...originalSample, analysis_window: {start: '2026-08-20', end: '2026-11-18'},
+    sources: [source], insight_items: [{text: quote, sources: [source], evidence: [{...source, quote}]}]};
+};
+for (const [quote, expected] of [[datedSentence,'2026-10-02'],
+    ['ExampleCo launched drone delivery in Houston on November 17, 2026.', '2026-11-17'],
+    ['ExampleCo plans to launch drone delivery in Houston on November 17, 2026.', null],
+    ['ExampleCo launched a service announced by its partner on November 17, 2026.', null],
+    ['ExampleCo launched a service after its partner entered the market on November 17, 2026.', null],
+    ['ExampleCo launched a service for an expo on November 17, 2026.', null],
+    ['Another company acquired ExampleCo on November 17, 2026.', null],
+    [datedSentence.replace('opened','may open'),null],
+    [datedSentence.replace('October','July'),null],
+    [datedSentence.replace('October 2','February 31'),null],
+    [datedSentence.replace('ExampleCo opened','another company acquired ExampleCo and opened'),null]]) {
+  context.dated = makeDated(quote);
+  assert.equal(vm.runInContext('recentAnnouncement(dated.insight_items[0],dated)?.day || null', context),expected);
+}
+
+const plan = 'ExampleCo plans to open a battery assembly plant.';
+context.reportedPlan = makeDated(plan);
+context.reportedPlan.sources[0].published_at = 'Sat, 10 Oct 2026 06:33:33 GMT';
+context.reportedPlan.research_coverage = {status: 'uncertain'};
+vm.runInContext('render(reportedPlan)', context);
+const planNodes = dashboardNodes();
+const planCard = planNodes.find(node => node.className === 'insight');
+assert.ok(descendants(planCard).some(node => node.textContent === plan));
+assert.ok(descendants(planCard).some(node => node.textContent === 'Source published 10 Oct 2026'));
+assert.ok(descendants(planCard).some(node => node.textContent === 'Event date unconfirmed'));
+assert.ok(descendants(planCard).some(node => node.href === 'https://example.com/news'));
+assert.ok(planNodes.indexOf(planCard) < planNodes.findIndex(node => node.className === 'source-notes'));
+assert.ok(planNodes.some(node => node.textContent === 'Event dates unavailable'));
+assert.equal(planNodes.filter(node => node.className === 'metric-value')[1].textContent, '—');
+assert.equal(planNodes.filter(node => node.className === 'metric-note')[1].textContent,
+  '1 observation with an unconfirmed date');
+assert.equal(planNodes.filter(node => node.className === 'metric-note')[2].textContent,
+  '1 cited in findings or context · Limited coverage');
+
+const datedReport = makeDated(datedSentence);
+context.mixedDates = {
+  ...context.reportedPlan, sources: [
+    ...context.reportedPlan.sources,
+    {...datedReport.sources[0], url: 'https://example.com/opening', published_at: '2026-10-03'},
+  ], insight_items: [
+    ...context.reportedPlan.insight_items,
+    {...datedReport.insight_items[0], evidence: [
+      {...datedReport.insight_items[0].evidence[0], source_id: 'S2', url: 'https://example.com/opening'},
+    ]},
+  ],
+};
+vm.runInContext('render(mixedDates)', context);
+const mixedNodes = dashboardNodes();
+const mixedTitles = mixedNodes.filter(node => node.className === 'insight-title');
+assert.deepEqual(mixedTitles.map(node => node.textContent), [datedSentence, plan]);
+assert.ok(mixedNodes.indexOf(mixedTitles[1]) < mixedNodes.findIndex(node => node.className === 'source-notes'));
+assert.equal(mixedNodes.filter(node => node.className === 'metric-value')[1].textContent, '1');
+assert.equal(mixedNodes.filter(node => node.className === 'metric-note')[1].textContent,
+  'Dated in the report window · 1 observation with an unconfirmed date');
+const dateProof = descendants(mixedNodes.filter(node => node.className === 'brief-metric')[1]);
+const proofGroups = dateProof.filter(node => node.className === 'metric-proof-group');
+assert.deepEqual(proofGroups.map(group => group.children[0].textContent),
+  ['Dated developments', 'Observations with unconfirmed dates']);
+const datedProof = descendants(proofGroups[0]);
+assert.ok(datedProof.some(node => node.href === 'https://example.com/opening'));
+assert.ok(datedProof.some(node => node.tag === 'blockquote' && node.textContent === datedSentence));
+assert.ok(!datedProof.some(node => node.href === 'https://example.com/news'));
+const undatedProof = descendants(proofGroups[1]);
+assert.ok(undatedProof.some(node => node.href === 'https://example.com/news'));
+assert.ok(undatedProof.some(node => node.tag === 'blockquote' && node.textContent === plan));
+
+context.reportedPlan.sources[0].published_at = 'invalid';
+vm.runInContext('render(reportedPlan)', context);
+assert.ok(!dashboardNodes().some(node => node.textContent.startsWith('Source published')));
+
 const companyDescription = 'ExampleCo makes electric motorcycles.';
 const originalCitation = { title: 'Company products', url: 'https://example.com/products' };
 const overviewEvidence = {
@@ -310,9 +400,10 @@ const overviewEvidence = {
 };
 context.sample = {
   ...originalSample, analysis_format: 'evidence_ids_v2', analysis_status: 'partial',
+  source_stats: {returned: 2, accepted: 2, discarded: 0},
   sources: [{ ...originalCitation, content: companyDescription }, {
     title: 'Unselected retail page', url: 'https://example.com/retail',
-    content: 'The retailer offers a commuter and a cargo model.',
+    content: 'DatabaseChargesRegulatory AlertsLitigationsDetailed FinancialsCredit RatingsGlobal BrandsFunding\nThe retailer offers a commuter and a cargo model.',
   }],
   insight_items: [], context_items: [{
     event: 'Company overview', text: 'Unsupported overview prose.', evidence: [overviewEvidence],
@@ -324,10 +415,95 @@ assert.ok(overviewNodes.some(node => node.className === 'snapshot-text' && node.
 assert.ok(overviewNodes.some(node => node.tag === 'a' && node.href === originalCitation.url));
 assert.ok(!overviewNodes.some(node => node.textContent === 'Unsupported overview prose.'));
 assert.ok(overviewNodes.some(node => node.textContent === 'The retailer offers a commuter and a cargo model.'));
+assert.ok(!overviewNodes.some(node => node.className === 'source-preview' && node.textContent.includes('DatabaseCharges')));
 assert.ok(overviewNodes.some(node => node.tag === 'a' && node.href === 'https://example.com/retail'));
 assert.ok(overviewNodes.findIndex(node => node.textContent === 'Executive Snapshot') <
   overviewNodes.findIndex(node => node.textContent === 'No source-supported developments available.'));
 assert.equal(overviewNodes.find(node => node.className === 'source-notes').children.length, 2);
+const coverageMetric = descendants(overviewNodes.filter(node => node.className === 'brief-metric')[2]);
+assert.ok(coverageMetric.some(node => node.className === 'metric-value' && node.textContent === '2 pages'));
+assert.ok(coverageMetric.some(node => node.className === 'metric-note' && node.textContent === '1 cited in findings or context'));
+const citedFilter = overviewNodes.find(node => node.type === 'checkbox');
+const librarySearch = overviewNodes.find(node => node.type === 'search');
+citedFilter.checked = true;
+citedFilter.handlers.change();
+assert.equal(dashboardNodes().filter(node => node.className === 'library-source').length, 1);
+assert.ok(dashboardNodes().filter(node => node.className === 'library-source')
+  .some(row => descendants(row).some(node => node.href === originalCitation.url)));
+librarySearch.value = 'Unselected retail page';
+librarySearch.handlers.input();
+assert.equal(dashboardNodes().filter(node => node.className === 'library-source').length, 0);
+citedFilter.checked = false;
+citedFilter.handlers.change();
+assert.equal(dashboardNodes().filter(node => node.className === 'library-source').length, 1);
+librarySearch.value = '';
+librarySearch.handlers.input();
+assert.equal(dashboardNodes().filter(node => node.className === 'library-source').length, 2);
+
+const longExcerpt = 'Company profile. ' + companyDescription + ' ' +
+  'Additional information appears in the source. '.repeat(18).trimEnd();
+context.longSnapshot = {
+  ...context.sample,
+  sources: [{...context.sample.sources[0], content: longExcerpt}, context.sample.sources[1]],
+  context_items: [{...context.sample.context_items[0], text: 'ExampleCo makes electric motorcycles for an unknown customer.',
+    evidence: [{...overviewEvidence, quote: longExcerpt, evidence_id: 'S1-0000000000000000-0-' + longExcerpt.length}]}],
+};
+vm.runInContext('render(longSnapshot)', context);
+assert.ok(dashboardNodes().some(node => node.className === 'snapshot-text' && node.textContent === companyDescription));
+assert.ok(dashboardNodes().some(node => node.tag === 'blockquote' && node.textContent === longExcerpt));
+assert.ok(!dashboardNodes().some(node => node.textContent.includes('unknown customer')));
+
+const productText = context.sample.sources[1].content.split('\n').at(-1);
+const productStart = context.sample.sources[1].content.indexOf(productText);
+context.sample.context_items.push({
+  event: 'Products and services', text: productText,
+  evidence: [{source_id: 'S2', evidence_id: 'S2-0000000000000000-' + productStart + '-' + (productStart + productText.length),
+    url: 'https://example.com/retail', title: 'Unselected retail page', quote: productText}],
+});
+vm.runInContext('render(sample)', context);
+const productSection = dashboardNodes().find(node => node.className === 'snapshot-offering');
+assert.ok(descendants(productSection).some(node => node.textContent === productText));
+assert.ok(descendants(productSection).some(node => node.tag === 'a' && node.href === 'https://example.com/retail'));
+assert.equal(vm.runInContext('buildSelectedEvidenceExport(sample).context.length', context), 2);
+
+const agreement = 'ExampleCo signed a supply agreement with Atlas.';
+const opening = 'ExampleCo opened a warehouse in Austin.';
+const sharedExcerpt = agreement + ' ' + opening;
+const sharedSource = {title: 'Company update', url: 'https://example.com/update', content: sharedExcerpt};
+const sharedProof = {...sharedSource, source_id: 'S1', quote: sharedExcerpt,
+  evidence_id: 'S1-0000000000000000-0-' + sharedExcerpt.length};
+const agreementItem = {text: agreement, category: 'M&A / Partnerships', evidence: [sharedProof]};
+context.sharedEvidence = {...context.sample, sources: [sharedSource], context_items: [], insight_items: [
+  agreementItem,
+  {text: opening, category: 'Market Expansion', evidence: [sharedProof]},
+  {...agreementItem, text: '  ' + agreement + '  '},
+]};
+vm.runInContext('render(sharedEvidence)', context);
+const sharedCards = dashboardNodes().filter(node => node.className === 'insight').map(descendants);
+assert.deepEqual(sharedCards.map(card => card.find(node => node.className === 'insight-title').textContent), [agreement, opening]);
+assert.ok(sharedCards[0].some(node => node.textContent === 'M&A / Partnerships'));
+assert.ok(sharedCards[1].some(node => node.textContent === 'Market Expansion'));
+assert.equal(vm.runInContext('buildSelectedEvidenceExport(sharedEvidence).observations.length', context), 2);
+
+// A selected catalog field can share a passage with specifications and marketing copy.
+const catalogList = 'Folding bicycles, Cargo bicycles, Electric bicycles, Connected diagnostics app';
+const catalogQuote = 'Products: ' + catalogList + ' [...] Description: Models have different maximum speeds.';
+const catalogReport = JSON.parse(JSON.stringify(context.sample));
+catalogReport.sources[1].content = catalogQuote;
+const catalogItem = catalogReport.context_items[1];
+catalogItem.text = 'Unsupported catalog paraphrase';
+Object.assign(catalogItem.evidence[0], {quote: catalogQuote,
+  evidence_id: 'S2-0000000000000000-0-' + catalogQuote.length});
+context.catalogReport = catalogReport;
+vm.runInContext('render(catalogReport)', context);
+assert.equal(dashboardNodes().find(n => n.className === 'metric-value').textContent, 'Folding bicycles');
+const offeringProof = descendants(dashboardNodes().find(node => node.className === 'brief-metric'));
+assert.ok(offeringProof.some(node => node.href === 'https://example.com/retail'));
+assert.ok(offeringProof.some(node => node.tag === 'blockquote' && node.textContent === catalogQuote));
+assert.ok(!offeringProof.some(node => node.href === 'https://example.com/products'));
+const catalogSnapshot = descendants(dashboardNodes().find(n => n.className === 'snapshot-offering'));
+assert.ok(catalogSnapshot.some(n => n.className === 'snapshot-text' && n.textContent === catalogList));
+assert.ok(catalogSnapshot.some(n => n.tag === 'blockquote' && n.textContent === catalogQuote));
 
 const backgroundPages = Array.from({ length: 7 }, (_, index) => ({
   title: 'Background page ' + index, url: 'https://example.net/background-' + index, content: 'Background text.',
@@ -501,7 +677,7 @@ assert.equal(classifications().assessed, 2, 'An assessment must match a retained
 context.backgroundEvidence = {...context.sourceSample,
   research_coverage: {status: 'background_only', limitations: ['Only background evidence was retained.']}};
 vm.runInContext('render(backgroundEvidence)', context);
-const developmentCard = dashboardNodes().find(node => node.className === 'brief-metric');
+const developmentCard = dashboardNodes().filter(node => node.className === 'brief-metric')[1];
 assert.ok(descendants(developmentCard).some(node => node.textContent === 'Background evidence only'));
 assert.ok(!dashboardNodes().some(node => node.className === 'breakdown-item'));
 assert.ok(dashboardNodes().some(node => node.textContent === 'Only background evidence was retained.'));
@@ -511,11 +687,41 @@ const comparisonSource = {title: 'Comparison source', url: 'https://example.org/
   evidence_id: 'C1-0000000000000000-0-33', quote: 'Acme and Atlas are both discussed.'};
 context.comparisonSample = {...context.sourceSample, competitors: [
   {name: 'Atlas', overlap: 'Unsupported positioning', sources: [comparisonSource], evidence: [comparisonSource]},
+  {name: 'ATLAS', overlap: 'Duplicate name', sources: [comparisonSource], evidence: [comparisonSource]},
   {name: 'Invented competitor', overlap: 'Unsupported threat', sources: [comparisonSource], evidence: [comparisonSource]}
 ]};
 vm.runInContext('render(comparisonSample)', context);
 assert.ok(dashboardNodes().some(node => node.className === 'competitor-name' && node.textContent === 'Atlas'));
+assert.ok(dashboardNodes().some(node => node.textContent === 'Source excerpt · Acme and Atlas are both discussed.'));
 assert.ok(!dashboardNodes().some(node => ['Invented competitor', 'Unsupported positioning', 'Unsupported threat'].includes(node.textContent)));
+assert.equal(vm.runInContext('comparisonEntries(comparisonSample)[0].supported', context), false);
+const alternativeCard = descendants(dashboardNodes().filter(node => node.className === 'brief-metric')[3]);
+assert.ok(alternativeCard.some(node => node.className === 'metric-value' && node.textContent === '1 mentioned'));
+assert.ok(alternativeCard.some(node => node.textContent === 'Product overlap unconfirmed'));
+assert.ok(alternativeCard.some(node => node.href === comparisonSource.url));
+assert.ok(alternativeCard.some(node => node.tag === 'blockquote' && node.textContent === comparisonSource.quote));
+assert.ok(dashboardNodes().some(node => node.tag === 'details' && node.open &&
+  node.children[0].textContent.startsWith('Comparison mentions')));
+const comparisonCases = [
+  ["Harbor Logistics", "Acme faces competition from Orion, Harbor Logistics, and other freight operators.", "Harbor Logistics", true],
+  ["Tern (Cedar Group)", "Project Tern, a freight carrier owned by Cedar Group, serves suburban customers.", "Tern", false],
+  ["Atlas", "Atlas provides delivery services. Acme faces competition from Orion and Atlas.", "Atlas", true],
+  ["Atlas", "Acme faces competition from Atlas Ventures and Orion.", "Atlas", false],
+  ["Atlas", "Acme previously faced competition from Atlas and Orion.", "Atlas", false],
+  ["Atlas", "Acme does not face competition from Atlas and Orion.", "Atlas", false],
+];
+for (const [name, quote, shownName, supported] of comparisonCases) {
+  const source = {...comparisonSource, quote};
+  context.explicitComparison = {...context.sourceSample, company_name: 'Acme', competitors: [
+    {name, sources: [source], evidence: [source]},
+  ]};
+  const entry = vm.runInContext('comparisonEntries(explicitComparison)[0]', context);
+  assert.equal(entry.name, shownName);
+  assert.equal(entry.supported, supported);
+  if (supported) assert.match(entry.preview, /faces competition from/);
+}
+assert.equal(vm.runInContext("sourceKind('https://mediacenter.example.com/story', 'in.example.com', 'Example')", context), 'Corporate site');
+assert.equal(vm.runInContext("sourceKind('https://elsewhere.github.io/story', 'in.github.io', 'Example')", context), 'External source');
 assert.equal(vm.runInContext('safeUrl("https://user:password@example.com/secret")', context), null);
 context.badComparison = {...context.sourceSample, competitors: [{name: 'Unverified alternative', overlap: 'Unsupported comparison',
   sources: [{title: fundingSource.title, url: fundingSource.url}], evidence: selected}]};
@@ -583,26 +789,28 @@ nodes.companyInput.value = 'Tesla';
     assert.ok(dashboardNodes().some(node => node.tag === 'a' && node.href === 'https://example.com/collected'));
     assert.ok(dashboardNodes().some(node => node.tag === 'a' && node.href === 'https://example.com/comparison-article'));
     assert.ok(dashboardNodes().some(node => node.className === 'timeline-date' && node.textContent.includes('2026')));
+    assert.equal(dashboardNodes().find(node => node.className === 'publication-detail').open, true);
     assert.ok(dashboardNodes().some(node => node.textContent === 'Event dates unavailable'));
     assert.equal(nodes.downloadEvidenceButton.disabled, true);
+    if (timedOut) assert.ok(dashboardNodes().some(node => node.textContent === errorMessage));
   } else {
     assert.ok(nodes.output.children.some(node => node.textContent === errorMessage));
   }
 
-  if (malformedAnalysis) {
+  if (malformedAnalysis || timedOut) {
     nodes.downloadReportButton.handlers.click();
-    assert.equal(blobs.length, 1, 'Malformed analysis must not export stale data');
+    assert.equal(blobs.length, 1, 'A failed analysis must not export stale data');
     return;
   }
 
-  const warning = process.argv[2] === 'partial'
+  const warning = analysisStatus === 'partial'
     ? 'Some generated findings were excluded because they could not be validated.'
     : 'Insufficient evidence for a company overview.';
   context.sample = {
     ...context.sample,
-    analysis_status: process.argv[2],
-    analysis_warnings: process.argv[2] === 'partial' ? [warning] : [],
-    ...(process.argv[2] === 'insufficient_evidence'
+    analysis_status: analysisStatus,
+    analysis_warnings: analysisStatus === 'partial' ? [warning] : [],
+    ...(analysisStatus === 'insufficient_evidence'
       ? {executive_summary: null, insight_items: []}
       : {})
   };
@@ -613,7 +821,7 @@ nodes.companyInput.value = 'Tesla';
   const exportHtml = vm.runInContext('buildReportHtml(sample)', context);
   assert.ok(exportHtml.includes(warning), 'Missing exported analysis notice');
   assert.ok(exportHtml.includes('href="https://example.com/press"'));
-  if (process.argv[2] === 'insufficient_evidence') {
+  if (analysisStatus === 'insufficient_evidence') {
     assert.ok(exportHtml.includes('Evidence-only report'));
   }
   assert.equal(nodes.downloadReportButton.disabled, false);
@@ -642,6 +850,10 @@ def test_malformed_analysis_keeps_collected_sources_visible():
     run_export_runtime_check("complete", "malformed_with_sources")
 
 
+def test_timed_out_analysis_keeps_collected_sources_visible():
+    run_export_runtime_check("complete", "timed_out_with_sources")
+
+
 def run_export_runtime_check(analysis_status, error_kind):
     node = shutil.which("node")
 
@@ -651,9 +863,10 @@ def run_export_runtime_check(analysis_status, error_kind):
         )
 
     result = subprocess.run(
-        [node, "-e", NODE_CHECK, str(INDEX), analysis_status, error_kind],
+        [node, "-", str(INDEX), analysis_status, error_kind],
+        input=NODE_CHECK,
+        encoding="utf-8",
         capture_output=True,
-        text=True,
         timeout=15,
         check=False,
     )

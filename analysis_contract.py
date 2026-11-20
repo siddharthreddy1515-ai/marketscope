@@ -11,6 +11,9 @@ import hashlib
 from datetime import date, datetime, timedelta, timezone
 
 
+MAX_CONTEXT_ITEMS = 5
+
+
 def normalized(value):
     return " ".join(value.split())
 
@@ -164,6 +167,77 @@ def validated_analysis_window(value):
     return {"start": start.isoformat(), "end": end.isoformat()}
 
 
+def dated_announcement_from_evidence(text, evidence, company_name, months):
+    """Return a date when a dateline and its announcement match the same claim."""
+    subject = re.escape(company_name)
+    claim = re.match(rf"^{subject} (?:has )?announced (?P<detail>.+)", normalized(text), re.I)
+    if not claim:
+        return None
+    detail = re.findall(r"\w+", claim["detail"].casefold())[:6]
+    if len(detail) < 6:
+        return None
+    month = "(?:" + "|".join(months) + ")"
+    dateline = re.compile(
+        rf"^(?:[^\d,.:!?]{{1,48}}, ){{0,2}}"
+        rf"(?P<date>(?:\d{{1,2}} {month}|{month} \d{{1,2}}),? 20\d{{2}}): "
+        rf"{subject}(?:, [^,.:!?]{{1,130}},)? (?:has )?(?:today )?announced (?P<detail>[^.!?]+)",
+        re.I,
+    )
+    month_numbers = {name.casefold(): number for number, name in enumerate(months, 1)}
+    dates = set()
+    for item in evidence:
+        match = dateline.match(normalized(item["quote"]))
+        if not match or re.findall(r"\w+", match["detail"].casefold())[:6] != detail:
+            continue
+        first, second, year = match["date"].replace(",", "").split()
+        day, month_name = (first, second) if first.isdigit() else (second, first)
+        try:
+            dates.add(date(int(year), month_numbers[month_name.casefold()], int(day)))
+        except ValueError:
+            return None
+    return next(iter(dates)) if len(dates) == 1 else None
+
+
+def period_end_from_evidence(text, quotes, company_name, months):
+    """Recognize completed actions when the selected passage supplies the same period."""
+    company = re.escape(company_name)
+    investment = re.fullmatch(rf"In (20\d{{2}}), .+ invested .+ in {company}\.", text, re.I)
+    if investment and any(text.casefold() in quote for quote in quotes):
+        return date(int(investment[1]), 12, 31)
+
+    month_names = "|".join(months)
+    release = re.match(
+        rf"^(?P<generation>The \w+ generation of )?(?:the )?(?P<product>{company}\b[\w -]{{0,60}})"
+        rf"(?P<action> was (?:launched|released|introduced) in (?P<month>{month_names}) (?P<year>20\d{{2}}))(?=[,.]|$)",
+        text, re.I,
+    )
+    if not release:
+        return None
+    if not any(release[0].casefold() in quote for quote in quotes):
+        # A device reference must follow a sentence naming the specific product.
+        if not release["generation"]:
+            return None
+        device_reference = (rf"\bknown for (?:the )?{re.escape(release['product'])}\b[^.!?]{{0,420}}\.\s+"
+                            + re.escape(release["generation"] + "the device" + release["action"])
+                            + r"(?=[,.]|$)")
+        if not any(re.search(device_reference, quote, re.I) for quote in quotes):
+            return None
+    month = next(i for i, name in enumerate(months, 1) if name.casefold() == release["month"].casefold())
+    year = int(release["year"])
+    return date(year, month, calendar.monthrange(year, month)[1])
+
+
+def is_current_integration(text, evidence, company_name):
+    """A cited capability in the present tense belongs with company background."""
+    if not company_name:
+        return False
+    text = normalized(text)
+    pattern = rf"(?:Through a collaboration with [^,.!?]+, )?{re.escape(company_name)} integrates [^.!?]+ into [^.!?]+\."
+    return bool(re.fullmatch(pattern, text, re.I)
+                and not re.search(r"\b(?:now|new|first|starting|today|20\d{2})\b", text, re.I)
+                and any(text.casefold() in normalized(item["quote"]).casefold() for item in evidence))
+
+
 def temporal_context(text, evidence, company_name, analysis_window):
     """Narrow old-action detection, not a general event-date or truth verifier.
 
@@ -175,17 +249,28 @@ def temporal_context(text, evidence, company_name, analysis_window):
         return uncertain
     window = validated_analysis_window(analysis_window)
     months = "January February March April May June July August September October November December".split()
+    if re.search(r"[.!?]\s+\S|\b(?:today|now|currently|yesterday|this week|this month|this year)\b", text, re.I):
+        return uncertain
+    quotes = [normalized(e["quote"]).casefold() for e in evidence]
+    period_end = period_end_from_evidence(normalized(text), quotes, company_name, months)
+    if period_end and period_end < date.fromisoformat(window["start"]):
+        return {"temporal_status": "historical",
+                "temporal_note": f"The selected passage dates this action to a period before {window['start']}."}
+    if not re.search(r"\b20\d{2}\b", text):
+        announced = dated_announcement_from_evidence(text, evidence, company_name, months)
+        if announced and announced < date.fromisoformat(window["start"]):
+            return {"temporal_status": "historical",
+                    "temporal_note": f"The selected passage dates this announcement to {announced.isoformat()}, "
+                                     f"before the report window started on {window['start']}."}
+        return uncertain
     dated_mentions = re.findall(r"\b(?:" + "|".join(months) + r")\s+(?:\d{1,2},?\s+)?20\d{2}\b", text, re.I)
     if len(dated_mentions) != 1:
-        return uncertain
-    if re.search(r"[.!?]\s+\S|\b(?:today|now|currently|yesterday|this week|this month|this year)\b", text, re.I):
         return uncertain
     pattern = re.compile(r"^In\s+(" + "|".join(months) + r")\s+(20\d{2}),\s+" + re.escape(company_name)
         + r"\s+(?:has\s+)?(?:completed|announced|launched|introduced|acquired|raised|appointed)\b", re.I)
     matches = list(pattern.finditer(text))
     if not matches:
         return uncertain
-    quotes = [normalized(e["quote"]).casefold() for e in evidence]
     for match in matches:
         if not any(normalized(match[0]).casefold() in quote for quote in quotes):
             return uncertain
@@ -197,7 +282,8 @@ def temporal_context(text, evidence, company_name, analysis_window):
     return {"temporal_status": "historical", "temporal_note": f"The claim and selected body evidence explicitly date the company's action before {window['start']}. Kept as historical context, not a recent development."}
 
 
-def decode_analysis(text, company_sources, competitor_sources, categories, *, company_name=None, analysis_window=None, allowed_evidence_ids=None):
+def decode_analysis(text, company_sources, competitor_sources, categories, *, company_name=None, analysis_window=None,
+                    allowed_evidence_ids=None, background_source_ids=()):
     """Return None for the legacy line protocol, otherwise a checked envelope."""
     if not text.lstrip().startswith(("{", "[", "\x60")):
         return None
@@ -233,11 +319,11 @@ def decode_analysis(text, company_sources, competitor_sources, categories, *, co
     seen_text = set()
     context_items, context_warnings, seen_context = [], [], set()
 
-    def add_context(row, evidence, timing):
+    def add_context(row, evidence, timing, *, limit=MAX_CONTEXT_ITEMS):
         key = normalized(row["text"]).casefold()
         if key in seen_context or key in seen_text:
             return
-        if len(context_items) == 3:
+        if len(context_items) >= limit:
             context_warnings.append("Additional background context was excluded at the bounded item limit.")
             return
         seen_context.add(key)
@@ -260,8 +346,15 @@ def decode_analysis(text, company_sources, competitor_sources, categories, *, co
             continue
         timing = temporal_context(text, evidence, company_name, analysis_window) if version == 2 else {}
         if timing.get("temporal_status") == "historical":
-            add_context(row, evidence, timing)
+            add_context(row, evidence, timing, limit=3)
             context_warnings.append("Historical observations were moved out of selected developments and retained as context.")
+            continue
+        if version == 2 and is_current_integration(text, evidence, company_name):
+            add_context(row, evidence, {**timing, "temporal_note": "The selected passage describes an existing integration."}, limit=3)
+            continue
+        if version == 2 and all(item["source_id"] in background_source_ids for item in evidence):
+            add_context(row, evidence, timing, limit=3)
+            context_warnings.append("Observations supported only by reference pages are shown as background.")
             continue
         key = normalized(text).casefold()
         if key in seen_text:

@@ -2,7 +2,6 @@
 import json
 import os
 import re
-from datetime import date, timedelta
 from typing import TypedDict
 from urllib.parse import (
     urlparse,
@@ -18,9 +17,16 @@ from langchain_openai import ChatOpenAI
 from langchain_tavily import TavilySearch
 from langfuse.langchain import CallbackHandler
 from langgraph.graph import StateGraph, START, END
+from openai import APITimeoutError
 
-from analysis_contract import decode_analysis, build_evidence_registry, bounded_evidence_view, default_analysis_window, validated_analysis_window
-from research_policy import source_evidence_role, assess_research_evidence
+from analysis_contract import (
+    MAX_CONTEXT_ITEMS, bounded_evidence_view, build_evidence_registry, decode_analysis,
+    default_analysis_window, validated_analysis_window,
+)
+from research_policy import (
+    assess_research_evidence, distinct_preview_title, has_official_detail, is_reference_page,
+    is_short_search_preview, ranked_company_sources, source_evidence_role,
+)
 
 from workflow_contract import SIGNAL_CATEGORIES, normalize_company_domain
 
@@ -104,7 +110,12 @@ class AgentState(TypedDict):
     context_warnings: list[str]
     retry_count: int
     research_attempts: int
+    search_blocked: bool
+    search_issue: str | None
     enrichment_attempted: bool
+    official_detail_attempted: bool
+    offsite_search_attempted: bool
+    news_preview_follow_up: str | None
     sources: list[SourceRecord]
     source_stats: ResearchStats
     research_warnings: list[str]
@@ -149,18 +160,54 @@ def build_query(
     )
 
     return (
-        f"{identity} strategy partnerships "
-        "acquisitions funding product launches "
-        "market share"
+        f"{identity} news announcements product launches "
+        "services expansion partnerships"
     )
 
 
-def build_competitor_query(company: str) -> str:
-    return (
-        f'"{company}" competitors alternatives '
-        "competing products similar startups "
-        "market comparison"
+def build_competitor_query(company: str, official_domain: str | None = None) -> str:
+    query = (
+        f'"{company}" current direct competitors '
+        "alternative products services same customers market"
     )
+    domain = normalize_company_domain(official_domain)
+    return f"{query} {domain}" if domain else query
+
+
+def news_search_request(company, domain, sources, window_start, *, offsite=False):
+    """Use the news slot for reporting once we already have a directory profile."""
+    request = {
+        "query": build_query(company, None if offsite else domain),
+        "topic": "news",
+        "start_date": window_start,
+    }
+    excluded = [domain] if offsite and domain else []
+    for source in sources:
+        page = urlsplit(source["url"])
+        if page.hostname != "tavily.com" or not page.path.startswith("/knowledge/company/"):
+            continue
+        if not domain or domain == "tavily.com" or domain.endswith(".tavily.com"):
+            continue
+        if "tavily.com" not in excluded:
+            excluded.append("tavily.com")
+        # Use a short business descriptor only when the profile names the
+        # supplied website. Other publishers and company newsrooms stay eligible.
+        website = re.search(r"(?im)^Website:[ \t]*(\S+)", source["content"])
+        area = re.search(r"(?im)^Business areas:[ \t]*([^,\r\n]+)", source["content"])
+        if not website or not area:
+            continue
+        try:
+            profile_domain = normalize_company_domain(website[1])
+        except ValueError:
+            continue
+        descriptor = area[1].strip()
+        if profile_domain == domain and re.fullmatch(r"[\w &-]{3,65}", descriptor):
+            identity = f'"{company}"' if offsite else f'"{company}" {domain}'
+            request["query"] = f"{identity} {descriptor} recent business news"
+            break
+    if excluded:
+        request["exclude_domains"] = excluded
+    return request
 
 
 def classify_company_evidence(
@@ -220,6 +267,10 @@ def classify_company_evidence(
             source_host == domain
             or source_host.endswith("." + domain)
         )
+        # A branded corporate catalog can be relevant to a regional search.
+        regional = re.fullmatch(r"[a-z]{2}\.([a-z0-9-]+\.com)", domain)
+        if regional and regional[1].split(".")[0] == re.sub(r"[^a-z0-9]", "", company_name.casefold()):
+            official_source |= source_host in (regional[1], "www." + regional[1])
 
         domain_pattern = (
             rf"(?<![\w.-])(?:www\.)?"
@@ -246,6 +297,10 @@ def classify_company_evidence(
         "issue tracking",
         "application",
         "customers",
+        "services",
+        "manufactur",
+        "supply",
+        "distribution",
     )
 
     event_terms = (
@@ -300,6 +355,22 @@ def classify_company_evidence(
     if not name_found:
         return "irrelevant"
 
+    # A publisher may shorten the actor's name in its headline. Require the
+    # same action after the domain-backed brand and the full name in the body.
+    name_parts = company_name.casefold().split()
+    if domain and len(name_parts) > 1 and domain.split(".")[0] == name_parts[0]:
+        action = r"\s+(plans|announces|opens|launches|acquires|introduces|raises|expands)\b"
+        headline = re.search(rf"(?<!\w){re.escape(name_parts[0])}{action}", title, re.I)
+        if headline and re.search(name_pattern + r"\s+" + re.escape(headline[1]) + r"\b", content, re.I):
+            return "relevant"
+
+    # Distinctive multi-word brand in both title and body, matching the domain.
+    brand = re.sub(r"[^a-z0-9]", "", company_name.casefold())
+    if (domain and len(company_name.split()) >= 2 and brand in domain.split(".")[:-1]
+            and re.search(name_pattern, title, re.I) and re.search(name_pattern, content, re.I)
+            and (has_business_context or has_event_context)):
+        return "relevant"
+
     # Require company identity, business context,
     # and event context in the same sentence.
     if domain:
@@ -343,28 +414,6 @@ def classify_company_evidence(
         return "relevant"
 
     return "uncertain"
-
-
-def company_news_start_date(
-    attempt_number: int,
-    *,
-    today: date | None = None,
-) -> str:
-    """
-    First research attempt: last 90 days.
-    Later attempts: last 365 days.
-    """
-    as_of = (
-        today
-        if today is not None
-        else date.today()
-    )
-
-    days = 90 if attempt_number == 1 else 365
-
-    return (
-        as_of - timedelta(days=days)
-    ).isoformat()
 
 
 def competitor_mock_path(company: str) -> str:
@@ -442,6 +491,20 @@ competitor_search_tool = TavilySearch(
 # Company research
 # ==================================================
 
+def search_failure_category(exc):
+    """Map the installed SDK's returned or raised exception to a safe diagnostic."""
+    status = re.match(r"^Error ([45]\d\d):", str(exc))
+    if status:
+        return "provider_http_" + status[1]
+    if type(exc).__name__ == "ToolException" and str(exc).startswith("No search results found for "):
+        return "empty_results"
+    if isinstance(exc, TimeoutError):
+        return "search_timeout"
+    if isinstance(exc, OSError):
+        return "search_connection_error"
+    return "search_request_failed"
+
+
 async def research_node(state: AgentState):
     company = state["company_name"]
 
@@ -476,6 +539,15 @@ async def research_node(state: AgentState):
         state.get("enrichment_attempted", False)
         or is_enrichment
     )
+    recovering = attempt == MAX_RESEARCH_CALLS and not sources
+    official_follow_up = bool(official_domain and (
+        recovering or (needs_official_detail(state) and (
+            state.get("enrichment_attempted", False)
+            or (len(sources) >= SOURCE_TARGET and has_development_source(sources, company))
+        ))
+    ))
+    preview_follow_up = state.get("news_preview_follow_up") if not official_follow_up else None
+    offsite_follow_up = not official_follow_up and not preview_follow_up and needs_offsite_coverage(state)
 
     previous_stats = (
         state.get("source_stats") or {}
@@ -490,11 +562,16 @@ async def research_node(state: AgentState):
         state.get("research_warnings", [])
     )
 
+    window = validated_analysis_window(state.get("analysis_window") or default_analysis_window())
     common = {
         "research_attempts": attempt,
         "enrichment_attempted": enrichment_attempted,
+        "official_detail_attempted": state.get("official_detail_attempted", False) or official_follow_up,
+        "offsite_search_attempted": state.get("offsite_search_attempted", False) or offsite_follow_up,
+        "news_preview_follow_up": None,
     }
 
+    news_batch = False
     if os.getenv("MOCK_TAVILY") == "true":
         path = mock_path(company)
 
@@ -513,24 +590,42 @@ async def research_node(state: AgentState):
     else:
         tool = (
             expanded_search_tool
-            if is_enrichment
+            if preview_follow_up or offsite_follow_up or (is_enrichment and not official_follow_up)
             else search_tool
         )
         if attempt == 1:
             identity = f"{company} {official_domain}" if official_domain else company
             request = {"query": f"{identity} company products services", "topic": "general"}
-        else:
+        elif official_follow_up:
             request = {
-                "query": build_query(company, official_domain=official_domain),
-                "topic": "news",
-                "start_date": company_news_start_date(attempt),
+                "query": f"{company} products services releases announcements",
+                "topic": "general",
+                "include_domains": [official_domain],
             }
+        elif preview_follow_up:
+            request = {
+                "query": f'"{company}" {preview_follow_up}',
+                "topic": "news",
+                "start_date": window["start"],
+                "exclude_domains": ["google.com", "tavily.com"],
+            }
+        elif recovering:
+            request = {"query": f"{company} official website what they make services", "topic": "general"}
+        else:
+            request = news_search_request(company, official_domain, sources, window["start"], offsite=offsite_follow_up)
 
+        news_batch = request.get("topic") == "news"
         try:
             results = await tool.ainvoke(request)
+            if isinstance(results, dict) and isinstance(results.get("error"), Exception):
+                raise results["error"]
 
         except Exception as exc:
-            print(f"Search failed: {exc}")
+            issue = search_failure_category(exc)
+            common.update(search_issue=issue, search_blocked=issue in {
+                "provider_http_401", "provider_http_403", "provider_http_429", "provider_http_432", "provider_http_433",
+            })
+            warnings.append("Search outcome: " + issue + ".")
 
             if sources:
                 warnings.append(
@@ -572,6 +667,7 @@ async def research_node(state: AgentState):
                 "research_warnings": warnings,
             }
 
+    common["search_issue"] = None
     raw_items = (
         results.get("results")
         if isinstance(results, dict)
@@ -579,6 +675,7 @@ async def research_node(state: AgentState):
     )
 
     if not isinstance(raw_items, list):
+        common["search_issue"] = "invalid_results"
         warnings.append(
             "Search response has no valid results list."
         )
@@ -672,7 +769,7 @@ async def research_node(state: AgentState):
                     candidate,
                     company_name=company,
                     official_domain=official_domain,
-                    company_basics=attempt == 1,
+                    company_basics=attempt == 1 or official_follow_up,
                 )
             )
 
@@ -687,6 +784,10 @@ async def research_node(state: AgentState):
         new_count += 1
 
     batch_returned = len(raw_items)
+    if news_batch and not preview_follow_up and attempt < MAX_RESEARCH_CALLS and new_count:
+        common["news_preview_follow_up"] = distinct_preview_title(sources[-new_count:], company)
+    if not sources:
+        common["search_issue"] = "no_accepted_sources" if batch_returned else "empty_results"
 
     cumulative_returned = (
         previous_returned + batch_returned
@@ -1231,27 +1332,76 @@ def company_overview_from_sources(company_name, sources, registry):
         r"(?:is an? (?:[\w-]+ ){0,6}(?:manufacturer|maker|provider|company)\b"
         r"|makes|manufactures|designs|develops|sells|provides|offers|builds|produces|operates)"
     )
-    for item in registry.values():
-        if not item["source_id"].startswith("S"):
-            continue
+    candidates = sorted(
+        (item for item in registry.values() if item["source_id"].startswith("S")),
+        key=lambda item: is_reference_page(sources[int(item["source_id"][1:]) - 1], company_name),
+    )
+    profile_field = None
+    for item in candidates:
         source = sources[int(item["source_id"][1:]) - 1]
-        title = source.get("title", "")
-        identities = full_name
-        if len(brand) >= 4 and re.match(rf"{full_name}\b", title, re.I):
-            identities = f"(?:{full_name}|{re.escape(brand)})"
+        title = " ".join(source.get("title", "").split())
+        aliases = [full_name]
+        if re.match(rf"{full_name}\b", title, re.I):
+            if len(brand) >= 4:
+                aliases.append(re.escape(brand))
+            if re.fullmatch(rf"{full_name}(?: [\w.-]+){{1,2}}", title, re.I):
+                aliases.append(re.escape(title))
+            if profile_field is None and is_reference_page(source, company_name) and re.fullmatch(
+                r"(?:Business areas|Products and services|Services):\s+.{15,230}", item["quote"], re.I,
+            ):
+                profile_field = (item["quote"], item)
+        identities = "|".join(aliases)
         about = re.compile(
-            rf"^(?:Description:\s*)?(?:{identities})\s+{business}\b"
+            rf"^(?:{identities})\s+{business}\b"
             rf"|^The (?:{identities})\s+[^.!?]{{1,90}}\s+(?:is|are) the company['’]s (?:main|core) product",
             re.I,
         )
-        for sentence in re.split(r"(?<=[.!?])\s+|\[\.\.\.\]\s+", item["quote"]):
-            statement = sentence.strip()
-            if 25 <= len(statement) <= 250 and about.match(statement):
-                return {
-                    "event": "Company overview", "text": statement, "category": "Other",
-                    "evidence": [item], "sources": [{"title": item["title"], "url": item["url"]}],
-                }
-    return None
+        statements = (
+            re.sub(r"^Description:\s*", "", sentence.strip(), flags=re.I)
+            for sentence in re.split(r"(?<=[.!?])\s+|\[\.\.\.\]\s+", item["quote"])
+        )
+        statement = next((text for text in statements if 25 <= len(text) <= 250 and about.match(text)), None)
+        if statement is not None:
+            profile_field = (statement, item)
+            break
+    if profile_field is None:
+        return None
+    text, evidence = profile_field
+    return {
+        "event": "Company overview", "text": text, "category": "Other",
+        "evidence": [evidence], "sources": [{"title": evidence["title"], "url": evidence["url"]}],
+    }
+
+
+def company_offering_from_sources(company_name, domain, registry, context_items):
+    """Recover a short product description from existing body evidence."""
+    used = {item["evidence_id"] for row in context_items for item in row["evidence"]}
+    name = re.escape(company_name)
+    named_product = re.compile(rf"(?<!\w)(?i:{name})\s+[A-Z][\w-]+")
+    product_words = re.compile(r"\b(?:software|service|platform|solution|product|tool)s?\b", re.I)
+    fallback = None
+    for item in registry.values():
+        if not item["source_id"].startswith("S") or item["evidence_id"] in used:
+            continue
+        page = urlsplit(item["url"])
+        host = page.hostname or ""
+        if (domain and (host == domain or host.endswith("." + domain))
+                and re.search(r"/(?:products?|services?|solutions?|catalog(?:ue)?|what-we-offer)(?:[/.-]|$)", page.path, re.I)):
+            for line in re.split(r"(?<=[.!?])\s+|\[\.\.\.\]\s*", item["quote"]):
+                statement = line.strip()
+                if (30 <= len(statement) <= 240 and not statement.startswith(("#", "|", "*"))
+                        and named_product.search(statement) and product_words.search(statement)):
+                    return {"event": "Products and services", "text": statement, "category": "Other",
+                            "evidence": [item], "sources": [{"title": item["title"], "url": item["url"]}]}
+        if (fallback is None and host == "tavily.com" and page.path.startswith("/knowledge/company/")
+                and re.match(rf"^{name}\b", item["title"], re.I)
+                and item["quote"].startswith("Products: ")):
+            listing = item["quote"].partition(" [...]")[0]
+            statement = ", ".join(listing.split(", ")[:3])
+            if len(statement) <= 240:
+                fallback = {"event": "Products and services", "text": statement, "category": "Other",
+                            "evidence": [item], "sources": [{"title": item["title"], "url": item["url"]}]}
+    return fallback
 
 
 async def analysis_node(state: AgentState):
@@ -1263,29 +1413,34 @@ async def analysis_node(state: AgentState):
     analysis_window = validated_analysis_window(state.get("analysis_window") or default_analysis_window()) if protocol == 2 else None
     competitor_sources = state.get("competitor_sources", [])
     evidence_registry = build_evidence_registry(state["sources"], competitor_sources) if protocol == 2 else {}
-    shown_evidence_ids = set(evidence_registry)
     input_warnings = []
 
     def indexed_body(source_id):
         return "\n".join(f"[{key}] {evidence['quote']}" for key, evidence in evidence_registry.items()
                          if evidence["source_id"] == source_id) or "No selectable body evidence is available."
 
-    indexed_sources = list(enumerate(state["sources"], start=1))
-    role_order = {"development_candidate": 0, "uncertain": 1, "background": 2}
-    indexed_sources.sort(key=lambda pair: role_order[source_evidence_role(pair[1], state["company_name"])])
-    numbered_sources = "\n\n".join(
-        f"[S{i}] TITLE: {source['title']}\n"
-        f"URL: {source['url']}\n"
-        f"PUBLISHED: "
-        f"{source['published_at'] or 'unknown'}\n"
-        f"EVIDENCE ROLE: {source_evidence_role(source, state['company_name'])}\n"
-        f"CONTENT: {source['content'] if protocol == 1 else indexed_body(f'S{i}')}"
-        for i, source in indexed_sources
-    )
+    if protocol == 2:
+        indexed_sources = ranked_company_sources(state["sources"], state["company_name"])
+    else:
+        role_order = {"development_candidate": 0, "uncertain": 1, "background": 2}
+        indexed_sources = sorted(enumerate(state["sources"], start=1),
+                                 key=lambda pair: role_order[source_evidence_role(pair[1], state["company_name"])])
 
-    competitor_sources = state.get(
-        "competitor_sources",
-        [],
+    def company_header(index, source):
+        preview = "SOURCE DEPTH: short search preview\n" if protocol == 2 and is_short_search_preview(source) else ""
+        return (f"[S{index}] TITLE: {source['title']}\nURL: {source['url']}\n"
+                f"PUBLISHED: {source['published_at'] or 'unknown'}\n"
+                f"EVIDENCE ROLE: {source_evidence_role(source, state['company_name'])}\n{preview}CONTENT: ")
+
+    headers = [(f"S{index}", company_header(index, source)) for index, source in indexed_sources]
+    company_source_ids = {source_id for source_id, _ in headers}
+    comparison_evidence_ids = {key for key, evidence in evidence_registry.items() if evidence["source_id"].startswith("C")}
+    shown_evidence_ids = comparison_evidence_ids | {
+        key for key, evidence in evidence_registry.items() if evidence["source_id"] in company_source_ids
+    }
+    numbered_sources = "\n\n".join(
+        header + (indexed_body(source_id) if protocol == 2 else source["content"])
+        for (source_id, header), (_, source) in zip(headers, indexed_sources)
     )
 
     competitor_evidence = "\n\n".join(
@@ -1397,13 +1552,14 @@ SOURCE SENTIMENT
 2. Allowed labels: Positive, Neutral, Negative, Unclear.
 3. Describe the portrayal of the requested company.
 4. Do not automatically treat launches, funding, or partnerships as Positive.
-5. Use Unclear if evidence does not support a reliable assessment.
+5. Use Unclear for directories, navigation, terms pages, or other text without a meaningful portrayal.
 6. Never use competitor sources for company sentiment.
 
 COMPETITOR INTELLIGENCE
+Requested company website, if supplied: {state.get('official_domain') or 'not supplied'}.
 1. Identify up to 3 competitors using ONLY C-numbered sources.
 2. A competitor must offer overlapping products or services, or serve a substantially similar market.
-3. Explain specific product, service, or customer overlap.
+3. Explain specific product, service, or customer overlap. When C sources identify a market or geography, retain that scope. Prefer matches for the requested business; keep useful broader comparisons clearly scoped.
 4. Do not confuse partners, investors, customers, or suppliers with competitors.
 5. Cite sources directly supporting the competitor and overlap.
 6. Prefer currently operating competitors when source evidence establishes current status.
@@ -1453,7 +1609,13 @@ Company findings and context use S evidence IDs; competitor overlaps use C evide
 Do not compose quotation strings, source URLs, a candidate catalog, or a separate summary. Selecting an ID is not proof that its text supports your interpretation.
 Primary observations concern meaningful developments. Explicitly historical or routine background belongs in context_items, at most two items using the same text/event/category/evidence_ids fields.
 Use context_items to give a useful company brief even when there are no developments. Label the basic company description "Company overview" and explain what the company does, a named product or service, or who it serves. Select short body passages that state those facts clearly. Do not treat a company or product description as a launch.
+When a source names a product or service and describes what it does, include a distinct "Products and services" context item with that name and its practical use. Use a different passage from the overview.
+Prefer named products, services and specific actions. Terms pages, directories and standing profiles support background. Avoid marketing superlatives and undated totals in the company overview. Prefer direct product pages and clearly attributed reporting.
+Use one finding for multiple reports about the same action or milestone. Select the passage that best establishes the action and its status. Where a short search preview is the only evidence, retain a distinct development only to the extent that the body excerpt directly supports it. A headline alone cannot establish a claim.
+Keep the named product brand, local subsidiary and parent company distinct. Attribute a parent-level development as such when the evidence connects it to the target.
 Suggest competitors only if the sources show that their products or services are plausible substitutes for the target's offerings. Sharing an industry is insufficient. If you cannot identify the target's offering, return no competitors.
+A directory list of competitor names does not establish product or customer overlap. Prefer passages that explain what the alternative offers and who it serves.
+If sources only establish a past competitor or leave current operations unclear, omit it from the competitor list.
 The primary overview window is {analysis_window['start']} through {analysis_window['end']}, inclusive. Distinguish event dates from publication dates, financial periods and future effective dates.
 Do not assume an event is recent when timing is unknown. Keep wording cautious; do not invent a day. Planned future succession can be a current announcement when evidence supports that distinction.
 If only background context is supported, set status insufficient_evidence and insights [], with context_items if useful. Never force three primary insights.
@@ -1467,22 +1629,25 @@ If only background context is supported, set status insufficient_evidence and in
             head += ("BOUNDED INPUT NOTICE\nSome company body spans are omitted to fit the input limit. "
                      "Use only the evidence IDs shown below. Do not assume complete coverage.\n\n")
             suffix = "\n\nDEDICATED COMPETITOR RESEARCH SOURCES\n" + competitor_evidence + "\n"
-            headers = [(f"S{i}",
-                f"[S{i}] TITLE: {source['title']}\nURL: {source['url']}\n"
-                f"PUBLISHED: {source['published_at'] or 'unknown'}\n"
-                f"EVIDENCE ROLE: {source_evidence_role(source, state['company_name'])}\nCONTENT: ")
-                for i, source in indexed_sources]
             view, company_ids = bounded_evidence_view(headers, evidence_registry, 60000 - len(head + marker + suffix))
-            shown_evidence_ids = company_ids | {key for key, e in evidence_registry.items() if e["source_id"].startswith("C")}
+            shown_evidence_ids = company_ids | comparison_evidence_ids
             prompt = head + marker + view + suffix
             input_warnings.append(
                 "The model received a bounded subset of the collected excerpts to fit the input limit. "
                 "The source library retains the full retrieved excerpts; useful developments may be omitted."
             )
 
-    response = await llm_analysis.ainvoke([
-        HumanMessage(content=prompt)
-    ])
+    try:
+        response = await llm_analysis.ainvoke([HumanMessage(content=prompt)])
+    except Exception as error:
+        cause = error
+        for _ in range(6):
+            if isinstance(cause, (APITimeoutError, TimeoutError)):
+                return {"analysis_status": "timed_out"}
+            cause = cause.__cause__ or cause.__context__
+            if cause is None:
+                break
+        raise
 
     usage_metadata = getattr(
         response,
@@ -1532,7 +1697,11 @@ If only background context is supported, set status insufficient_evidence and in
     rejected: set[str] = set()
     structured = decode_analysis(raw_insights, state["sources"], competitor_sources, SIGNAL_CATEGORIES,
                                  company_name=state["company_name"], analysis_window=analysis_window,
-                                 allowed_evidence_ids=shown_evidence_ids if protocol == 2 else None)
+                                 allowed_evidence_ids=shown_evidence_ids if protocol == 2 else None,
+                                 background_source_ids={
+                                     f"S{i}" for i, source in enumerate(state["sources"], 1)
+                                     if is_reference_page(source, state["company_name"])
+                                 } if protocol == 2 else ())
     parsed_text = raw_insights
     if structured is not None:
         parsed_text = structured["text"]
@@ -1585,11 +1754,17 @@ If only background context is supported, set status insufficient_evidence and in
     if analysis_status == "malformed" and finish_reason in (None, "stop") and context_items and rejected:
         analysis_status = "partial"
         analysis_warnings.append("Some generated findings were excluded. Source-linked company context is available.")
-    if (analysis_status != "malformed" and structured is not None and structured.get("schema_version") == 2
-            and not any(item.get("event", "").casefold() == "company overview" for item in context_items)):
-        overview = company_overview_from_sources(state["company_name"], state["sources"], evidence_registry)
-        if overview is not None and len(context_items) < 3:
-            context_items.insert(0, overview)
+    if analysis_status != "malformed" and structured is not None and structured.get("schema_version") == 2:
+        context_labels = {item["event"].casefold() for item in context_items}
+        if len(context_items) < MAX_CONTEXT_ITEMS and "company overview" not in context_labels:
+            overview = company_overview_from_sources(state["company_name"], state["sources"], evidence_registry)
+            if overview is not None:
+                context_items.insert(0, overview)
+        if len(context_items) < MAX_CONTEXT_ITEMS and "products and services" not in context_labels:
+            offering = company_offering_from_sources(state["company_name"], state.get("official_domain"),
+                                                     evidence_registry, context_items)
+            if offering is not None:
+                context_items.append(offering)
     if context_items and analysis_status == "insufficient_evidence":
         analysis_warnings.append("No primary developments were established; historical/background context is retained separately.")
     for item in [*mapped, *context_items, *([summary] if summary else [])]:
@@ -1646,7 +1821,7 @@ If only background context is supported, set status insufficient_evidence and in
 # ==================================================
 
 async def report_node(state: AgentState):
-    if state.get("analysis_status") == "malformed":
+    if state.get("analysis_status") in {"malformed", "timed_out"}:
         return {"report": None}
 
     print("--- GENERATING REPORT ---")
@@ -1701,7 +1876,7 @@ async def competitor_research_node(
         )
     )
 
-    if attempts >= 1:
+    if attempts >= 1 or state.get("search_blocked"):
         return {
             "competitor_sources": sources,
             "competitor_research_attempts": attempts,
@@ -1727,7 +1902,7 @@ async def competitor_research_node(
             response = await (
                 competitor_search_tool.ainvoke({
                     "query": build_competitor_query(
-                        company
+                        company, official_domain=state.get("official_domain"),
                     ),
                 })
             )
@@ -1877,6 +2052,34 @@ async def competitor_research_node(
 # LangGraph routing
 # ==================================================
 
+def has_development_source(sources, company_name):
+    return any(source_evidence_role(source, company_name) == "development_candidate" for source in sources)
+
+
+def needs_official_detail(state: AgentState) -> bool:
+    domain = state.get("official_domain")
+    sources = state.get("sources", [])
+    return bool(domain and sources and not state.get("official_detail_attempted") and not has_official_detail(
+        sources, state["company_name"], domain,
+    ))
+
+
+def needs_offsite_coverage(state: AgentState) -> bool:
+    domain = state.get("official_domain")
+    sources = state.get("sources", [])
+    if not domain or state.get("offsite_search_attempted") or len(sources) < SOURCE_TARGET:
+        return False
+    company = state["company_name"]
+    if not has_official_detail(sources, company, domain):
+        return False
+    for source in sources:
+        host = urlsplit(source["url"]).hostname
+        if (host and host != domain and not host.endswith("." + domain)
+                and source_evidence_role(source, company) != "background"):
+            return False
+    return True
+
+
 def check_research(state: AgentState):
     sources = state.get(
         "sources",
@@ -1888,10 +2091,7 @@ def check_research(state: AgentState):
         state.get("retry_count", 0),
     )
 
-    if len(sources) >= SOURCE_TARGET:
-        return "continue"
-
-    if attempts >= MAX_RESEARCH_CALLS:
+    if attempts >= MAX_RESEARCH_CALLS or state.get("search_blocked"):
         return (
             "continue"
             if sources
@@ -1899,14 +2099,11 @@ def check_research(state: AgentState):
         )
 
     if sources:
-        return (
-            "continue"
-            if state.get(
-                "enrichment_attempted",
-                False,
-            )
-            else "retry"
-        )
+        if needs_official_detail(state) or state.get("news_preview_follow_up") or needs_offsite_coverage(state):
+            return "retry"
+        if state.get("enrichment_attempted", False):
+            return "continue"
+        return "continue" if len(sources) >= SOURCE_TARGET and has_development_source(sources, state["company_name"]) else "retry"
 
     return "retry"
 
@@ -1982,7 +2179,10 @@ async def run_workflow(
         "retry_count": 0,
         "research_attempts": 0,
         "enrichment_attempted": False,
+        "official_detail_attempted": False,
+        "offsite_search_attempted": False,
         "analysis_protocol": 2,
+        "analysis_window": default_analysis_window(),
         "context_items": [],
         "context_warnings": [],
         "sources": [],
@@ -2014,6 +2214,7 @@ async def run_workflow(
         return {
             "status": "failed",
             "error_code": "RESEARCH_EXHAUSTED",
+            "search_issue": result.get("search_issue"),
             "research_attempts": attempts,
             "report": None,
             "search_results": "",
@@ -2047,19 +2248,19 @@ async def run_workflow(
 
     report = result.get("report")
     analysis_status = result["analysis_status"]
-    malformed = analysis_status == "malformed"
+    analysis_error = {"malformed": "ANALYSIS_MALFORMED", "timed_out": "ANALYSIS_TIMEOUT"}.get(analysis_status)
 
-    if not report and not malformed:
+    if not report and not analysis_error:
         raise RuntimeError(
             "Workflow ended without generating "
             "a report."
         )
 
     return {
-        "status": "failed" if malformed else "completed",
-        "error_code": "ANALYSIS_MALFORMED" if malformed else None,
+        "status": "failed" if analysis_error else "completed",
+        "error_code": analysis_error,
         "research_attempts": attempts,
-        "report": None if malformed else report,
+        "report": None if analysis_error else report,
         "analysis_status": analysis_status,
         "analysis_warnings": result.get("analysis_warnings", []),
         "analysis_format": result.get("analysis_format"),
