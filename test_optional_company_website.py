@@ -65,6 +65,7 @@ def test_invalid_website_is_rejected():
 
 
 def test_api_forwards_official_domain(monkeypatch):
+    monkeypatch.setenv("ENABLE_LIVE_ANALYSIS", "true")
     calls = []
 
     async def fake_workflow(
@@ -104,6 +105,7 @@ def test_api_forwards_official_domain(monkeypatch):
 def test_name_only_api_remains_compatible(
     monkeypatch,
 ):
+    monkeypatch.setenv("ENABLE_LIVE_ANALYSIS", "true")
     calls = []
 
     # Deliberately accepts only one argument.

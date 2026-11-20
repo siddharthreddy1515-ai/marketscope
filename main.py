@@ -6,15 +6,12 @@ import re
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.routing import APIRoute
 from pydantic import BaseModel, Field, field_validator
 
-from workflow import (
-    run_workflow,
-    SIGNAL_CATEGORIES,
-    normalize_company_domain,
-)
+from workflow_contract import SIGNAL_CATEGORIES, normalize_company_domain
 
 
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +20,35 @@ app = FastAPI(
     title="MarketScope Multi-Agent",
     version="0.3.0",
 )
+
+
+def require_live_analysis_enabled():
+    if os.getenv("ENABLE_LIVE_ANALYSIS", "false").strip().lower() != "true":
+        raise HTTPException(
+            status_code=503,
+            detail="Analysis is temporarily unavailable.",
+        )
+
+
+class LiveAnalysisRoute(APIRoute):
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+
+        async def guarded_handler(request: Request):
+            require_live_analysis_enabled()
+            return await handler(request)
+
+        return guarded_handler
+
+
+analysis_router = APIRouter(route_class=LiveAnalysisRoute)
+
+
+async def run_workflow(company_name: str, official_domain: str | None = None) -> dict:
+    # Provider clients initialize only after the request passes the server-side gate.
+    from workflow import run_workflow as execute
+
+    return await execute(company_name, official_domain=official_domain)
 
 
 # --------------------------------------------------
@@ -225,9 +251,10 @@ class AnalyzeResponse(BaseModel):
 # Company Analysis Endpoint
 # --------------------------------------------------
 
-@app.post(
+@analysis_router.post(
     "/api/v1/analyze",
     response_model=AnalyzeResponse,
+    responses={503: {"description": "Analysis is temporarily unavailable."}},
 )
 async def analyze_endpoint(
     request: AnalyzeRequest,
@@ -381,6 +408,9 @@ async def analyze_endpoint(
             [],
         ),
     )
+
+
+app.include_router(analysis_router)
 
 
 # --------------------------------------------------

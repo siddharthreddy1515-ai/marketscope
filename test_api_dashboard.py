@@ -4,6 +4,11 @@ from fastapi.testclient import TestClient
 import main
 
 
+@pytest.fixture(autouse=True)
+def enable_mock_analysis(monkeypatch):
+    monkeypatch.setenv("ENABLE_LIVE_ANALYSIS", "true")
+
+
 def test_analyze_returns_research_data(monkeypatch):
 
     async def fake_workflow(company_name):

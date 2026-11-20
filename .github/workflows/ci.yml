@@ -40,3 +40,37 @@ jobs:
       - name: Run mocked pipeline tests
         run: |
           python -m pytest -q -rs
+
+      - name: Smoke test Docker with analysis disabled
+        run: |
+          docker build -t marketscope-ci .
+          container_id="$(docker run --detach --network none marketscope-ci)"
+          trap 'docker logs "$container_id"; docker rm --force "$container_id" >/dev/null' EXIT
+          docker exec -i "$container_id" python - <<'PY'
+          import json
+          import time
+          from urllib.error import HTTPError, URLError
+          from urllib.request import Request, urlopen
+
+          base = "http://127.0.0.1:8000"
+          for attempt in range(30):
+              try:
+                  with urlopen(base + "/health", timeout=1) as response:
+                      assert json.load(response) == {"status": "ok", "version": "0.3.0"}
+                  break
+              except URLError:
+                  if attempt == 29:
+                      raise
+                  time.sleep(1)
+          with urlopen(base + "/", timeout=3) as response:
+              assert b"source-brief-2026-11-19" in response.read()
+          request = Request(base + "/api/v1/analyze", data=b'{"company_name":"Acme"}',
+                            headers={"Content-Type": "application/json"})
+          try:
+              urlopen(request, timeout=3)
+          except HTTPError as error:
+              assert error.code == 503
+              assert json.load(error) == {"detail": "Analysis is temporarily unavailable."}
+          else:
+              raise AssertionError("Analysis was not disabled by default")
+          PY
