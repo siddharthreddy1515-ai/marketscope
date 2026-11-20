@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.routing import APIRoute
 from pydantic import BaseModel, Field, field_validator
 
@@ -222,6 +222,7 @@ class AnalyzeResponse(BaseModel):
     research_coverage: ResearchCoverageResponse | None = None
     competitor_research_warnings: list[str] = Field(default_factory=list)
     sources: list[SourceResponse]
+    comparison_sources: list[SourceResponse] = Field(default_factory=list)
     source_stats: ResearchStatsResponse
     research_warnings: list[str]
     insight_items: list[InsightItemResponse]
@@ -315,9 +316,27 @@ async def analyze_endpoint(
         and analysis_status not in ("complete", "partial", "insufficient_evidence")
     ):
         logging.warning("Malformed analysis response for %s", request.company_name)
+        detail = "The analysis response could not be read. Please try again."
+        sources = result.get("sources") or []
+        if sources:
+            return JSONResponse(status_code=502, content={
+                "detail": detail,
+                "research": {
+                    "company_name": request.company_name,
+                    "official_domain": request.official_domain,
+                    "research_attempts": result.get("research_attempts", 0),
+                    "research_coverage": result.get("research_coverage"),
+                    "research_warnings": result.get("research_warnings", []),
+                    "sources": [SourceResponse.model_validate(source).model_dump() for source in sources],
+                    "comparison_sources": [
+                        SourceResponse.model_validate(source).model_dump()
+                        for source in result.get("competitor_sources", [])
+                    ],
+                },
+            })
         raise HTTPException(
             status_code=502,
-            detail="The analysis response could not be read. Please try again.",
+            detail=detail,
         )
 
     if (
@@ -374,6 +393,7 @@ async def analyze_endpoint(
             "sources",
             [],
         ),
+        comparison_sources=result.get("competitor_sources", []),
 
         source_stats=result.get(
             "source_stats",

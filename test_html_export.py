@@ -59,7 +59,8 @@ const nodes = {};
 const downloads = [];
 const blobs = [];
 let fetchCalls = 0;
-const malformedAnalysis = process.argv[3] === 'malformed';
+const retainedResearch = process.argv[3] === 'malformed_with_sources';
+const malformedAnalysis = retainedResearch || process.argv[3] === 'malformed';
 const errorMessage = malformedAnalysis
   ? 'The analysis response could not be read. Please try again.'
   : 'Simulated error';
@@ -152,7 +153,14 @@ const context = vm.createContext({
       ok: false,
       status: malformedAnalysis ? 502 : 500,
       json: async () => ({
-        detail: errorMessage
+        detail: errorMessage,
+        ...(retainedResearch ? {research: {
+          company_name: 'Tesla', sources: [{
+            title: 'Saved company page', url: 'https://example.com/collected',
+            content: 'Retrieved company description remains available.', published_at: '2026-11-04',
+          }],
+          comparison_sources: [{title: 'Comparison article', url: 'https://example.com/comparison-article'}],
+        }} : {}),
       })
     };
   }
@@ -294,6 +302,50 @@ assert.ok(dashboardNodes().some(node => node.textContent === 'Executive Snapshot
 assert.ok(dashboardNodes().some(node => node.textContent === 'Event dates unavailable'));
 
 const originalSample = context.sample;
+const companyDescription = 'ExampleCo makes electric motorcycles.';
+const originalCitation = { title: 'Company products', url: 'https://example.com/products' };
+const overviewEvidence = {
+  ...originalCitation, source_id: 'S1', quote: companyDescription,
+  evidence_id: 'S1-0000000000000000-0-' + companyDescription.length,
+};
+context.sample = {
+  ...originalSample, analysis_format: 'evidence_ids_v2', analysis_status: 'partial',
+  sources: [{ ...originalCitation, content: companyDescription }, {
+    title: 'Unselected retail page', url: 'https://example.com/retail',
+    content: 'The retailer offers a commuter and a cargo model.',
+  }],
+  insight_items: [], context_items: [{
+    event: 'Company overview', text: 'Unsupported overview prose.', evidence: [overviewEvidence],
+  }],
+};
+vm.runInContext('render(sample)', context);
+const overviewNodes = dashboardNodes();
+assert.ok(overviewNodes.some(node => node.className === 'snapshot-text' && node.textContent === companyDescription));
+assert.ok(overviewNodes.some(node => node.tag === 'a' && node.href === originalCitation.url));
+assert.ok(!overviewNodes.some(node => node.textContent === 'Unsupported overview prose.'));
+assert.ok(overviewNodes.some(node => node.textContent === 'The retailer offers a commuter and a cargo model.'));
+assert.ok(overviewNodes.some(node => node.tag === 'a' && node.href === 'https://example.com/retail'));
+assert.ok(overviewNodes.findIndex(node => node.textContent === 'Executive Snapshot') <
+  overviewNodes.findIndex(node => node.textContent === 'No source-supported developments available.'));
+assert.equal(overviewNodes.find(node => node.className === 'source-notes').children.length, 2);
+
+const backgroundPages = Array.from({ length: 7 }, (_, index) => ({
+  title: 'Background page ' + index, url: 'https://example.net/background-' + index, content: 'Background text.',
+}));
+context.sample = {
+  ...context.sample, official_domain: 'example.com',
+  sources: [...backgroundPages, ...context.sample.sources],
+  context_items: [{ ...context.sample.context_items[0], evidence: [{
+    ...overviewEvidence, source_id: 'S8', evidence_id: overviewEvidence.evidence_id.replace(/^S1/, 'S8'),
+  }] }],
+};
+vm.runInContext('render(sample)', context);
+const sourceGrids = dashboardNodes().filter(node => node.className === 'source-notes');
+assert.equal(sourceGrids[0].children.length, 6);
+assert.ok(descendants(sourceGrids[0].children[0]).some(node => node.href === originalCitation.url));
+assert.ok(descendants(sourceGrids[0].children[1]).some(node => node.href === 'https://example.com/retail'));
+assert.equal(sourceGrids[1].children.length, 3);
+
 context.sample = {
   ...originalSample,
   analysis_status: 'complete',
@@ -452,7 +504,8 @@ vm.runInContext('render(backgroundEvidence)', context);
 const developmentCard = dashboardNodes().find(node => node.className === 'brief-metric');
 assert.ok(descendants(developmentCard).some(node => node.textContent === 'Background evidence only'));
 assert.ok(!dashboardNodes().some(node => node.className === 'breakdown-item'));
-assert.ok(dashboardNodes().some(node => node.textContent === 'Available evidence provides company background. Recent developments could not be established.'));
+assert.ok(dashboardNodes().some(node => node.textContent === 'Only background evidence was retained.'));
+assert.ok(dashboardNodes().some(node => node.className === 'snapshot-label' && node.textContent === 'From the sources'));
 
 const comparisonSource = {title: 'Comparison source', url: 'https://example.org/compare', source_id: 'C1',
   evidence_id: 'C1-0000000000000000-0-33', quote: 'Acme and Atlas are both discussed.'};
@@ -523,9 +576,18 @@ nodes.companyInput.value = 'Tesla';
     vm.runInContext('latestReportData', context),
     null
   );
-  assert.ok(nodes.output.children.some(node =>
-    node.textContent === errorMessage
-  ));
+  if (retainedResearch) {
+    assert.ok(dashboardNodes().some(node => node.textContent === 'Analysis unavailable. The collected sources are shown below.'));
+    assert.ok(dashboardNodes().some(node => node.className === 'source-preview' &&
+      node.textContent === 'Retrieved company description remains available.'));
+    assert.ok(dashboardNodes().some(node => node.tag === 'a' && node.href === 'https://example.com/collected'));
+    assert.ok(dashboardNodes().some(node => node.tag === 'a' && node.href === 'https://example.com/comparison-article'));
+    assert.ok(dashboardNodes().some(node => node.className === 'timeline-date' && node.textContent.includes('2026')));
+    assert.ok(dashboardNodes().some(node => node.textContent === 'Event dates unavailable'));
+    assert.equal(nodes.downloadEvidenceButton.disabled, true);
+  } else {
+    assert.ok(nodes.output.children.some(node => node.textContent === errorMessage));
+  }
 
   if (malformedAnalysis) {
     nodes.downloadReportButton.handlers.click();
@@ -574,6 +636,10 @@ def test_export_runtime_and_stale_report_guard(analysis_status):
 
 def test_malformed_analysis_clears_stale_report():
     run_export_runtime_check("complete", "malformed")
+
+
+def test_malformed_analysis_keeps_collected_sources_visible():
+    run_export_runtime_check("complete", "malformed_with_sources")
 
 
 def run_export_runtime_check(analysis_status, error_kind):
